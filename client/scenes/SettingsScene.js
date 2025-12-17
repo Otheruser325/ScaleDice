@@ -1,4 +1,5 @@
 import GlobalAudio from '../utils/AudioManager.js';
+import GlobalBackground from '../utils/BackgroundManager.js';
 import GlobalSettings from '../utils/SettingsManager.js';
 
 export default class SettingsScene extends Phaser.Scene {
@@ -7,6 +8,8 @@ export default class SettingsScene extends Phaser.Scene {
     }
 
     create() {
+		GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
+		
         this.add.text(600, 80, 'Settings', {
             fontSize: 48,
             fontFamily: 'Orbitron, Arial'
@@ -95,7 +98,7 @@ export default class SettingsScene extends Phaser.Scene {
         this.backBtn = this.add.text(600, 460, '← Back', {
                 fontSize: 28,
                 fontFamily: 'Orbitron, Arial',
-                color: '#66aaff'
+                color: '#ff6666'
             })
             .setOrigin(0.5)
             .setInteractive({
@@ -105,6 +108,11 @@ export default class SettingsScene extends Phaser.Scene {
         this.backBtn.on('pointerdown', () => {
             if (GlobalAudio) GlobalAudio.playButton(this);
             this.scene.start('MenuScene');
+        });
+		
+		this.input.keyboard.on('keydown-ESC', () => {
+          if (GlobalAudio) GlobalAudio.playButton(this);
+          this.scene.start('MenuScene');
         });
     }
 

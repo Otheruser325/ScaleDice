@@ -5,6 +5,8 @@ const DEFAULTS = {
     gamesPlayed: 0,
     roundsPlayed: 0,
     bestSingleMatchScore: 0,
+    playTimeSeconds: 0,
+    straightsRolled: 0
   },
   unlocked: {
     firstPlay: false,
@@ -14,9 +16,15 @@ const DEFAULTS = {
     score10000: false,
     score100000: false,
     score1000000: false,
+    score10000000: false,
     fourOfAKind: false,
     fiveOfAKind: false,
-    sixOfAKind: false
+    sixOfAKind: false,
+    addiction: false,
+    diceaholic: false,
+    funHouse: false,
+    roundhouseStraight: false,
+    maximumPower: false
   }
 };
 
@@ -40,6 +48,7 @@ class AchievementsManager {
       });
     }
 
+    // Try to flush queued notifications as soon as a scene is available
     if (this._scene && this._scene.time) {
       this._maybeDisplayNotifications();
     }
@@ -75,7 +84,7 @@ class AchievementsManager {
     return copy;
   }
 
-  // Totals
+  // ---- Totals / recorders ----
   addGame() {
     this._data.totals.gamesPlayed = (this._data.totals.gamesPlayed || 0) + 1;
     this.maybeUnlock('firstPlay');
@@ -96,10 +105,29 @@ class AchievementsManager {
     this._save();
   }
 
+  // add total play seconds (called when session ends or on regular heartbeat if you want)
+  addPlaySeconds(seconds) {
+    seconds = Math.max(0, Math.floor(seconds || 0));
+    this._data.totals.playTimeSeconds = (this._data.totals.playTimeSeconds || 0) + seconds;
+    // check the time milestones
+    this._checkTimeMilestones();
+    this._save();
+  }
+
+  // increment global straights counter (for Roundhouse Straight)
+  addStraights(n = 1) {
+    n = Math.max(0, Math.floor(n || 1));
+    this._data.totals.straightsRolled = (this._data.totals.straightsRolled || 0) + n;
+    this._checkStraightMilestone();
+    this._save();
+  }
+
+  // Mark an existing combo-based achievement - convenience wrapper
   unlockComboAchievement(key) {
     this.maybeUnlock(key);
   }
 
+  // Checkers
   _checkRoundMilestones() {
     const r = this._data.totals.roundsPlayed || 0;
     if (r >= 100) this.maybeUnlock('rounds100');
@@ -112,6 +140,18 @@ class AchievementsManager {
     if (s >= 10000) this.maybeUnlock('score10000');
     if (s >= 100000) this.maybeUnlock('score100000');
     if (s >= 1000000) this.maybeUnlock('score1000000');
+    if (s >= 10000000) this.maybeUnlock('score10000000');
+  }
+
+  _checkTimeMilestones() {
+    const t = this._data.totals.playTimeSeconds || 0;
+    if (t >= 3600) this.maybeUnlock('addiction');
+    if (t >= 12 * 3600) this.maybeUnlock('diceaholic');
+  }
+
+  _checkStraightMilestone() {
+    const s = this._data.totals.straightsRolled || 0;
+    if (s >= 10) this.maybeUnlock('roundhouseStraight');
   }
 
   // mark unlocked and enqueue notification
@@ -128,6 +168,7 @@ class AchievementsManager {
 
     // enqueue notification (newest at front)
     this._notifications.unshift(key);
+    // cap stored notifications to avoid runaway memory
     if (this._notifications.length > 200) this._notifications.length = 200;
 
     this._save();
@@ -141,8 +182,10 @@ class AchievementsManager {
   // attempt to display queued notifications using the registered scene (if any)
   _maybeDisplayNotifications() {
     if (!this._notifications || this._notifications.length === 0) return;
+    // if no scene registered, do nothing — keep notifications queued
     if (!this._scene) return;
 
+    // copy and clear current queue (we will display these)
     const notifs = this._notifications.slice();
     this._notifications.length = 0;
 
@@ -166,7 +209,7 @@ class AchievementsManager {
    * Display a sequence of achievement popups.
    * - notifs: array of achievement keys (required)
    * - onComplete: optional callback when finished
-   * - sceneOverride: optional Phaser.Scene to use for UI (if provided it'll be used even if no scene was registered)
+   * - sceneOverride: optional Phaser.Scene to use for UI (useful for mid-game popups)
    */
   _displayAchievementSequence(notifs, onComplete, sceneOverride) {
     if (!Array.isArray(notifs) || notifs.length === 0) {
@@ -185,13 +228,20 @@ class AchievementsManager {
       firstPlay: { title: "I'm New to This", desc: 'Played Scale Dice for the first time.' },
       rounds100: { title: 'Late Warrior', desc: 'Progressed 100 rounds total.' },
       rounds500: { title: 'Late Nights', desc: 'Progressed 500 rounds total.' },
-      score1000: { title: "Pilin' Up!", desc: 'Scored 1,000 points in a match.' },
-      score10000: { title: "Rackin' Up!", desc: 'Scored 10,000 points in a match.' },
-      score100000: { title: 'Hard Labour', desc: 'Scored 100,000 points in a match.' },
-      score1000000: { title: 'Millionaire', desc: 'Scored 1,000,000 points in a match.' },
-      fourOfAKind: { title: 'Big Shot', desc: 'Rolled a Four-of-a-kind.' },
-      fiveOfAKind: { title: 'Perfection', desc: 'Rolled a Five-of-a-kind.' },
-      sixOfAKind: { title: 'Diceomania', desc: 'Rolled a Six-of-a-kind.' }
+      score1000: { title: "Pilin' Up!", desc: 'Scored 1,000 points in a local/online game.' },
+      score10000: { title: "Rackin' Up!", desc: 'Scored 10,000 points in a local/online game.' },
+      score100000: { title: 'Hard Labour', desc: 'Scored 100,000 points in a local/online game.' },
+      score1000000: { title: 'Millionaire', desc: 'Scored 1,000,000 points in a local/online game.' },
+      score10000000: { title: 'Strike It Dice', desc: 'Scored 10,000,000 points in a local/online game.' },
+      strikeItDice: { title: 'Strike It Dice', desc: 'Scored 10,000,000 points in a local/online game.' },
+      fourOfAKind: { title: 'Big Shot', desc: 'Rolled a Four-of-a-kind combo.' },
+      fiveOfAKind: { title: 'Perfection', desc: 'Rolled a Five-of-a-kind combo.' },
+      sixOfAKind: { title: 'Diceomania', desc: 'Rolled a Six-of-a-kind combo.' },
+      addiction: { title: 'Addicted', desc: 'Played Scale Dice for 1 hour total.' },
+      diceaholic: { title: 'Diceaholic', desc: 'Played Scale Dice for 12 hours total.' },
+      funHouse: { title: 'Fun House', desc: 'Rolled 5 consecutive full houses or power houses in a game.' },
+      roundhouseStraight: { title: 'Roundhouse Straight', desc: 'Rolled 10 straights in total.' },
+      maximumPower: { title: 'Maximum Power', desc: 'Fully upgraded dice, economy and luck in a game.' }
     };
 
     this._achieveNotificationRunning = true;
@@ -213,18 +263,20 @@ class AchievementsManager {
 
       const key = notifs[idx];
       const item = meta[key] || { title: key, desc: '' };
-      const boxY = 820;
-      const boxW = 700;
-      const boxH = 70;
-      const x = 600;
+
+      // popup coordinates
+      const boxY = displayScene.cameras.main.height - 120;
+      const boxW = Math.min(800, displayScene.cameras.main.width - 120);
+      const boxH = 72;
+      const x = displayScene.cameras.main.centerX;
 
       let rect, title, desc;
       try {
-        rect = displayScene.add.rectangle(x, boxY + 40, boxW, boxH, 0x111111, 0.9).setDepth(1000).setAlpha(0);
+        rect = displayScene.add.rectangle(x, boxY + 40, boxW, boxH, 0x111111, 0.95).setDepth(1000).setAlpha(0);
         rect.setStrokeStyle(2, 0x66ff66, 1);
 
-        title = displayScene.add.text(x - boxW / 2 + 18, boxY + 19, item.title, { fontSize: 20, fontFamily: 'Orbitron, Arial', color: '#66ff66' }).setDepth(1001);
-        desc = displayScene.add.text(x - boxW / 2 + 18, boxY + 40, item.desc, { fontSize: 14, fontFamily: 'Orbitron, Arial', color: '#ffffff' }).setDepth(1001);
+        title = displayScene.add.text(x - boxW / 2 + 18, boxY + 12, item.title, { fontSize: 20, fontFamily: 'Orbitron, Arial', color: '#66ff66' }).setDepth(1001);
+        desc = displayScene.add.text(x - boxW / 2 + 18, boxY + 36, item.desc, { fontSize: 14, fontFamily: 'Orbitron, Arial', color: '#ffffff' }).setDepth(1001);
 
         displayScene.tweens.add({
           targets: [rect, title, desc],
@@ -241,7 +293,7 @@ class AchievementsManager {
         return;
       }
 
-      const hold = 1400;
+      const hold = 1500;
       try {
         displayScene.time.delayedCall(hold, () => {
           if (!displayScene || !displayScene.tweens) {
@@ -263,7 +315,7 @@ class AchievementsManager {
               try { title.destroy(); } catch (e) {}
               try { desc.destroy(); } catch (e) {}
               try {
-                displayScene.time.delayedCall(150, () => displayOne(idx + 1));
+                displayScene.time.delayedCall(130, () => displayOne(idx + 1));
               } catch (e) {
                 const remainder = notifs.slice(idx + 1);
                 this._notifications = remainder.concat(this._notifications);

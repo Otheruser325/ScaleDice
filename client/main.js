@@ -9,6 +9,7 @@ import LocalConfigScene from './scenes/LocalConfigScene.js';
 import LocalGameScene from './scenes/LocalGameScene.js';
 import LocalPostGameScene from './scenes/LocalPostGameScene.js';
 import OnlineMenuScene from './scenes/OnlineMenuScene.js';
+import ChallengesScene from './scenes/ChallengesScene.js';
 
 const config = {
     type: Phaser.AUTO,
@@ -18,6 +19,12 @@ const config = {
     backgroundColor: '#1f1f1f',
     dom: {
         createContainer: true
+    },
+    scale: {
+      mode: Phaser.Scale.FIT,
+      autoCenter: Phaser.Scale.CENTER_BOTH,
+      width: 1280,
+      height: 960
     },
     scene: [
         PreloadScene,
@@ -31,6 +38,7 @@ const config = {
         LocalGameScene,
 		LocalPostGameScene,
         OnlineMenuScene,
+        ChallengesScene
     ]
 };
 

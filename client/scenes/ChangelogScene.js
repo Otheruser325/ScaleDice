@@ -1,4 +1,5 @@
 import GlobalAudio from '../utils/AudioManager.js';
+import GlobalBackground from '../utils/BackgroundManager.js';
 
 export default class ChangelogScene extends Phaser.Scene {
   constructor() {
@@ -6,6 +7,8 @@ export default class ChangelogScene extends Phaser.Scene {
   }
 
   create() {
+	GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
+	
     const CENTER_X = 600;
     const VIEW_WIDTH = 320;
     const VIEW_TOP = 160;
@@ -101,9 +104,14 @@ export default class ChangelogScene extends Phaser.Scene {
       color: '#ff6666'
     })
       .setOrigin(0.5)
-      .setInteractive();
+      .setInteractive({ useHandCursor: true });
 
     backBtn.on('pointerdown', () => {
+      GlobalAudio.playButton(this);
+      this.scene.start('MenuScene');
+    });
+	
+	this.input.keyboard.on('keydown-ESC', () => {
       GlobalAudio.playButton(this);
       this.scene.start('MenuScene');
     });

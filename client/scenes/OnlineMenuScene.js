@@ -1,4 +1,5 @@
 import GlobalAudio from '../utils/AudioManager.js';
+import GlobalBackground from '../utils/BackgroundManager.js';
 
 export default class OnlineMenuScene extends Phaser.Scene {
     constructor() {
@@ -6,6 +7,8 @@ export default class OnlineMenuScene extends Phaser.Scene {
     }
 
     create() {
+	    GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
+		
         this.add.text(600, 80, 'Online Mode', { fontSize: 48, fontFamily: 'Orbitron, Arial' }).setOrigin(0.5);
 
         this.comingSoonText = this.add.text(600, 200, 'Coming soon...', { fontSize: 32, fontFamily: 'Orbitron, Arial' })
@@ -17,12 +20,16 @@ export default class OnlineMenuScene extends Phaser.Scene {
             color: '#ff6666'
         })
         .setOrigin(0.5)
-        .setInteractive();
+        .setInteractive({ useHandCursor: true });
 
         this.backBtn.on('pointerdown', () => {
-			if (this.popupOpen) return; 
             GlobalAudio.playButton(this);
-            this.scene.start('MenuScene');
+            this.scene.start('PlayModeScene');
+        });
+		
+		this.input.keyboard.on('keydown-ESC', () => {
+          GlobalAudio.playButton(this);
+          this.scene.start('PlayModeScene');
         });
     }
 }

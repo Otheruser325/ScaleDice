@@ -1,3 +1,5 @@
+import GlobalBackground from '../utils/BackgroundManager.js';
+
 export default class PreloadScene extends Phaser.Scene {
     constructor() {
         super('PreloadScene');
@@ -44,6 +46,8 @@ export default class PreloadScene extends Phaser.Scene {
             });
         });
 
+        GlobalBackground.createBackgroundPanel(this, { width: 920, height: 760, useImageIfAvailable: false });
+
         // ---- Assets ----
         this.load.audio('button', 'assets/audio/button.mp3');
         this.load.audio('dice', 'assets/audio/dice.mp3');
@@ -59,6 +63,8 @@ export default class PreloadScene extends Phaser.Scene {
 
         this.load.json('changelog', 'config/changelog.json');
 
+        this.load.image('bg', 'assets/bg/Background-floor.png');
+
         this.load.image('dice1', 'assets/dice/dice-six-faces-one.png');
         this.load.image('dice2', 'assets/dice/dice-six-faces-two.png');
         this.load.image('dice3', 'assets/dice/dice-six-faces-three.png');
@@ -66,13 +72,18 @@ export default class PreloadScene extends Phaser.Scene {
         this.load.image('dice5', 'assets/dice/dice-six-faces-five.png');
         this.load.image('dice6', 'assets/dice/dice-six-faces-six.png');
 
+        this.load.image('settingsIcon', 'assets/ui/settings.png');
+        this.load.image('achievementIcon', 'assets/ui/achievement.png');
+        this.load.image('helpIcon', 'assets/ui/help.png');
+        this.load.image('changelogIcon', 'assets/ui/changelog.png');
         this.load.image('playerIcon', 'assets/ui/player.png');
         this.load.image('botIcon', 'assets/ui/robot.png');
     }
 
     create() {
+		GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
+		
         const saved = JSON.parse(localStorage.getItem('scaleDice_settings')) || {};
-
         const defaults = {
             audio: true,
             music: true,
@@ -82,7 +93,6 @@ export default class PreloadScene extends Phaser.Scene {
         };
 
         const finalSettings = { ...defaults, ...saved };
-
         this.registry.set('settings', finalSettings);
     }
 }

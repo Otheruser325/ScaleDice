@@ -2,10 +2,15 @@ import { formatCompact } from './FormatManager.js';
 
 export default class UpgradeManager {
   constructor() {
-    this.comboLevels = {};   // e.g. { pair: 2, triple: 1 }
-    this.luckBonus = 0;      // additive luck bonus (0.2 per upgrade)
-    this.luckLevel = 0;      // 0..25
-    this.economyLevel = 0;   // 0..50
+    this.comboLevels = {};
+    this.luckBonus = 0;
+    this.luckLevel = 0;
+    this.economyLevel = 0;
+	this.bigUpgrades = new Set();
+    this.clairvoyanceChance = 0;
+    this.economyMultiplier = 1;
+    this.comboGlobalMultiplier = 1;
+    this.diceScoreMultiplier = 1;
   }
 
   // -------- Combo --------
@@ -127,4 +132,54 @@ export default class UpgradeManager {
       this.economyLevel++;
     }
   }
+  
+  // -------- Big Upgrades --------
+  getBigUpgradeCost(key) {
+    const costs = {
+      clairvoyance: 500,
+      stockExchange: 1000,
+      comboX: 2500,
+      masterPredict: 7500,
+      fixated: 30000
+    };
+    return costs[key] ?? Infinity;
+  }
+
+  hasBigUpgrade(key) {
+    return this.bigUpgrades.has(key);
+  }
+
+  canBuyBigUpgrade(score, key) {
+    return !this.hasBigUpgrade(key) && score >= this.getBigUpgradeCost(key);
+  }
+
+  buyBigUpgrade(key) {
+    if (this.hasBigUpgrade(key)) return false;
+    switch (key) {
+      case 'clairvoyance':
+        this.clairvoyanceChance = Math.max(this.clairvoyanceChance, 0.25);
+        break;
+      case 'masterPredict':
+        this.clairvoyanceChance = Math.max(this.clairvoyanceChance, 0.5);
+        break;
+      case 'stockExchange':
+        this.economyMultiplier = Math.max(this.economyMultiplier, 1.5);
+        break;
+      case 'comboX':
+        this.comboGlobalMultiplier = Math.max(this.comboGlobalMultiplier, 1.5);
+        break;
+      case 'fixated':
+        this.diceScoreMultiplier = Math.max(this.diceScoreMultiplier, 2);
+        break;
+      default:
+        return false;
+    }
+    this.bigUpgrades.add(key);
+    return true;
+  }
+
+  getClairvoyanceChance() { return this.clairvoyanceChance; }
+  getEconomyMultiplier() { return this.economyMultiplier; }
+  getComboGlobalMultiplier() { return this.comboGlobalMultiplier; }
+  getDiceScoreMultiplier() { return this.diceScoreMultiplier; }
 }

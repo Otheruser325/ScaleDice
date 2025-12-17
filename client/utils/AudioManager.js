@@ -9,6 +9,10 @@ class AudioManager {
     this._onCompleteRef = null;
     this._lastTrackKey = null;
     this._attachedSoundManager = null;
+
+    // Autoplay fallback handlers
+    this._onUserGestureAutoplay = null;
+    this._onVisibilityChange = null;
   }
 
   getSettings(scene) {
@@ -37,6 +41,63 @@ class AudioManager {
     this.music = null;
     this._attachedSoundManager = null;
     this._onCompleteRef = null;
+  }
+
+  // Try to attach visibility handler so we can resume AudioContext on visibilitychange
+  _attachVisibilityHandler() {
+    if (this._onVisibilityChange) return;
+    this._onVisibilityChange = () => {
+      try {
+        if (document.visibilityState === 'visible') {
+          // Try to resume the WebAudio context (Phaser uses WebAudio under the hood)
+          if (this._attachedSoundManager && this._attachedSoundManager.context && typeof this._attachedSoundManager.context.resume === 'function') {
+            this._attachedSoundManager.context.resume().catch(() => {});
+          }
+          // If we have a music object that isn't playing, try play (defensive)
+          if (this.music && !this.music.isPlaying) {
+            try { this.music.play(); } catch (e) {}
+          }
+        }
+      } catch (e) {}
+    };
+    document.addEventListener('visibilitychange', this._onVisibilityChange);
+  }
+
+  _detachVisibilityHandler() {
+    if (!this._onVisibilityChange) return;
+    document.removeEventListener('visibilitychange', this._onVisibilityChange);
+    this._onVisibilityChange = null;
+  }
+
+  _attachUserGestureForAutoplay(scene) {
+    if (this._onUserGestureAutoplay) return;
+
+    // handler references for removal
+    this._onUserGestureAutoplay = () => {
+      try {
+        // attempt to resume sound manager context first (Phaser uses AudioContext)
+        if (scene && scene.sound && scene.sound.context && typeof scene.sound.context.resume === 'function') {
+          scene.sound.context.resume().catch(() => {});
+        }
+        // then attempt to play the music again
+        this.playMusic(scene);
+      } catch (e) {}
+      // remove listener after first call
+      this._removeUserGestureListener();
+    };
+
+    // listen to several possible user gestures
+    ['pointerdown', 'touchstart', 'keydown'].forEach(evt => {
+      window.addEventListener(evt, this._onUserGestureAutoplay, { once: true, passive: true });
+    });
+  }
+
+  _removeUserGestureListener() {
+    if (!this._onUserGestureAutoplay) return;
+    ['pointerdown', 'touchstart', 'keydown'].forEach(evt => {
+      try { window.removeEventListener(evt, this._onUserGestureAutoplay); } catch (e) {}
+    });
+    this._onUserGestureAutoplay = null;
   }
 
   // ------------ CORE MUSIC PLAYBACK ------------
@@ -71,32 +132,70 @@ class AudioManager {
     this._lastTrackKey = trackKey;
 
     try {
-      // loop only when user explicitly chose manual-loop (jukeboxEnabled)
-      // BUT: if shuffleTrack is enabled, we never loop single track (we pick a random next on complete)
-      const loop = !!this.jukeboxEnabled && !settings.shuffleTrack;
+      // NEW: loop when shuffle is OFF (default), else do not loop and auto-advance on 'complete'
+      // If shuffleTrack is false => continuous loop of current track
+      // If shuffleTrack is true => pick next on complete
+      const loop = !settings.shuffleTrack;
 
       this.music = scene.sound.add(trackKey, { volume: 0.6, loop });
       this._attachedSoundManager = scene.sound;
 
+      // attach visibility handler to attempt resume when page becomes visible
+      this._attachVisibilityHandler();
+
+      // If not looping, set up the 'complete' handler so we auto-advance (shuffle vs sequential)
       if (!loop) {
-        // on complete -> select next track according to settings (shuffle vs sequential)
-        this._onCompleteRef = () => {
-          this.nextTrack(scene, true);
-        };
-        // Using `once` so the listener is removed and re-attached each time we create the track
-        this.music.once('complete', this._onCompleteRef);
+        // no complete handler required for continuous loop
+        this._onCompleteRef = null;
       } else {
-        // looping; no complete handler required
+        // (this branch is not expected now since loop === !shuffle; kept for safety)
         this._onCompleteRef = null;
       }
 
-      this.music.play();
+      // If we *did* choose non-looping behavior (shuffle on) then set complete handler
+      if (!loop) {
+        // actually we looped above -- this block is redundant by design
+      } else {
+        // redundant
+      }
+
+      // Instead: handle the shuffle ON case: if shuffle is true we used loop=false, so attach complete
+      if (settings.shuffleTrack) {
+        // ensure we are listening for completion to auto-advance
+        this._onCompleteRef = () => {
+          // auto true to indicate complete-fired advance
+          this.nextTrack(scene, true);
+        };
+        // use once to avoid duplicate listeners
+        this.music.once('complete', this._onCompleteRef);
+      } else {
+        this._onCompleteRef = null;
+      }
+
+      // Try to play - some browsers will reject this with NotAllowedError if no user gesture happened
+      const playResult = this.music.play();
+
+      // Phaser's Sound.play may not return a promise; we defensively check for a Promise-like return
+      if (playResult && typeof playResult.then === 'function') {
+        playResult.catch((err) => {
+          console.warn('[AudioManager] autoplay blocked, will resume on user gesture.', err);
+          this._attachUserGestureForAutoplay(scene);
+        });
+      } else {
+        setTimeout(() => {
+          try {
+            if (this.music && !this.music.isPlaying) {
+              this._attachUserGestureForAutoplay(scene);
+            }
+          } catch (e) {}
+        }, 200);
+      }
     } catch (e) {
       console.warn('[AudioManager] failed to play music:', e);
-      // advance pointer to avoid getting stuck, persist to settings
       this.currentTrack = (this.currentTrack + 1) % this.tracks.length;
       GlobalSettings.set(scene, 'trackIndex', this.currentTrack);
       this._cleanupMusic();
+      this._attachUserGestureForAutoplay(scene);
     }
   }
 
@@ -108,7 +207,7 @@ class AudioManager {
     GlobalSettings.set(scene, 'trackIndex', clamped);
     this.currentTrack = clamped;
 
-    // If user chose a track manually and shuffle is OFF, enable manual-loop (jukebox)
+    // Keep jukeboxEnabled behavior (manual selection implies user intent to keep it)
     const settings = this._settingsOrDefault(scene);
     this.jukeboxEnabled = !!(!settings.shuffleTrack);
 
@@ -128,13 +227,13 @@ class AudioManager {
   // nextTrack(auto) - if auto true, called from 'complete' event; shuffle setting changes behaviour
   nextTrack(scene, auto = false) {
     const settings = this._settingsOrDefault(scene);
-    if (auto) {
-      if (this.jukeboxEnabled && !settings.shuffleTrack) {
-        if (!this.music || !this.music.isPlaying) {
-          this.playMusic(scene);
-        }
-        return;
+
+    // If auto-called and shuffle is OFF (looping), then do nothing (we want continuous loop)
+    if (auto && !settings.shuffleTrack) {
+      if (!this.music || !this.music.isPlaying) {
+        this.playMusic(scene);
       }
+      return;
     }
 
     this._cleanupMusic();
@@ -170,6 +269,8 @@ class AudioManager {
 
   stopMusic() {
     this._cleanupMusic();
+    this._removeUserGestureListener();
+    this._detachVisibilityHandler();
   }
 
   // ------------ SFX ------------

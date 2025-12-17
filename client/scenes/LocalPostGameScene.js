@@ -1,4 +1,6 @@
+import GlobalAchievements from '../utils/AchievementsManager.js';
 import GlobalAudio from '../utils/AudioManager.js';
+import GlobalBackground from '../utils/BackgroundManager.js';
 import { formatCompact } from '../utils/FormatManager.js';
 
 export default class LocalPostGameScene extends Phaser.Scene {
@@ -7,6 +9,14 @@ export default class LocalPostGameScene extends Phaser.Scene {
     }
 
     create() {
+		try {
+          GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
+        } catch (e) {}
+        try {
+          GlobalAchievements.registerScene(this);
+          GlobalAchievements._maybeDisplayNotifications();
+        } catch (e) {}
+		
         const stats = this.registry.get("localPostGame") || {};
         const totalPlayers = stats.players || 0;
 
@@ -257,11 +267,16 @@ export default class LocalPostGameScene extends Phaser.Scene {
             fontSize: 26,
             fontFamily: 'Orbitron, Arial',
             color: "#ff6666"
-        }).setOrigin(0.5).setInteractive();
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
         back.on("pointerdown", () => {
             GlobalAudio.playButton(this);
             this.scene.start('MenuScene');
+        });
+		
+		this.input.keyboard.on('keydown-ESC', () => {
+          GlobalAudio.playButton(this);
+          this.scene.start('MenuScene');
         });
     }
 }
