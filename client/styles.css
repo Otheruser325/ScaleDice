@@ -1,19 +1,17 @@
 html, body {
-  height: 100%;
-  margin: 0;
-  background: #0f0f0f;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #111;
+    font-family: Orbitron, Arial;
 }
 
 #game-container {
-  position: fixed;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 canvas {
