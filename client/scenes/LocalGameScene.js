@@ -93,11 +93,11 @@ export default class LocalGameScene extends Phaser.Scene {
     ];
 	
 	this._bigUpgradeDefs = [
-      { key: 'clairvoyance', baseCost: 500 },
-      { key: 'stockExchange', baseCost: 1000 },
-      { key: 'comboX', baseCost: 2500 },
-      { key: 'masterPredict', baseCost: 7500 },
-      { key: 'fixated', baseCost: 30000 }
+      { key: 'clairvoyance', title: 'Clairvoyance', baseCost: 500 },
+      { key: 'stockExchange', title: 'Stock Exchange', baseCost: 1000 },
+      { key: 'comboX', title: 'Combo-X', baseCost: 2500 },
+      { key: 'masterPredict', title: 'Master Predict', baseCost: 7500 },
+      { key: 'fixated', title: 'Fixated', baseCost: 30000 }
     ];
   }
 
@@ -418,7 +418,6 @@ export default class LocalGameScene extends Phaser.Scene {
 
     const baseIncome = player.upgrades.getEconomyIncome();
     let ecoMult = player.upgrades.getEconomyMultiplier ? player.upgrades.getEconomyMultiplier() : 1;
-    if (player.upgrades.hasBigUpgrade && player.upgrades.hasBigUpgrade('stockExchange')) ecoMult *= 1.5;
     const income = Math.floor(baseIncome * ecoMult);
     if (income > 0) {
       player.score += income;
@@ -541,17 +540,25 @@ export default class LocalGameScene extends Phaser.Scene {
 	const tryBuyBigNow = (key) => {
       const def = this._bigUpgradeDefs.find(d => d.key === key);
       if (!def) return false;
-      if (player.upgrades.hasBigUpgrade && player.upgrades.hasBigUpgrade(key)) return false;
+
+      if (player.upgrades.hasBigUpgrade?.(key)) return false;
+
       const cost = Math.max(1, Math.floor(def.baseCost * (this.costMult || 1)));
       if (player.score < cost) return false;
+
       player.score -= cost;
-      const ok = player.upgrades.buyBigUpgrade ? player.upgrades.buyBigUpgrade(key) : false;
+
+      const ok = player.upgrades.buyBigUpgrade?.(key);
       if (ok) {
-        this._logActivity(`${player.name} bought ${key} for ${formatCompact(cost)}`);
-        try { this.refreshBigUpgradesPanel(); } catch (e) {}
-        try { this.updateTurnUI(); } catch (e) {}
+        this._logActivity(
+          `${player.name} bought ${def.title} for ${formatCompact(cost)}`
+        );
+
+        try { this.refreshBigUpgradesPanel(); } catch {}
+        try { this.updateTurnUI(); } catch {}
         return true;
       }
+
       player.score += cost;
       return false;
     };
