@@ -7,8 +7,7 @@ export default class ChangelogScene extends Phaser.Scene {
   }
 
   create() {
-	GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
-	
+    GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
     const CENTER_X = 600;
     const VIEW_WIDTH = 320;
     const VIEW_TOP = 160;
@@ -21,8 +20,8 @@ export default class ChangelogScene extends Phaser.Scene {
     }
 
     // Title
-    this.add.text(CENTER_X, 70, data.title ?? 'Changelog', {
-      fontSize: '52px',
+    this.add.text(CENTER_X, 70, data.title ?? 'CHANGELOG', {
+      fontSize: 48,
       fontFamily: 'Orbitron, Arial',
       color: '#ffffff'
     }).setOrigin(0.5);
@@ -98,7 +97,7 @@ export default class ChangelogScene extends Phaser.Scene {
       this.content.y = VIEW_TOP - this.scrollY;
     });
 
-    const backBtn = this.add.text(100, 80, '← Back', {
+    const backBtn = this.add.text(100, 80, '← BACK', {
       fontSize: 28,
       fontFamily: 'Orbitron, Arial',
       color: '#ff6666'

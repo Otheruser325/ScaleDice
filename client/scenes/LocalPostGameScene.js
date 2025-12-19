@@ -14,13 +14,12 @@ export default class LocalPostGameScene extends Phaser.Scene {
         } catch (e) {}
         try {
           GlobalAchievements.registerScene(this);
-          GlobalAchievements._maybeDisplayNotifications();
         } catch (e) {}
 		
         const stats = this.registry.get("localPostGame") || {};
         const totalPlayers = stats.players || 0;
 
-        this.add.text(600, 50, "Local Game — Results", {
+        this.add.text(600, 50, "LOCAL GAME - RESULTS", {
             fontSize: 40,
             fontFamily: 'Orbitron, Arial'
         }).setOrigin(0.5);
@@ -263,7 +262,7 @@ export default class LocalPostGameScene extends Phaser.Scene {
         }
 
         // -------- Back Button --------
-        const back = this.add.text(650, 800, "Return to Menu", {
+        const back = this.add.text(650, 800, "RETURN TO MENU", {
             fontSize: 26,
             fontFamily: 'Orbitron, Arial',
             color: "#ff6666"

@@ -1,3 +1,4 @@
+import GlobalAchievements from '../utils/AchievementsManager.js';
 import GlobalAudio from '../utils/AudioManager.js';
 import GlobalBackground from '../utils/BackgroundManager.js';
 
@@ -7,7 +8,12 @@ export default class OnlineMenuScene extends Phaser.Scene {
     }
 
     create() {
-	    GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
+	    try {
+          GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
+        } catch (e) {}
+        try {
+          GlobalAchievements.registerScene(this);
+        } catch (e) {}
 		
         this.add.text(600, 80, 'Online Mode', { fontSize: 48, fontFamily: 'Orbitron, Arial' }).setOrigin(0.5);
 

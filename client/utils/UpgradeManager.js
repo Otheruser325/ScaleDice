@@ -133,6 +133,12 @@ export default class UpgradeManager {
     }
   }
   
+  getHighStonksMultiplier(roundsDone = 0) {
+    if (!this.hasBigUpgrade('highStonks')) return 1;
+    const r = Math.max(0, roundsDone);
+    return 1 + 0.05 * r;
+  }
+  
   // -------- Big Upgrades --------
   getBigUpgradeCost(key) {
     const costs = {
@@ -140,7 +146,9 @@ export default class UpgradeManager {
       stockExchange: 1000,
       comboX: 2500,
       masterPredict: 7500,
-      fixated: 30000
+      fixated: 30000,
+	  highStonks: 60000,
+	  comboMasher: 150000
     };
     return costs[key] ?? Infinity;
   }
@@ -170,6 +178,10 @@ export default class UpgradeManager {
         break;
       case 'fixated':
         this.diceScoreMultiplier = Math.max(this.diceScoreMultiplier, 2);
+        break;
+	  case 'highStonks':
+        break;
+      case 'comboMasher':
         break;
       default:
         return false;

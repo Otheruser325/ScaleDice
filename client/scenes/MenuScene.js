@@ -1,5 +1,5 @@
-import GlobalAudio from '../utils/AudioManager.js';
 import GlobalAchievements from '../utils/AchievementsManager.js';
+import GlobalAudio from '../utils/AudioManager.js';
 import GlobalBackground from '../utils/BackgroundManager.js';
 
 export default class MenuScene extends Phaser.Scene {
@@ -8,13 +8,18 @@ export default class MenuScene extends Phaser.Scene {
   }
 
   create() {
-	GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
+	try {
+      GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
+    } catch (e) {}
+    try {
+      GlobalAchievements.registerScene(this);
+    } catch (e) {}
 	
     const centerX = this.cameras.main.centerX;
     const centerY = 140;
 
     this.add.text(centerX, 60, 'SCALE DICE', {
-      fontSize: 48,
+      fontSize: 60,
       fontFamily: 'Orbitron, Arial'
     }).setOrigin(0.5);
 
@@ -50,13 +55,13 @@ export default class MenuScene extends Phaser.Scene {
       return { img, txt };
     };
 
-    makeIcon(leftStartX, topY, 'settingsIcon', 'Settings', 'SettingsScene');
-    makeIcon(leftStartX + (iconSize + iconPadding), topY, 'achievementIcon', 'Achievements', 'AchievementsScene');
-    makeIcon(rightStartX - (iconSize + iconPadding), topY, 'helpIcon', 'Help', 'HelpScene');
-    makeIcon(rightStartX, topY, 'changelogIcon', 'Changelog', 'ChangelogScene');
+    makeIcon(leftStartX, topY, 'settingsIcon', 'SETTINGS', 'SettingsScene');
+    makeIcon(leftStartX + (iconSize + iconPadding), topY, 'achievementIcon', 'ACHIEVEMENTS', 'AchievementsScene');
+    makeIcon(rightStartX - (iconSize + iconPadding), topY, 'helpIcon', 'HELP', 'HelpScene');
+    makeIcon(rightStartX, topY, 'changelogIcon', 'CHANGELOG', 'ChangelogScene');
 
     const playBtnY = this.cameras.main.centerY;
-    const playBtn = this.add.text(centerX, playBtnY, '▶ Play', {
+    const playBtn = this.add.text(centerX, playBtnY, '▶ PLAY', {
       fontSize: 96,
       fontFamily: 'Orbitron, Arial',
       color: '#66ff66'
@@ -76,20 +81,15 @@ export default class MenuScene extends Phaser.Scene {
     });
 
     const footerY = this.cameras.main.height - 40;
-    const musicText = this.add.text(centerX, footerY, 'Music: On', { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#cccccc' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    const musicText = this.add.text(centerX, footerY, 'MUSIC: ON', { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#cccccc' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     musicText.on('pointerdown', () => {
       if (!GlobalAudio || typeof GlobalAudio.toggleMusic !== 'function') return;
       GlobalAudio.toggleMusic(this);
-      musicText.setText(GlobalAudio.isMusicOn ? 'Music: On' : 'Music: Off');
+      musicText.setText(GlobalAudio.isMusicOn ? 'MUSIC: ON' : 'MUSIC: OFF');
       GlobalAudio.playButton(this);
     });
 
     // Start / resume music safely
     if (GlobalAudio && typeof GlobalAudio.playMusic === 'function') GlobalAudio.playMusic(this);
-
-    // Initialise achievements manager
-    if (GlobalAchievements && typeof GlobalAchievements.registerScene === 'function') {
-      GlobalAchievements.registerScene(this);
-    }
   }
 }

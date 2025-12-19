@@ -1,3 +1,4 @@
+import GlobalAchievements from '../utils/AchievementsManager.js';
 import GlobalAudio from '../utils/AudioManager.js';
 import GlobalBackground from '../utils/BackgroundManager.js';
 
@@ -7,10 +8,15 @@ export default class PlayModeScene extends Phaser.Scene {
   }
 
   create() {
-	GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
+	try {
+      GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
+    } catch (e) {}
+    try {
+      GlobalAchievements.registerScene(this);
+    } catch (e) {}
 	
     const centerX = this.cameras.main.centerX;
-    this.add.text(centerX, 80, 'Play', { fontSize: 48, fontFamily: 'Orbitron, Arial' }).setOrigin(0.5);
+    this.add.text(centerX, 60, 'SCALE DICE', { fontSize: 60, fontFamily: 'Orbitron, Arial' }).setOrigin(0.5);
 
     const iconSize = 128;
     const iconPadding = 14;
@@ -44,10 +50,10 @@ export default class PlayModeScene extends Phaser.Scene {
       return { img, txt };
     };
 
-    makeIcon(leftStartX, topY, 'settingsIcon', 'Settings', 'SettingsScene');
-    makeIcon(leftStartX + (iconSize + iconPadding), topY, 'achievementIcon', 'Achievements', 'AchievementsScene');
-    makeIcon(rightStartX - (iconSize + iconPadding), topY, 'helpIcon', 'Help', 'HelpScene');
-    makeIcon(rightStartX, topY, 'changelogIcon', 'Changelog', 'ChangelogScene');
+    makeIcon(leftStartX, topY, 'settingsIcon', 'SETTINGS', 'SettingsScene');
+    makeIcon(leftStartX + (iconSize + iconPadding), topY, 'achievementIcon', 'ACHIEVEMENTS', 'AchievementsScene');
+    makeIcon(rightStartX - (iconSize + iconPadding), topY, 'helpIcon', 'HELP', 'HelpScene');
+    makeIcon(rightStartX, topY, 'changelogIcon', 'CHANGELOG', 'ChangelogScene');
 
     const makeWideBtn = (y, label, cb, opts = {}) => {
       const w = opts.width || 520;
@@ -60,11 +66,11 @@ export default class PlayModeScene extends Phaser.Scene {
       return { bg, txt };
     };
 
-    makeWideBtn(220, 'Local Play', () => this.scene.start('LocalConfigScene'));
-    makeWideBtn(300, 'Online Play', () => this.scene.start('OnlineMenuScene'));
-    makeWideBtn(380, 'Challenges', () => this.scene.start('ChallengesScene'));
+    makeWideBtn(220, 'LOCAL PLAY', () => this.scene.start('LocalConfigScene'));
+    makeWideBtn(300, 'ONLINE PLAY', () => this.scene.start('OnlineMenuScene'));
+    makeWideBtn(380, 'CHALLENGES', () => this.scene.start('ChallengesScene'));
     
-    const backBtn = this.add.text(centerX, 460, '← Back', { fontSize: 26, fontFamily: 'Orbitron, Arial', color: '#ff6666' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    const backBtn = this.add.text(centerX, 460, '← BACK', { fontSize: 26, fontFamily: 'Orbitron, Arial', color: '#ff6666' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     backBtn.on('pointerdown', () => { GlobalAudio.playButton(this); this.scene.start('MenuScene'); });
 	this.input.keyboard.on('keydown-ESC', () => {
       GlobalAudio.playButton(this);

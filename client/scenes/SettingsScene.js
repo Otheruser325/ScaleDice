@@ -10,8 +10,8 @@ export default class SettingsScene extends Phaser.Scene {
     create() {
 		GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
 		
-        this.add.text(600, 80, 'Settings', {
-            fontSize: 48,
+        this.add.text(600, 70, 'SETTINGS', {
+            fontSize: 60,
             fontFamily: 'Orbitron, Arial'
         }).setOrigin(0.5);
 
@@ -21,7 +21,7 @@ export default class SettingsScene extends Phaser.Scene {
         // ---------- AUDIO (SFX) TOGGLE ----------
         this.audioText = this.add.text(
                 600, 200,
-                `Sound Effects: ${settings.audio ? 'ON' : 'OFF'}`, {
+                `SOUND EFFECTS: ${settings.audio ? 'ON' : 'OFF'}`, {
                     fontSize: 32,
                     fontFamily: 'Orbitron, Arial'
                 }
@@ -34,14 +34,14 @@ export default class SettingsScene extends Phaser.Scene {
         this.audioText.on('pointerdown', () => {
             if (GlobalAudio) GlobalAudio.playButton(this);
             GlobalSettings.toggle(this, 'audio');
-            this.audioText.setText(`Sound Effects: ${GlobalSettings.get(this).audio ? 'ON' : 'OFF'}`);
+            this.audioText.setText(`SOUND EFFECTS: ${GlobalSettings.get(this).audio ? 'ON' : 'OFF'}`);
             GlobalSettings.save(this);
         });
 
         // ---------- MUSIC TOGGLE ----------
         this.musicText = this.add.text(
                 600, 260,
-                `Music: ${settings.music ? 'ON' : 'OFF'}`, {
+                `MUSIC: ${settings.music ? 'ON' : 'OFF'}`, {
                     fontSize: 32,
                     fontFamily: 'Orbitron, Arial'
                 }
@@ -54,14 +54,14 @@ export default class SettingsScene extends Phaser.Scene {
         this.musicText.on('pointerdown', () => {
             if (GlobalAudio) GlobalAudio.playButton(this);
             GlobalAudio.toggleMusic(this);
-            this.musicText.setText(`Music: ${GlobalSettings.get(this).music ? 'ON' : 'OFF'}`);
+            this.musicText.setText(`MUSIC: ${GlobalSettings.get(this).music ? 'ON' : 'OFF'}`);
             GlobalSettings.save(this);
         });
 
         // ---------- VISUAL EFFECTS (COMBO FX / SCREEN SHAKE / FLASH) ----------
         this.visualText = this.add.text(
                 600, 320,
-                `Visual Effects: ${settings.visualEffects ? 'ON' : 'OFF'}`, {
+                `VISUAL EFFECTS: ${settings.visualEffects ? 'ON' : 'OFF'}`, {
                     fontSize: 32,
                     fontFamily: 'Orbitron, Arial'
                 }
@@ -74,12 +74,12 @@ export default class SettingsScene extends Phaser.Scene {
         this.visualText.on('pointerdown', () => {
             if (GlobalAudio) GlobalAudio.playButton(this);
             GlobalSettings.toggle(this, 'visualEffects');
-            this.visualText.setText(`Visual Effects: ${GlobalSettings.get(this).visualEffects ? 'ON' : 'OFF'}`);
+            this.visualText.setText(`VISUAL EFFECTS: ${GlobalSettings.get(this).visualEffects ? 'ON' : 'OFF'}`);
             GlobalSettings.save(this);
         });
 
         // ---------- JUKEBOX HEADER ----------
-        this.jukeboxBtn = this.add.text(600, 380, 'Jukebox', {
+        this.jukeboxBtn = this.add.text(600, 380, 'JUKEBOX', {
                 fontSize: 28,
                 fontFamily: 'Orbitron, Arial',
                 color: '#ffff99'
@@ -95,7 +95,7 @@ export default class SettingsScene extends Phaser.Scene {
         });
 		
         // ---------- BACK BUTTON ----------
-        this.backBtn = this.add.text(600, 460, '← Back', {
+        this.backBtn = this.add.text(600, 460, '← BACK', {
                 fontSize: 28,
                 fontFamily: 'Orbitron, Arial',
                 color: '#ff6666'
@@ -163,7 +163,7 @@ export default class SettingsScene extends Phaser.Scene {
       });
 
       // ---- Track list ----
-      const trackNames = ['Dice League', 'Powerhouse', 'Energy'];
+      const trackNames = ['Dice League', 'Snake Theme', 'Gravitor Theme', 'Basilisk Theme'];
       const trackY = 250;
       const spacing = 70;
 
@@ -198,7 +198,7 @@ export default class SettingsScene extends Phaser.Scene {
       });
 
       // ---- Close button ----
-      const closeBtn = this.add.text(600, 360 + spacing, 'Close', {
+      const closeBtn = this.add.text(600, 360 + spacing, 'CLOSE', {
               fontSize: 28,
               fontFamily: 'Orbitron, Arial',
               color: '#ff8888'

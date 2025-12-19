@@ -1,4 +1,4 @@
-import GlobalAlerts from '../utils/AlertManager.js';
+import GlobalAchievements from '../utils/AchievementsManager.js';
 import GlobalAudio from '../utils/AudioManager.js';
 import GlobalBackground from '../utils/BackgroundManager.js';
 
@@ -13,7 +13,7 @@ export default class LocalConfigScene extends Phaser.Scene {
         this.costMultipliers = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4, 5];
         this.playerTeams = ['blue', 'red', 'blue', 'red', 'blue', 'red'];
         this.playerNames = ["Player 1", "Player 2", "Player 3", "Player 4", "Player 5", "Player 6"];
-        this.isAI = [false, true, true, true, true, true];
+        this.isAI = [false, false, false, false, false, false];
         this.aiDifficulty = ["Medium", "Medium", "Medium", "Medium", "Medium", "Medium"];
         this.aiDifficultyLevels = [{
                 name: "Baby",
@@ -39,17 +39,20 @@ export default class LocalConfigScene extends Phaser.Scene {
     }
 
     create() {
-        GlobalBackground.registerScene(this, {
-            key: 'bg',
-            useImageIfAvailable: true
-        });
-        this.add.text(600, 50, 'Local Game Setup', {
+        try {
+          GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
+        } catch (e) {}
+        try {
+          GlobalAchievements.registerScene(this);
+        } catch (e) {}
+		
+        this.add.text(600, 50, 'LOCAL GAME - SETUP', {
             fontSize: 40,
             fontFamily: 'Orbitron, Arial'
         }).setOrigin(0.5);
 
         // ---------------- Players ----------------
-        this.add.text(600, 110, 'Players', {
+        this.add.text(600, 110, 'PLAYERS', {
             fontSize: 28,
             fontFamily: 'Orbitron, Arial'
         }).setOrigin(0.5);
@@ -96,7 +99,7 @@ export default class LocalConfigScene extends Phaser.Scene {
                 });
 
             // AI toggle
-            this.add.text(310, y, this.isAI[i] ? 'Computer' : 'Human', {
+            this.add.text(310, y, this.isAI[i] ? 'COMPUTER' : 'HUMAN', {
                     fontSize: 22,
                     fontFamily: 'Orbitron, Arial',
                     color: this.isAI[i] ? '#ff5555' : '#ffffff'
@@ -151,13 +154,13 @@ export default class LocalConfigScene extends Phaser.Scene {
         }
 
         // ---------------- Rounds ----------------
-        this.add.text(600, 450, 'Rounds', {
+        this.add.text(600, 450, 'ROUNDS', {
             fontSize: 26,
             fontFamily: 'Orbitron, Arial'
         }).setOrigin(0.5);
 
-        [10, 20, 30, 40, 50].forEach((r, i) => {
-            this.add.text(450 + i * 80, 490, `${r}`, {
+        [10, 20, 30, 40, 50, 75, 100].forEach((r, i) => {
+            this.add.text(370 + i * 80, 490, `${r}`, {
                     fontSize: 24,
                     fontFamily: 'Orbitron, Arial',
                     color: r === this.selectedRounds ? '#ffff66' : '#ffffff'
@@ -169,12 +172,12 @@ export default class LocalConfigScene extends Phaser.Scene {
         });
 
         // ---------------- Rules ----------------
-        this.add.text(600, 550, 'Rules & Scaling', {
+        this.add.text(600, 550, 'RULES & SCALING', {
             fontSize: 26,
             fontFamily: 'Orbitron, Arial'
         }).setOrigin(0.5);
 
-        this.add.text(600, 590, `Teams: ${this.teamsEnabled ? 'ON' : 'OFF'}`, {
+        this.add.text(600, 590, `TEAMS: ${this.teamsEnabled ? 'ON' : 'OFF'}`, {
                 fontSize: 22,
                 fontFamily: 'Orbitron, Arial'
             })
@@ -187,7 +190,7 @@ export default class LocalConfigScene extends Phaser.Scene {
             });
 
         const mult = this.costMultipliers[this.costMultIndex];
-        this.add.text(600, 630, `Upgrade Cost Multiplier: x${mult}`, {
+        this.add.text(600, 630, `UPGRADE COST MULTIPLIER: x${mult}`, {
                 fontSize: 22,
                 fontFamily: 'Orbitron, Arial'
             })
@@ -223,7 +226,7 @@ export default class LocalConfigScene extends Phaser.Scene {
             });
 
         // Back
-        this.add.text(80, 800, '← Back', {
+        this.add.text(80, 800, '← BACK', {
                 fontSize: 24,
                 fontFamily: 'Orbitron, Arial',
                 color: '#ff6666'

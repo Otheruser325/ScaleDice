@@ -37,8 +37,8 @@ export default class LocalGameScene extends Phaser.Scene {
     this.waitingForResult = false;
     this.diceCosts = [10, 100, 500, 3000, 20000];
     this.teamScoreText = null;
-	
-	this.playerTints = [
+
+    this.playerTints = [
       0x66aaff,
       0xffdd66,
       0x66ff99,
@@ -60,8 +60,8 @@ export default class LocalGameScene extends Phaser.Scene {
       powerHouse: 0,
       sixOfAKind: 0
     }));
-	
-	this._consecutiveComboCounter = Array(this.playerCount).fill(0);
+
+    this._consecutiveComboCounter = Array(this.playerCount).fill(0);
     this.dice = new Dice();
 
     this.comboRequirements = {
@@ -91,13 +91,15 @@ export default class LocalGameScene extends Phaser.Scene {
       { key: 'powerHouse', req: 6 },
       { key: 'sixOfAKind', req: 6 }
     ];
-	
-	this._bigUpgradeDefs = [
+
+    this._bigUpgradeDefs = [
       { key: 'clairvoyance', title: 'Clairvoyance', baseCost: 500 },
       { key: 'stockExchange', title: 'Stock Exchange', baseCost: 1000 },
       { key: 'comboX', title: 'Combo-X', baseCost: 2500 },
       { key: 'masterPredict', title: 'Master Predict', baseCost: 7500 },
-      { key: 'fixated', title: 'Fixated', baseCost: 30000 }
+      { key: 'fixated', title: 'Fixated', baseCost: 30000 },
+	  { key: 'highStonks', title: 'High Stonks', baseCost: 60000 },
+      { key: 'comboMasher', title: 'Combo Masher', baseCost: 150000 }
     ];
   }
 
@@ -105,7 +107,7 @@ export default class LocalGameScene extends Phaser.Scene {
     this.headerText = this.add.text(600, 15, 'Scale Dice', { fontSize: 22, fontFamily: 'Orbitron, Arial', color: '#cccccc' }).setOrigin(0.5);
     this.roundText = this.add.text(600, 40, `Round ${this.currentRound} / ${this.maxRounds}`, { fontSize: 28, fontFamily: 'Orbitron, Arial' }).setOrigin(0.5);
     this.lastRollText = this.add.text(600, 72, '', { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ffffaa' }).setOrigin(0.5);
-	this.predictionText = this.add.text(600, 85, '', { fontSize: 16, fontFamily: 'Orbitron, Arial', color: '#88ff88' }).setOrigin(0.5);
+    this.predictionText = this.add.text(600, 85, '', { fontSize: 16, fontFamily: 'Orbitron, Arial', color: '#88ff88' }).setOrigin(0.5);
 
     this.turnText = this.add.text(600, 100, '', { fontSize: 24, fontFamily: 'Orbitron, Arial' }).setOrigin(0.5);
 
@@ -161,18 +163,12 @@ export default class LocalGameScene extends Phaser.Scene {
     });
 
     this.input.keyboard.on('keydown-C', (e) => {
-      const p = this.players[this.currentPlayerIndex];
-      if (!p || p.isAI) return;
       if (this.isRolling || this.waitingForResult) return;
-      if (this.currentPlayerIndex !== this.getLocalPlayerIndex()) return;
       this.toggleComboToolbar();
     });
-	
+
     this.input.keyboard.on('keydown-B', () => {
-      const p = this.players[this.currentPlayerIndex];
-      if (!p || p.isAI) return;
       if (this.isRolling || this.waitingForResult) return;
-      if (this.currentPlayerIndex !== this.getLocalPlayerIndex()) return;
       this.toggleBigUpgrades();
     });
 
@@ -186,28 +182,30 @@ export default class LocalGameScene extends Phaser.Scene {
     });
 
     this.comboPanelOpen = false;
+	this.bigUpgradesOpen = false;
+	this.comboToolbarContainer = null;
+    this.bigUpgradesToolbarContainer = null;
     this.comboToolbar = [];
     this.createComboToolbar();
     this.createPlayerBar();
     this.addBackButton();
     this.updateTurnUI();
-	this.createHistoryLog();
-	this.createBigUpgradesPanel();
-	this.bigUpgradesOpen = false;
-    this.bigUpgradesPanel.container.setVisible(false);
-    this.bigUpgradesPanel.panelBg.setVisible(false);
-    this.bigUpgradesPanel.title.setVisible(false);
-	try {
+    this.createHistoryLog();
+    this.createBigUpgradesPanelToolbar();
+    try {
       GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
     } catch (e) {}
     try {
       GlobalAchievements.registerScene(this);
-      GlobalAchievements._maybeDisplayNotifications();
     } catch (e) {}
 
-    this._sessionStartTs = Date.now();
+    try {
+      if (this.players.some(p => !p.isAI)) {
+        GlobalAchievements.maybeUnlock('firstPlay');
+      }
+    } catch (e) {}
   }
-  
+
   getLocalPlayerIndex() {
     return this.currentPlayerIndex;
   }
@@ -220,47 +218,44 @@ export default class LocalGameScene extends Phaser.Scene {
   }
 
   createComboToolbar() {
-	if (this.comboToggleBtn) {
-      try { this.comboToggleBtn.destroy(); } catch (e) {}
-      this.comboToggleBtn = null;
+    if (this.comboToolbarContainer) {
+      try { this.comboToolbarContainer.destroy(true); } catch (e) {}
+      this.comboToolbarContainer = null;
     }
-	
+    this.comboToolbar = [];
+
+    const leftPad = Math.max(16, Math.floor(this.scale.width * 0.02));
+    const panelWidth = 260;
+    const hiddenX = leftPad - panelWidth - 20;
+    const baseX = leftPad;
+    const startY = 120;
+
+    this.comboToolbarContainer = this.add.container(baseX, 0).setDepth(1002);
+    this.comboToolbarContainer.x = hiddenX;
+
     const player = this.players[this.currentPlayerIndex];
     this.comboKeys = this.getAvailableComboKeysForPlayer(player);
 
-    const startY = 140;
-    const baseX = 40;
-    const hiddenX = -220;
-
-    if (Array.isArray(this.comboToolbar) && this.comboToolbar.length) {
-      this.comboToolbar.forEach(c => Object.values(c.ui).forEach(o => o?.destroy?.()));
-      this.comboToolbar = [];
-    }
-
-    this.comboToggleBtn = this.add.text(hiddenX + 20, 120, '▶', { fontSize: 20, fontFamily: 'Orbitron, Arial', color: '#ffffff' })
-      .setOrigin(0, 0.5)
-      .setInteractive()
-      .on('pointerdown', () => this.toggleComboToolbar());
-
     this.comboKeys.forEach((key, idx) => {
       const y = startY + idx * 56;
+      const rowBg = this.add.rectangle(0, y, panelWidth, 48, 0x0b0b0b, 0.92).setOrigin(0, 0.5);
+      rowBg.setStrokeStyle(1, 0x222222);
       const labelText = COMBO_DISPLAY_NAMES[key] ? COMBO_DISPLAY_NAMES[key] : key.toUpperCase();
-      const label = this.add.text(hiddenX + 40, y, labelText, { fontSize: 16, fontFamily: 'Orbitron, Arial', color: '#ffffff' }).setOrigin(0, 0.5);
-      const lvlText = this.add.text(hiddenX + 150, y, 'Lv 0', { fontSize: 14, fontFamily: 'Orbitron, Arial', color: '#ffff88' }).setOrigin(0, 0.5);
-      const btn = this.add.text(hiddenX + 280, y, 'UPGRADE', { fontSize: 14, fontFamily: 'Orbitron, Arial', color: '#66ff66' }).setOrigin(0, 0.5).setInteractive();
+      const label = this.add.text(12, y - 10, labelText, { fontSize: 16, fontFamily: 'Orbitron, Arial', color: '#ffffff' }).setOrigin(0, 0);
+      const lvlText = this.add.text(12, y + 12, 'Lv 0', { fontSize: 14, fontFamily: 'Orbitron, Arial', color: '#ffff88' }).setOrigin(0, 0);
+      const btn = this.add.text(panelWidth - 86, y - 8, 'UPGRADE', { fontSize: 14, fontFamily: 'Orbitron, Arial', color: '#66ff66' })
+        .setOrigin(0, 0).setInteractive({ useHandCursor: true });
 
+      this.comboToolbarContainer.add([rowBg, label, lvlText, btn]);
       this.comboToolbar.push({
         key,
-        ui: { label, lvlText, btn },
-        baseX,
-        hiddenX,
-        y
+        ui: { rowBg, label, lvlText, btn },
+        layout: { x: 0, y }
       });
 
       btn.on('pointerdown', () => {
         if (this.currentPlayerIndex !== this.getLocalPlayerIndex()) return;
         const p = this.players[this.currentPlayerIndex];
-
         if (p.isAI) return;
         if (this.isRolling || this.waitingForResult) return;
 
@@ -274,55 +269,53 @@ export default class LocalGameScene extends Phaser.Scene {
           p.score -= cost;
           p.upgrades.upgradeCombo(key);
           GlobalAudio.playButton(this);
-		  this._logActivity(`${p.name} upgraded ${COMBO_DISPLAY_NAMES[key] || key} → Lv ${p.upgrades.getComboLevel(key)}`);
+          this._logActivity(`${p.name} upgraded ${COMBO_DISPLAY_NAMES[key] || key} → Lv ${p.upgrades.getComboLevel(key)}`);
           this.updateTurnUI();
         }
       });
     });
 
+    if (this.comboToggleBtn) try { this.comboToggleBtn.destroy(); } catch(e){}
+    this.comboToggleBtn = this.add.text(leftPad - 18, startY - 24, '▶', { fontSize: 20, fontFamily: 'Orbitron, Arial', color: '#ffffff' })
+      .setOrigin(0.5).setDepth(1003).setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => this.toggleComboToolbar());
+
     this.comboPanelOpen = false;
-    this.comboToolbar.forEach(entry => {
-      entry.ui.label.x = entry.hiddenX + 40;
-      entry.ui.lvlText.x = entry.hiddenX + 120;
-      entry.ui.btn.x = entry.hiddenX + 240;
-    });
-    this.comboToggleBtn.x = hiddenX + 20;
+    this.comboToggleBtn.x = leftPad - 16;
+    this.comboToolbarContainer.x = hiddenX;
   }
 
   toggleComboToolbar() {
-    const openX = 40;
-    const hiddenX = -220;
+    if (this.bigUpgradesOpen) this.closeBigUpgradesInstant();
+
+    const leftPad = Math.max(16, Math.floor(this.scale.width * 0.02));
+    const panelWidth = 260;
+    const hiddenX = leftPad - panelWidth - 20;
+    const openX = leftPad;
     this.comboPanelOpen = !this.comboPanelOpen;
 
-    this.comboToggleBtn.setText(this.comboPanelOpen ? '◀' : '▶');
-
-    this.comboToolbar.forEach(entry => {
-      const toXBase = this.comboPanelOpen ? (entry.baseX) : entry.hiddenX;
-      const labelTargetX = toXBase + 40;
-      const lvlTargetX = toXBase + 130;
-      const btnTargetX = toXBase + 240;
-
-      this.tweens.add({ targets: entry.ui.label, x: labelTargetX, duration: 300, ease: 'Cubic.easeOut' });
-      this.tweens.add({ targets: entry.ui.lvlText, x: lvlTargetX, duration: 320, ease: 'Cubic.easeOut' });
-      this.tweens.add({ targets: entry.ui.btn, x: btnTargetX, duration: 340, ease: 'Cubic.easeOut' });
+    this.tweens.killTweensOf(this.comboToolbarContainer);
+    this.tweens.add({
+      targets: this.comboToolbarContainer,
+      x: this.comboPanelOpen ? openX : hiddenX,
+      duration: 320,
+      ease: 'Cubic.easeOut'
     });
 
-    const toggleTo = this.comboPanelOpen ? (40 - 20) : (hiddenX + 20);
-    this.tweens.add({ targets: this.comboToggleBtn, x: toggleTo, duration: 300, ease: 'Cubic.easeOut' });
+    try { this.comboToggleBtn.setText(this.comboPanelOpen ? '◀' : '▶'); } catch(e){}
   }
 
   refreshComboToolbarForPlayer(player) {
-    this.comboToolbar.forEach(entry => {
+    (this.comboToolbar || []).forEach(entry => {
       const key = entry.key;
-      const lvl = player.upgrades.getComboLevel(key);
-      const comboXMult = (player.upgrades.hasBigUpgrade && player.upgrades.hasBigUpgrade('comboX')) ? 1.5 : 1;
-      const upgradeMult = (player.upgrades.getComboMultiplier(key) || 1) * comboXMult;
+      const lvl = (player.upgrades.getComboLevel && player.upgrades.getComboLevel(key)) || 0;
+      const upgradeMult = (player.upgrades.getComboMultiplier && player.upgrades.getComboMultiplier(key)) || 1;
       const baseMult = COMBO_BASE_MULT[key] || 1;
       const totalMult = baseMult * upgradeMult;
 
       entry.ui.lvlText.setText(`Lv ${lvl} (x${totalMult.toFixed(1)})`);
 
-      const cost = Math.floor(player.upgrades.getComboCost(key) * this.costMult);
+      const cost = Math.floor((player.upgrades.getComboCost && player.upgrades.getComboCost(key) || 0) * this.costMult);
       entry.ui.btn.setText(cost ? `UPGRADE (${formatCompact(cost)})` : 'UPGRADE');
 
       const req = this.comboRequirements[key] ?? 2;
@@ -339,20 +332,164 @@ export default class LocalGameScene extends Phaser.Scene {
       }
     });
   }
-  
+
   closeComboToolbarInstant() {
-    if (!Array.isArray(this.comboToolbar)) return;
-    this.comboToolbar.forEach(entry => {
-      try {
-        entry.ui.label.x = entry.hiddenX + 40;
-        entry.ui.lvlText.x = entry.hiddenX + 120;
-        entry.ui.btn.x = entry.hiddenX + 240;
-      } catch(e){}
-    });
-    if (this.comboToggleBtn) {
-      try { this.comboToggleBtn.setText('▶'); this.comboToggleBtn.x = -220 + 20; } catch(e){}
+    if (this.comboToolbarContainer) {
+      const leftPad = Math.max(16, Math.floor(this.scale.width * 0.02));
+      const panelWidth = 260;
+      const hiddenX = leftPad - panelWidth - 20;
+      try { this.comboToolbarContainer.x = hiddenX; } catch (e) {}
     }
+    try { if (this.comboToggleBtn) { this.comboToggleBtn.setText('▶'); } } catch(e){}
     this.comboPanelOpen = false;
+  }
+
+  createBigUpgradesPanelToolbar() {
+    if (this.bigUpgradesToolbarContainer) {
+      try { this.bigUpgradesToolbarContainer.destroy(true); } catch (e) {}
+      this.bigUpgradesToolbarContainer = null;
+    }
+
+    const leftPad = Math.max(16, Math.floor(this.scale.width * 0.02));
+    const comboWidth = 260;
+    const gap = 12;
+    const panelWidth = 320;
+    const startX = leftPad + comboWidth + gap;
+    const startY = 120;
+
+    this.bigUpgradesToolbarContainer = this.add.container(startX, 0).setDepth(1002);
+    this.bigUpgradesToolbarContainer.x = startX - 40;
+    this.bigUpgradesToolbarContainer.setVisible(false);
+
+    const items = [
+      { key: 'clairvoyance', title: 'Clairvoyance', desc: '25% chance to predict your next roll.', baseCost: 500 },
+      { key: 'stockExchange', title: 'Stock Exchange', desc: 'Economy +50% income.', baseCost: 1000 },
+      { key: 'comboX', title: 'Combo-X', desc: 'Combo multipliers +50%.', baseCost: 2500 },
+      { key: 'masterPredict', title: 'Master Predict', desc: 'Make clairvoyance 50% (requires Clairvoyance).', baseCost: 7500 },
+      { key: 'fixated', title: 'Fixated', desc: 'Dice-earned scores ×2.', baseCost: 30000 },
+      { key: 'highStonks', title: 'High Stonks', desc: 'Economy +5% per completed round.', baseCost: 60000 },
+      { key: 'comboMasher', title: 'Combo Masher', desc: '+20% combo per consecutive same-type combo.', baseCost: 150000 }
+    ];
+
+    this.bigUpgradesToolbar = [];
+
+    let y = startY;
+    items.forEach(it => {
+      const rowBg = this.add.rectangle(0, y, panelWidth, 56, 0x0b0b0b, 0.92).setOrigin(0, 0.5);
+      rowBg.setStrokeStyle(1, 0x222222);
+      const title = this.add.text(8, y - 12, it.title, { fontSize: 14, fontFamily: 'Orbitron, Arial', color: '#ffffff' }).setOrigin(0, 0);
+      const desc = this.add.text(8, y + 6, it.desc, { fontSize: 11, fontFamily: 'Orbitron, Arial', color: '#cccccc', wordWrap: { width: panelWidth - 120 } }).setOrigin(0, 0);
+      const buyBtn = this.add.text(panelWidth - 96, y - 8, `BUY ${formatCompact(it.baseCost)}`, { fontSize: 14, fontFamily: 'Orbitron, Arial', color: '#66ff66' })
+        .setOrigin(0, 0).setInteractive({ useHandCursor: true });
+
+      buyBtn.on('pointerdown', () => {
+        this.attemptBuyBigUpgrade(it.key, it.title, it.baseCost);
+      });
+
+      this.bigUpgradesToolbarContainer.add([rowBg, title, desc, buyBtn]);
+      this.bigUpgradesToolbar.push({ key: it.key, rowBg, title, desc, buyBtn, baseCost: it.baseCost });
+      y += 64;
+    });
+
+    if (this.bigToggleBtn) try { this.bigToggleBtn.destroy(); } catch(e){}
+    this.bigToggleBtn = this.add.text(startX - 18, startY - 24, '▶', { fontSize: 20, fontFamily: 'Orbitron, Arial', color: '#ffffff' })
+      .setOrigin(0.5).setDepth(1003).setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => this.toggleBigUpgrades());
+
+    this.bigUpgradesOpen = false;
+  }
+
+  toggleBigUpgrades() {
+    if (this.comboPanelOpen) this.closeComboToolbarInstant();
+
+    this.bigUpgradesOpen = !this.bigUpgradesOpen;
+
+    try {
+      this.bigUpgradesToolbarContainer.setVisible(this.bigUpgradesOpen);
+      this.tweens.killTweensOf(this.bigUpgradesToolbarContainer);
+      this.tweens.add({
+        targets: this.bigUpgradesToolbarContainer,
+        x: this.bigUpgradesOpen ? this.bigUpgradesToolbarContainer.x + 40 : this.bigUpgradesToolbarContainer.x - 40,
+        duration: 260,
+        ease: 'Cubic.easeOut'
+      });
+      this.bigToggleBtn.setText(this.bigUpgradesOpen ? '◀' : '▶');
+    } catch (e) {}
+    if (this.bigUpgradesOpen) this.refreshBigUpgradesPanel();
+  }
+
+  closeBigUpgradesInstant() {
+    try {
+      this.bigUpgradesToolbarContainer.setVisible(false);
+      this.bigToggleBtn.setText('▶');
+    } catch (e) {}
+    this.bigUpgradesOpen = false;
+  }
+
+  refreshBigUpgradesPanel() {
+    if (!this.bigUpgradesToolbar) return;
+    const player = this.players[this.currentPlayerIndex];
+    const isActiveHuman = player && !player.isAI && this.currentPlayerIndex === this.getLocalPlayerIndex();
+
+    this.bigUpgradesToolbar.forEach(entry => {
+      const scaled = Math.max(1, Math.floor(entry.baseCost * (this.costMult || 1)));
+      entry.buyBtn.setText(`BUY ${formatCompact(scaled)}`);
+
+      const purchased = player.upgrades.hasBigUpgrade ? player.upgrades.hasBigUpgrade(entry.key) : false;
+
+      if (purchased) {
+        entry.buyBtn.disableInteractive?.();
+        entry.buyBtn.setStyle({ color: '#666666' });
+        entry.title.setStyle?.({ color: '#99ff99' });
+      } else {
+        const canBuy = isActiveHuman && !this.isRolling && !this.waitingForResult && player.score >= scaled;
+        if (!canBuy) {
+          entry.buyBtn.disableInteractive?.();
+          entry.buyBtn.setStyle({ color: '#555555' });
+        } else {
+          entry.buyBtn.setInteractive?.({ useHandCursor: true });
+          entry.buyBtn.setStyle({ color: '#66ff66' });
+        }
+        entry.title.setStyle?.({ color: '#ffffff' });
+      }
+    });
+  }
+
+  attemptBuyBigUpgrade(key, title, baseCost) {
+    const player = this.players[this.currentPlayerIndex];
+    if (!player) return;
+    if (this.currentPlayerIndex !== this.getLocalPlayerIndex()) {
+      this._logActivity(`${player.name} cannot buy upgrades when it's not their turn`);
+      return;
+    }
+    if (player.isAI) return;
+    if (this.isRolling || this.waitingForResult) {
+      this._logActivity(`${player.name} cannot buy during a roll`);
+      return;
+    }
+
+    const scaledCost = Math.max(1, Math.floor((baseCost || 0) * (this.costMult || 1)));
+
+    if (player.upgrades.hasBigUpgrade && player.upgrades.hasBigUpgrade(key)) {
+      this._logActivity(`${player.name} already owns ${title}`);
+      return;
+    }
+
+    if (player.score < scaledCost) {
+      this._logActivity(`${player.name} cannot afford ${title} (${formatCompact(scaledCost)})`);
+      return;
+    }
+
+    player.score -= scaledCost;
+    const ok = player.upgrades.buyBigUpgrade ? player.upgrades.buyBigUpgrade(key) : false;
+    if (ok) {
+      GlobalAudio.playButton(this);
+      this._logActivity(`${player.name} bought ${title} for ${formatCompact(scaledCost)}`);
+      this.updateTurnUI();
+      this.refreshBigUpgradesPanel();
+    } else {
+      player.score += scaledCost;
+    }
   }
 
   createPlayerBar() {
@@ -390,7 +527,7 @@ export default class LocalGameScene extends Phaser.Scene {
       ui.dice?.setText(`🎲 ${p.diceUnlocked}`);
       const effective = Math.min(p.luck + p.upgrades.getLuckBonus(), 6);
       ui.luck?.setText(`🍀 x${effective.toFixed(1)}`);
-      const incomeVal = Math.floor(p.upgrades.getEconomyIncome() * ((p.upgrades.hasBigUpgrade && p.upgrades.hasBigUpgrade('stockExchange')) ? 1.5 : 1));
+      const incomeVal = Math.floor(p.upgrades.getEconomyIncome() * ((p.upgrades.hasBigUpgrade && p.upgrades.hasBigUpgrade('stockExchange')) ? 1.5 : 1) * (p.upgrades.hasBigUpgrade && p.upgrades.hasBigUpgrade('highStonks') ? p.upgrades.getHighStonksMultiplier(this.currentRound - 1) : 1));
       ui.income?.setText(incomeVal > 0 ? `💰 +${formatCompact(incomeVal)}/turn` : '');
       ui.ring?.setVisible(i === this.currentPlayerIndex);
       const isActive = i === this.currentPlayerIndex;
@@ -406,18 +543,20 @@ export default class LocalGameScene extends Phaser.Scene {
       ui.ring.setVisible(true);
     });
   }
-  
+
   startTurn(player) {
     if (this._lastTurnGivenRoundFor[this.currentPlayerIndex] === this.currentRound) return;
-	
-	try {
+
+    try {
       this._logActivity(`${player.name}'s turn started`);
     } catch (e) {}
-	
+
     this._lastTurnGivenRoundFor[this.currentPlayerIndex] = this.currentRound;
 
     const baseIncome = player.upgrades.getEconomyIncome();
     let ecoMult = player.upgrades.getEconomyMultiplier ? player.upgrades.getEconomyMultiplier() : 1;
+    ecoMult *= (player.upgrades.getHighStonksMultiplier ? player.upgrades.getHighStonksMultiplier(this.currentRound - 1) : 1);
+
     const income = Math.floor(baseIncome * ecoMult);
     if (income > 0) {
       player.score += income;
@@ -429,11 +568,12 @@ export default class LocalGameScene extends Phaser.Scene {
         duration: 900,
         onComplete: () => ecoText.destroy()
       });
-	  this._logActivity(`${player.name} received ${formatCompact(income)} income`);
+      this._logActivity(`${player.name} received ${formatCompact(income)} income`);
     }
 
     if (this.currentRound >= this.maxRounds - 4 && this._isPlayerBehind(player)) {
-      const boost = Math.floor((this.maxRounds - this.currentRound + 1) * 50);
+      const highestOpponent = Math.max(...this.players.filter(p => p !== player).map(p => p.score || 0));
+      const boost = Math.floor((this.maxRounds - this.currentRound + 1) * 50 + Math.floor(highestOpponent * 0.2));
       player.score += boost;
       const boostText = this.add.text(760, 56, `Energy +${formatCompact(boost)}`, { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ffdd66' }).setOrigin(0.5);
       this.tweens.add({
@@ -443,7 +583,7 @@ export default class LocalGameScene extends Phaser.Scene {
         duration: 1100,
         onComplete: () => boostText.destroy()
       });
-	  this._logActivity(`${player.name} received a big boost (${formatCompact(boost)}). Go catch 'em!`);
+      this._logActivity(`${player.name} received a big boost (${formatCompact(boost)}). Go catch 'em!`);
     }
   }
 
@@ -452,7 +592,7 @@ export default class LocalGameScene extends Phaser.Scene {
     const map = { Baby: 0.5, Easy: 0.75, Medium: 1, Hard: 1.5, Nightmare: 2 };
     return map[difficulty] ?? 1;
   }
-  
+
   _shouldBotSkipCombo(player, key) {
     const dice = player.diceUnlocked;
     const isNightmare = player.difficulty === 'Nightmare';
@@ -481,11 +621,26 @@ export default class LocalGameScene extends Phaser.Scene {
     // ensure it's still their turn and nothing is mid-roll
     if (this.currentPlayerIndex !== playerIdx || this.isRolling || this.waitingForResult) return;
 
+    // DO NOT perform upgrades on last turn
+    if (this.currentRound >= this.maxRounds) {
+      this.handleRoll();
+      return;
+    }
+
     const diceCost = this.diceCosts[player.diceUnlocked - 1];
     const scaledDiceCost = Math.floor((diceCost || Infinity) * this.costMult);
     const expectedBase = player.diceUnlocked * 3.5;
 
     let availableComboKeys = this.getAvailableComboKeysForPlayer(player);
+
+    const totalComboLevels = (() => {
+      try {
+        return this.comboMeta.reduce((sum, c) => {
+          const lvl = (player.upgrades.getComboLevel && player.upgrades.getComboLevel(c.key)) || 0;
+          return sum + lvl;
+        }, 0);
+      } catch (e) { return 0; }
+    })();
 
     const pickBestComboROI = () => {
       let best = null;
@@ -536,8 +691,8 @@ export default class LocalGameScene extends Phaser.Scene {
       if (player.score < cost) return false;
       return this.buyCombo(key, true);
     };
-	
-	const tryBuyBigNow = (key) => {
+
+    const tryBuyBigNow = (key) => {
       const def = this._bigUpgradeDefs.find(d => d.key === key);
       if (!def) return false;
 
@@ -546,8 +701,10 @@ export default class LocalGameScene extends Phaser.Scene {
       const cost = Math.max(1, Math.floor(def.baseCost * (this.costMult || 1)));
       if (player.score < cost) return false;
 
-      player.score -= cost;
+      const allowBigBuy = (player.difficulty === 'Hard' || player.difficulty === 'Nightmare') || ['clairvoyance','stockExchange','comboX','masterPredict','fixated'].includes(key);
+      if (!allowBigBuy) return false;
 
+      player.score -= cost;
       const ok = player.upgrades.buyBigUpgrade?.(key);
       if (ok) {
         this._logActivity(
@@ -562,22 +719,22 @@ export default class LocalGameScene extends Phaser.Scene {
       player.score += cost;
       return false;
     };
-	
-	const bigPriority = ['clairvoyance','stockExchange','comboX','masterPredict','fixated'];
 
-    // DECISION TREE (same priorities but immediate actions & confirmation)
+    const bigPriority = ['clairvoyance','stockExchange','comboX','masterPredict','fixated','highStonks','comboMasher'];
+
+    // DECISION TREE
 
     // Hard / Nightmare bots: prefer dice early, then economy, then luck, then combos (ROI)
     if (player.difficulty === 'Hard' || player.difficulty === 'Nightmare') {
       availableComboKeys = availableComboKeys.filter(
         key => !this._shouldBotSkipCombo(player, key)
       );
-	  
+
       if (diceCost && player.score >= scaledDiceCost) {
         if (tryBuyDiceNow()) return;
       }
-	  
-	  for (let k of bigPriority) {
+
+      for (let k of bigPriority) {
         if (tryBuyBigNow(k)) return;
       }
 
@@ -585,8 +742,10 @@ export default class LocalGameScene extends Phaser.Scene {
 
       if (tryBuyLuckNow()) return;
 
-      const best = pickBestComboROI();
-      if (best && tryBuyComboNow(best.key)) return;
+      if (totalComboLevels < 30) {
+        const best = pickBestComboROI();
+        if (best && tryBuyComboNow(best.key)) return;
+      }
 
       if (diceCost && player.score >= scaledDiceCost) {
         if (tryBuyDiceNow()) return;
@@ -601,12 +760,12 @@ export default class LocalGameScene extends Phaser.Scene {
       if (diceCost && player.score >= scaledDiceCost) {
         if (tryBuyDiceNow()) return;
       }
-	  
-	  for (let k of bigPriority) {
+
+      for (let k of ['clairvoyance','stockExchange','comboX','masterPredict','fixated']) {
         if (tryBuyBigNow(k)) return;
       }
-	  
-	  if (tryBuyEconomyNow()) return;
+
+      if (tryBuyEconomyNow()) return;
 
       if (Math.random() < 0.25) {
         if (tryBuyLuckNow()) return;
@@ -616,6 +775,7 @@ export default class LocalGameScene extends Phaser.Scene {
       for (let k of mediumPriority) {
         const req = this.comboRequirements[k] ?? 2;
         if (player.diceUnlocked < req) continue;
+        if (totalComboLevels >= 30) continue;
         if (tryBuyComboNow(k)) return;
       }
 
@@ -638,7 +798,7 @@ export default class LocalGameScene extends Phaser.Scene {
       if (Math.random() < 0.2) {
         if (tryBuyLuckNow()) return;
       }
-	  
+
       const easyBigs = ['clairvoyance','stockExchange','comboX'];
       for (let k of easyBigs) {
         if (tryBuyBigNow(k)) return;
@@ -664,8 +824,8 @@ export default class LocalGameScene extends Phaser.Scene {
       if (Math.random() < 0.15) {
         if (tryBuyLuckNow()) return;
       }
-	  
-	  const babyBigs = ['clairvoyance','stockExchange','comboX'];
+
+      const babyBigs = ['clairvoyance','stockExchange','comboX'];
       for (let k of babyBigs) {
         if (tryBuyBigNow(k)) return;
       }
@@ -678,160 +838,203 @@ export default class LocalGameScene extends Phaser.Scene {
   }
 
   async handleRoll() {
-    if (this.isRolling) return;
+  if (this.isRolling) return;
 
-    this.isRolling = true;
-	this._setBuyUIEnabled(false);
-    this.rollBtn.disableInteractive();
-    this.rollBtn.setText('Rolling...');
-    this.rollBtn.setStyle({ color: '#c4c70bd2' });
+  this.isRolling = true;
+  this._setBuyUIEnabled(false);
+  this.rollBtn.disableInteractive();
+  this.rollBtn.setText('Rolling...');
+  this.rollBtn.setStyle({ color: '#c4c70bd2' });
 
-    const player = this.players[this.currentPlayerIndex];
-    GlobalAudio.playDice(this);
-    const raw = this.dice.rollMany(player.diceUnlocked);
-	
-    if (!player.isAI && player.upgrades.getClairvoyanceChance && player.upgrades.getClairvoyanceChance() > 0) {
-      const chance = player.upgrades.getClairvoyanceChance();
-      if (Math.random() < chance) {
-        const pred = Array.from({ length: player.diceUnlocked }, () => {
-          return Phaser.Math.Between(4, 6);
-        });
+  const player = this.players[this.currentPlayerIndex];
+  GlobalAudio.playDice(this);
+  const raw = this.dice.rollMany(player.diceUnlocked);
 
-        if (this.currentPlayerIndex === this.getLocalPlayerIndex()) {
-          this.predictionText.setText(`Prediction: ${pred.join(', ')}`);
-          this.time.delayedCall(4000, () => {
-            try { this.predictionText.setText(''); } catch (e) {}
-          });
-        }
-
-        const nudgeCount = Math.max(1, Math.floor(player.diceUnlocked * 0.25));
-        const idxs = Phaser.Utils.Array.NumberArray(0, player.diceUnlocked - 1);
-        Phaser.Utils.Array.Shuffle(idxs);
-        for (let k = 0; k < nudgeCount; k++) {
-          const idx = idxs[k];
-          if (Math.random() < 0.7) {
-            raw[idx] = pred[idx];
-          }
-        }
-      } else {
-        this.predictionText.setText('');
-      }
-    }
-
-    const luckBonus = player.upgrades.getLuckBonus();
-    const baseLuck = player.luck || 1;
-    const effectiveLuck = Phaser.Math.Clamp(baseLuck + luckBonus, 0.5, 6.0);
-
-    const final = raw.map(v => {
-      const rerollChance = Phaser.Math.Clamp((effectiveLuck - 1) / 5, 0, 1);
-
-      if (Math.random() < rerollChance) {
-        const bias = Math.pow(Math.random(), 1 / Math.max(0.001, effectiveLuck));
-        return Phaser.Math.Clamp(Math.ceil(bias * 6), 1, 6);
-      }
-
-      return v;
-    });
-
-    // Additional light "combo boost" behavior for higher luck:
-    if (effectiveLuck >= 2) {
-      const boostFraction = Phaser.Math.Clamp((effectiveLuck - 1) / 5, 0, 1);
-      const toCoerce = Math.floor(boostFraction * (player.diceUnlocked - 1));
-      if (toCoerce > 0) {
-        const counts = {};
-        final.forEach(n => counts[n] = (counts[n] || 0) + 1);
-        let targetFace = 6;
-        let bestCount = -1;
-        Object.keys(counts).forEach(k => {
-          const c = counts[k];
-          if (c > bestCount) { bestCount = c; targetFace = parseInt(k, 10); }
-        });
-        if (effectiveLuck >= 4 && Math.random() < 0.6) targetFace = 6;
-
-        let coerced = 0;
-        const indices = Array.from({ length: final.length }, (_, i) => i).sort(() => Math.random() - 0.5);
-        for (let idx of indices) {
-          if (coerced >= toCoerce) break;
-          if (final[idx] !== targetFace && Math.random() < 0.9) {
-            final[idx] = targetFace;
-            coerced++;
-          }
-        }
-      }
-    }
-
-    player.lastRoll = final.slice();
-    this.lastRollText.setText(`Last: ${final.join(', ')}`);
-
-    const activeDice = this.diceSprites.slice(0, player.diceUnlocked);
-    await animateDiceRoll(this, final, activeDice);
-
-    const combo = checkCombo(final);
-    let gained = final.reduce((a, b) => a + b, 0);
-	
-	const diceMultiplier = player.upgrades.getDiceScoreMultiplier ? player.upgrades.getDiceScoreMultiplier() : 1;
-    gained = Math.floor(gained * diceMultiplier);
-
-    if (combo) {
-      if (combo.key && this.comboStats[this.currentPlayerIndex] && typeof this.comboStats[this.currentPlayerIndex][combo.key] === 'number') {
-        this.comboStats[this.currentPlayerIndex][combo.key]++;
-      }
-
-      const playerComboMult = player.upgrades.getComboMultiplier(combo.key);
-      const comboGlobal = player.upgrades.getComboGlobalMultiplier ? player.upgrades.getComboGlobalMultiplier() : 1;
-      const mult = combo.multiplier * playerComboMult * comboGlobal;
-      gained = Math.floor(gained * mult);
-
-      showComboText(this, combo.type, combo.intensity);
-      playComboFX(this, combo.key);
-      if (GlobalAudio && combo.key && typeof GlobalAudio.comboSFX === 'function') {
-        GlobalAudio.comboSFX(this, combo.key);
-      }
-
-      try {
-        if (!player.isAI) {
-		  if (combo.key === 'straight') {
-            try { GlobalAchievements.addStraights(1); } catch (e) {}
-          }
-		  
-		  if (combo.key === 'fullHouse' || combo.key === 'powerHouse') {
-            this._consecutiveComboCounter[this.currentPlayerIndex] =
-              (this._consecutiveComboCounter[this.currentPlayerIndex] || 0) + 1;
-
-            if (this._consecutiveComboCounter[this.currentPlayerIndex] >= 5) {
-              try { GlobalAchievements.maybeUnlock('funHouse'); } catch (e) {}
-            }
-          } else {
-            this._consecutiveComboCounter[this.currentPlayerIndex] = 0;
-          }
-		  
-          if (combo.key === 'fourOfAKind') GlobalAchievements.unlockComboAchievement('fourOfAKind');
-          if (combo.key === 'fiveOfAKind') GlobalAchievements.unlockComboAchievement('fiveOfAKind');
-          if (combo.key === 'sixOfAKind') GlobalAchievements.unlockComboAchievement('sixOfAKind');
-          GlobalAchievements._maybeDisplayNotifications();
-        }
-      } catch (e) {
-        console.warn('[AchievementsHook] failed during in-play unlock', e);
-      }
-    }
-	
-	const comboLabel = combo && combo.key ? ` (${COMBO_DISPLAY_NAMES[combo.key] || combo.key})` : '';
-    this._logActivity(`${player.name} rolled [${final.join(', ')}] -> +${formatCompact(gained)}${comboLabel}`);
-
-    this.updateDiceScoreDisplay(final, gained, combo, player);
-
-    player.score += gained;
-
-    this.waitingForResult = true;
-    this.rollBtn.setText('RESULTS');
-    this.rollBtn.setStyle({ color: '#888888' });
-    this.rollBtn.disableInteractive();
-
-    this.updateTurnUI();
-    this.time.delayedCall(2000, () => {
-      this.endTurn();
-    });
+  if (!Array.isArray(this._lastComboKey) || this._lastComboKey.length !== this.playerCount) {
+    this._lastComboKey = Array(this.playerCount).fill(null);
   }
+  if (!Array.isArray(this._consecComboStreak) || this._consecComboStreak.length !== this.playerCount) {
+    this._consecComboStreak = Array(this.playerCount).fill(0);
+  }
+  if (!Array.isArray(this._consecutiveComboCounter) || this._consecutiveComboCounter.length !== this.playerCount) {
+    this._consecutiveComboCounter = Array(this.playerCount).fill(0);
+  }
+  if (!Array.isArray(this.comboStats) || this.comboStats.length !== this.playerCount) {
+    this.comboStats = Array.from({ length: this.playerCount }, () => ({
+      pair: 0, twoPair: 0, triple: 0, fullHouse: 0, straight: 0,
+      fourOfAKind: 0, fiveOfAKind: 0, threePair: 0, tripleTrend: 0,
+      powerHouse: 0, sixOfAKind: 0
+    }));
+  }
+
+  if (!player.isAI && player.upgrades.getClairvoyanceChance && player.upgrades.getClairvoyanceChance() > 0) {
+    const chance = player.upgrades.getClairvoyanceChance();
+    if (Math.random() < chance) {
+      const pred = Array.from({ length: player.diceUnlocked }, () => Phaser.Math.Between(4, 6));
+      if (this.currentPlayerIndex === this.getLocalPlayerIndex()) {
+        this.predictionText.setText(`Prediction: ${pred.join(', ')}`);
+        this.time.delayedCall(4000, () => {
+          try { this.predictionText.setText(''); } catch (e) {}
+        });
+      }
+
+      const nudgeCount = Math.max(1, Math.floor(player.diceUnlocked * 0.25));
+      const idxs = Phaser.Utils.Array.NumberArray(0, player.diceUnlocked - 1);
+      Phaser.Utils.Array.Shuffle(idxs);
+      for (let k = 0; k < nudgeCount; k++) {
+        const idx = idxs[k];
+        if (Math.random() < 0.7) {
+          raw[idx] = pred[idx];
+        }
+      }
+    } else {
+      this.predictionText.setText('');
+    }
+  }
+
+  const luckBonus = player.upgrades.getLuckBonus();
+  const baseLuck = player.luck || 1;
+  const effectiveLuck = Phaser.Math.Clamp(baseLuck + luckBonus, 0.5, 6.0);
+
+  const final = raw.map(v => {
+    const rerollChance = Phaser.Math.Clamp((effectiveLuck - 1) / 5, 0, 1);
+    if (Math.random() < rerollChance) {
+      const bias = Math.pow(Math.random(), 1 / Math.max(0.001, effectiveLuck));
+      return Phaser.Math.Clamp(Math.ceil(bias * 6), 1, 6);
+    }
+    return v;
+  });
+
+  if (effectiveLuck >= 2) {
+    const boostFraction = Phaser.Math.Clamp((effectiveLuck - 1) / 5, 0, 1);
+    const toCoerce = Math.floor(boostFraction * (player.diceUnlocked - 1));
+    if (toCoerce > 0) {
+      const counts = {};
+      final.forEach(n => counts[n] = (counts[n] || 0) + 1);
+      let targetFace = 6;
+      let bestCount = -1;
+      Object.keys(counts).forEach(k => {
+        const c = counts[k];
+        if (c > bestCount) { bestCount = c; targetFace = parseInt(k, 10); }
+      });
+      if (effectiveLuck >= 4 && Math.random() < 0.6) targetFace = 6;
+
+      let coerced = 0;
+      const indices = Array.from({ length: final.length }, (_, i) => i).sort(() => Math.random() - 0.5);
+      for (let idx of indices) {
+        if (coerced >= toCoerce) break;
+        if (final[idx] !== targetFace && Math.random() < 0.9) {
+          final[idx] = targetFace;
+          coerced++;
+        }
+      }
+    }
+  }
+
+  const idx = this.currentPlayerIndex;
+  player.lastRoll = final.slice();
+  this.lastRollText.setText(`Last: ${final.join(', ')}`);
+
+  const activeDice = this.diceSprites.slice(0, player.diceUnlocked);
+  await animateDiceRoll(this, final, activeDice);
+
+  const combo = checkCombo(final);
+
+  const base = final.reduce((a, b) => a + b, 0);
+  const isFixated = player.upgrades.hasBigUpgrade && player.upgrades.hasBigUpgrade('fixated');
+  const baseBeforeDice = isFixated ? base * 2 : base;
+
+  const diceMultiplier = player.upgrades.getDiceScoreMultiplier ? player.upgrades.getDiceScoreMultiplier() : 1;
+  let gained = Math.floor(baseBeforeDice * diceMultiplier);
+
+  if (combo) {
+    if (combo.key && this.comboStats[idx] && typeof this.comboStats[idx][combo.key] === 'number') {
+      this.comboStats[idx][combo.key]++;
+    }
+
+    const playerComboMultRaw = (player.upgrades.getComboMultiplier && player.upgrades.getComboMultiplier(combo.key)) || 1;
+    const comboGlobal = player.upgrades.getComboGlobalMultiplier ? player.upgrades.getComboGlobalMultiplier() : 1;
+    let mult = combo.multiplier * playerComboMultRaw * comboGlobal;
+	
+    try {
+      const lastKey = this._lastComboKey[idx];
+      if (lastKey === combo.key) {
+        this._consecComboStreak[idx] = (this._consecComboStreak[idx] || 1) + 1;
+      } else {
+        this._consecComboStreak[idx] = 1;
+      }
+      this._lastComboKey[idx] = combo.key;
+
+      if (player.upgrades.hasBigUpgrade && player.upgrades.hasBigUpgrade('comboMasher')) {
+        const streak = Math.max(1, this._consecComboStreak[idx] || 1);
+        const extra = 1 + 0.2 * (streak - 1);
+        mult = Math.round(mult * 100) / 100;
+        mult *= extra;
+      }
+    } catch (e) {
+      this._lastComboKey[idx] = combo.key;
+      if (typeof this._consecComboStreak[idx] === 'undefined') this._consecComboStreak[idx] = 1;
+    }
+
+    gained = Math.floor(gained * mult);
+
+    showComboText(this, combo.type, combo.intensity);
+    playComboFX(this, combo.key);
+    if (GlobalAudio && combo.key && typeof GlobalAudio.comboSFX === 'function') {
+      GlobalAudio.comboSFX(this, combo.key);
+    }
+
+    try {
+      if (!player.isAI) {
+        if (combo.key === 'straight') {
+          try { GlobalAchievements.addStraights(1); } catch (e) {}
+        }
+
+        if (combo.key === 'fullHouse' || combo.key === 'powerHouse') {
+          this._consecutiveComboCounter[idx] = (this._consecutiveComboCounter[idx] || 0) + 1;
+          if (this._consecutiveComboCounter[idx] >= 5) {
+            try { GlobalAchievements.maybeUnlock('funHouse'); } catch (e) {}
+          }
+        } else {
+          this._consecutiveComboCounter[idx] = 0;
+        }
+
+        if (combo.key === 'fourOfAKind') GlobalAchievements.unlockComboAchievement('fourOfAKind');
+        if (combo.key === 'fiveOfAKind') GlobalAchievements.unlockComboAchievement('fiveOfAKind');
+        if (combo.key === 'sixOfAKind') GlobalAchievements.unlockComboAchievement('sixOfAKind');
+        GlobalAchievements._maybeDisplayNotifications();
+      }
+    } catch (e) {
+      console.warn('[AchievementsHook] failed during in-play unlock', e);
+    }
+  } else {
+    this._lastComboKey[idx] = null;
+    this._consecComboStreak[idx] = 0;
+  }
+
+  try {
+    if (!player.isAI && gained >= 10000) {
+      GlobalAchievements.maybeUnlock('boomDicealaka');
+    }
+  } catch (e) {}
+
+  const comboLabel = combo && combo.key ? ` (${COMBO_DISPLAY_NAMES[combo.key] || combo.key})` : '';
+  this._logActivity(`${player.name} rolled [${final.join(', ')}] -> +${formatCompact(gained)}${comboLabel}`);
+
+  this.updateDiceScoreDisplay(final, gained, combo, player);
+
+  player.score += gained;
+
+  this.waitingForResult = true;
+  this.rollBtn.setText('RESULTS');
+  this.rollBtn.setStyle({ color: '#888888' });
+  this.rollBtn.disableInteractive();
+
+  this.updateTurnUI();
+  this.time.delayedCall(2000, () => {
+    this.endTurn();
+  });
+}
 
   buyDice(automated = false) {
     if (this.currentPlayerIndex < 0 || this.currentPlayerIndex >= this.playerCount) return false;
@@ -852,7 +1055,7 @@ export default class LocalGameScene extends Phaser.Scene {
       player.score -= cost;
       player.diceUnlocked = Math.min(6, player.diceUnlocked + 1); // cap at 6 dice
       GlobalAudio.playButton(this);
-	  this._logActivity(`${player.name} bought Dice → ${player.diceUnlocked} dice`);
+      this._logActivity(`${player.name} bought Dice → ${player.diceUnlocked} dice`);
       this.updateTurnUI();
       return true;
     }
@@ -876,7 +1079,7 @@ export default class LocalGameScene extends Phaser.Scene {
       player.score -= cost;
       player.upgrades.upgradeEconomy();
       GlobalAudio.playButton(this);
-	  this._logActivity(`${player.name} upgraded Economy → Lv ${player.upgrades.getEconomyLevel()}`);
+      this._logActivity(`${player.name} upgraded Economy → Lv ${player.upgrades.getEconomyLevel()}`);
       this.updateTurnUI();
       return true;
     }
@@ -910,7 +1113,7 @@ export default class LocalGameScene extends Phaser.Scene {
       player.score -= cost;
       player.upgrades.upgradeLuck();
       GlobalAudio.playButton(this);
-	  this._logActivity(`${player.name} upgraded Luck → Lv ${player.upgrades.getLuckLevel()} (x${(Math.min(player.luck + player.upgrades.getLuckBonus(),6)).toFixed(1)})`);
+      this._logActivity(`${player.name} upgraded Luck → Lv ${player.upgrades.getLuckLevel()} (x${(Math.min(player.luck + player.upgrades.getLuckBonus(),6)).toFixed(1)})`);
       this.updateTurnUI();
       return true;
     }
@@ -945,157 +1148,24 @@ export default class LocalGameScene extends Phaser.Scene {
       player.score -= cost;
       player.upgrades.upgradeCombo(key);
       GlobalAudio.playButton(this);
-	  this._logActivity(`${player.name} upgraded ${COMBO_DISPLAY_NAMES[key] || key} → Lv ${player.upgrades.getComboLevel(key)}`);
+      this._logActivity(`${player.name} upgraded ${COMBO_DISPLAY_NAMES[key] || key} → Lv ${player.upgrades.getComboLevel(key)}`);
       this.updateTurnUI();
       return true;
     }
 
     return false;
   }
-  
-  createBigUpgradesPanel() {
-    if (this.bigUpgradesPanel) return;
-
-    const x = 12;
-    const y = this.scale.height - 16;
-    const w = 260;
-    const h = 320;
-
-    const panelBg = this.add.rectangle(x + w/2, y - h/2, w, h, 0x0b0b0b, 0.95).setOrigin(0.5).setDepth(900);
-    panelBg.setStrokeStyle(2, 0x333333);
-
-    const title = this.add.text(x + 12, y - h + 12, 'Big Upgrades (B)', { fontSize: 14, fontFamily: 'Orbitron, Arial', color: '#ffff66' }).setOrigin(0,0).setDepth(901);
-
-    const items = [
-      { key: 'clairvoyance', title: 'Clairvoyance', desc: '25% chance to predict your next roll.', baseCost: 500 },
-      { key: 'stockExchange', title: 'Stock Exchange', desc: 'Economy +50% income.', baseCost: 1000 },
-      { key: 'comboX', title: 'Combo-X', desc: 'Combo multipliers +50%.', baseCost: 2500 },
-      { key: 'masterPredict', title: 'Master Predict', desc: 'Make clairvoyance 50% (requires Clairvoyance).', baseCost: 7500 },
-      { key: 'fixated', title: 'Fixated', desc: 'Dice-earned scores ×2.', baseCost: 30000 }
-    ];
-
-    const container = this.add.container(0, 0).setDepth(901);
-    const startX = x + 8;
-    let startY = y - 36 - (items.length - 1) * 60;
-
-    const buyBtns = [];
-
-    items.forEach(item => {
-      const box = this.add.rectangle(startX, startY, w - 16, 48, 0x121212, 0.9).setOrigin(0,0);
-      box.setStrokeStyle(1, 0x222222);
-      const itTitle = this.add.text(startX + 8, startY + 4, item.title, { fontSize: 14, fontFamily: 'Orbitron, Arial', color: '#ffffff' }).setOrigin(0,0);
-      const itDesc = this.add.text(startX + 8, startY + 20, item.desc, { fontSize: 11, fontFamily: 'Orbitron, Arial', color: '#cccccc', wordWrap: { width: w - 120 } }).setOrigin(0,0);
-      const buyBtn = this.add.text(startX + w - 96, startY + 12, 'BUY', { fontSize: 14, fontFamily: 'Orbitron, Arial', color: '#66ff66' })
-        .setInteractive({ useHandCursor: true })
-        .setOrigin(0,0);
-
-      buyBtn.on('pointerdown', () => {
-        this.attemptBuyBigUpgrade(item.key, item.title, item.baseCost);
-      });
-
-      container.add([box, itTitle, itDesc, buyBtn]);
-      buyBtns.push({ key: item.key, baseCost: item.baseCost, buyBtn, itTitle, itDesc, box });
-      startY += 52;
-    });
-
-    this.bigUpgradesPanel = { panelBg, title, container, items, buyBtns };
-  }
-  
-  refreshBigUpgradesPanel() {
-    if (!this.bigUpgradesPanel) return;
-    const player = this.players[this.currentPlayerIndex];
-    const isActiveHuman = player && !player.isAI && this.currentPlayerIndex === this.getLocalPlayerIndex();
-
-    this.bigUpgradesPanel.buyBtns.forEach(entry => {
-      const scaled = Math.max(1, Math.floor(entry.baseCost * (this.costMult || 1)));
-      entry.buyBtn.setText(entry.buyBtn.text ? `BUY ${formatCompact(scaled)}` : `BUY ${formatCompact(scaled)}`);
-
-      const purchased = player.upgrades.hasBigUpgrade ? player.upgrades.hasBigUpgrade(entry.key) : false;
-
-      if (purchased) {
-        entry.buyBtn.disableInteractive?.();
-        entry.buyBtn.setStyle({ color: '#666666' });
-        entry.itTitle.setStyle?.({ color: '#99ff99' });
-      } else if (!isActiveHuman || this.isRolling || this.waitingForResult || player.score < scaled) {
-        entry.buyBtn.disableInteractive?.();
-        entry.buyBtn.setStyle({ color: '#555555' });
-        entry.itTitle.setStyle?.({ color: '#ffffff' });
-      } else {
-        entry.buyBtn.setInteractive?.({ useHandCursor: true });
-        entry.buyBtn.setStyle({ color: '#66ff66' });
-        entry.itTitle.setStyle?.({ color: '#ffffff' });
-      }
-    });
-  }
-
-  attemptBuyBigUpgrade(key, title, baseCost) {
-    const player = this.players[this.currentPlayerIndex];
-    if (!player) return;
-    if (this.currentPlayerIndex !== this.getLocalPlayerIndex()) {
-      this._logActivity(`${player.name} cannot buy upgrades when it's not their turn`);
-      return;
-    }
-    if (player.isAI) return;
-    if (this.isRolling || this.waitingForResult) {
-      this._logActivity(`${player.name} cannot buy during a roll`);
-      return;
-    }
-
-    const scaledCost = Math.max(1, Math.floor((baseCost || 0) * (this.costMult || 1)));
-
-    if (player.upgrades.hasBigUpgrade && player.upgrades.hasBigUpgrade(key)) {
-      this._logActivity(`${player.name} already owns ${title}`);
-      return;
-    }
-
-    if (player.score < scaledCost) {
-      this._logActivity(`${player.name} cannot afford ${title} (${formatCompact(scaledCost)})`);
-      return;
-    }
-
-    player.score -= scaledCost;
-    const ok = player.upgrades.buyBigUpgrade ? player.upgrades.buyBigUpgrade(key) : false;
-    if (ok) {
-      GlobalAudio.playButton(this);
-      this._logActivity(`${player.name} bought ${title} for ${formatCompact(scaledCost)}`);
-      this.updateTurnUI();
-      this.refreshBigUpgradesPanel();
-    } else {
-      player.score += scaledCost;
-    }
-  }
-  
-  toggleBigUpgrades() {
-    if (!this.bigUpgradesPanel) return;
-    this.bigUpgradesOpen = !this.bigUpgradesOpen;
-
-    this.bigUpgradesPanel.container.setVisible(this.bigUpgradesOpen);
-    this.bigUpgradesPanel.panelBg.setVisible(this.bigUpgradesOpen);
-    this.bigUpgradesPanel.title.setVisible(this.bigUpgradesOpen);
-
-    if (this.bigUpgradesOpen) {
-      this.refreshBigUpgradesPanel();
-    }
-  }
-
-  closeBigUpgradesInstant() {
-    if (!this.bigUpgradesPanel) return;
-    this.bigUpgradesOpen = false;
-    this.bigUpgradesPanel.container.setVisible(false);
-    this.bigUpgradesPanel.panelBg.setVisible(false);
-    this.bigUpgradesPanel.title.setVisible(false);
-  }
 
   endTurn() {
     this.isRolling = false;
     this.waitingForResult = false;
-	this._setBuyUIEnabled(true);
+    this._setBuyUIEnabled(true);
 
     this.rollBtn.setText('ROLL DICE');
     this.rollBtn.setStyle({ color: '#66ff66' });
     this.rollBtn.setInteractive();
-	
-	try {
+
+    try {
       const prevIdx = this.currentPlayerIndex;
       if (this.players[prevIdx]) this.players[prevIdx].lastRoll = [];
     } catch(e){}
@@ -1105,6 +1175,11 @@ export default class LocalGameScene extends Phaser.Scene {
     if (this.currentPlayerIndex >= this.playerCount) {
       this.currentPlayerIndex = 0;
       this.currentRound++;
+
+      // award one completed round to global achievements
+      try {
+        GlobalAchievements.addRounds(1);
+      } catch (e) {}
 
       if (this.currentRound > this.maxRounds) {
         return this.endGame();
@@ -1254,52 +1329,90 @@ export default class LocalGameScene extends Phaser.Scene {
   }
 
   updateDiceScoreDisplay(dice, scored, combo = null, player = null) {
-    const base = dice.reduce((a, b) => a + b, 0);
-    let breakdown = `Rolled: ${dice.join(", ")}\nBase Score: ${base}`;
-	const isFixated = player && player.upgrades.hasBigUpgrade && player.upgrades.hasBigUpgrade('fixated');
-    if (isFixated) breakdown += `\nFixated: x2 -> ${base * 2}`;
+  const base = dice.reduce((a, b) => a + b, 0);
+  const hasFixated = player?.upgrades?.hasBigUpgrade?.('fixated');
 
-    if (combo) {
-      const baseMult = combo.multiplier || 1;
-	  const comboXMult = (player && player.upgrades.hasBigUpgrade && player.upgrades.hasBigUpgrade('comboX')) ? 1.5 : 1;
-      const upgradeMult = (player && combo.key) ? (player.upgrades.getComboMultiplier(combo.key) || 1) * comboXMult : comboXMult;
-      const totalMult = baseMult * upgradeMult;
+  let lines = [];
+  lines.push(`Rolled: ${dice.join(', ')}`);
+  lines.push(`Base Score: ${base}`);
 
-      const comboLevel = (player && combo.key) ? (player.upgrades.getComboLevel(combo.key) || 0) : 0;
+  let workingBase = base;
 
-      // use human-friendly combo display name
-      const comboName = (combo.key && COMBO_DISPLAY_NAMES[combo.key]) ? COMBO_DISPLAY_NAMES[combo.key] : (combo.type || combo.key || 'Combo');
+  if (hasFixated) {
+    workingBase = base * 2;
+    lines.push(`Base × 2 (Fixated) = ${workingBase}`);
+  }
 
-      breakdown += `\nCombo: x${totalMult.toFixed(1)} (${combo.type})`;
-      breakdown += `\n${comboName} Level: ${comboLevel}`;
-      breakdown += `\nFinal Score: ${formatCompact(scored)}`;
-    } else {
-      breakdown += `\nFinal Score: ${formatCompact(scored)}`;
+  if (combo && player) {
+    const comboName =
+      COMBO_DISPLAY_NAMES?.[combo.key] ||
+      combo.type ||
+      combo.key ||
+      'Combo';
+
+    const comboBaseMult = combo.multiplier || 1;
+    const comboLevel = player.upgrades.getComboLevel?.(combo.key) || 0;
+    const comboUpgradeMult = player.upgrades.getComboMultiplier?.(combo.key) || 1;
+
+    // ---- Combo Masher ----
+    const hasMasher = player.upgrades.hasBigUpgrade?.('comboMasher');
+    const streak = this._consecComboStreak?.[this.currentPlayerIndex] || 1;
+    const masherMult = hasMasher ? (1 + 0.2 * (streak - 1)) : 1;
+    const totalComboMult = comboBaseMult * comboUpgradeMult * masherMult;
+
+    lines.push(``);
+    lines.push(`Combo: ${comboName}`);
+    lines.push(`• Base Multiplier: ×${comboBaseMult.toFixed(2)}`);
+
+    if (comboLevel > 0) {
+      lines.push(`• ${comboName} Level ${comboLevel}: ×${comboUpgradeMult.toFixed(2)}`);
     }
 
-    this.scoreBreakdown.setText(breakdown);
-    try {
-      this.scoreBreakdown.setAlpha(0);
-      this.tweens.killTweensOf(this.scoreBreakdown);
-      this.tweens.add({ targets: this.scoreBreakdown, alpha: 1, duration: 220, ease: 'Cubic.easeOut' });
-    } catch (e) {}
+    if (hasMasher) {
+      lines.push(`• Combo Masher Streak: ${streak} (${(masherMult * 100 - 100).toFixed(0)}%)`);
+      lines.push(`  ↳ Masher Multiplier: ×${masherMult.toFixed(2)}`);
+    }
 
-    if (this._scoreDisplayTimer) this._scoreDisplayTimer.remove(false);
-    this._scoreDisplayTimer = this.time.delayedCall(4000, () => {
-      try {
-        this.tweens.add({
-          targets: this.scoreBreakdown,
-          alpha: 0,
-          duration: 300,
-          onComplete: () => this.scoreBreakdown.setText('')
-        });
-      } catch (e) {
-        this.scoreBreakdown.setText('');
-      }
-      this._scoreDisplayTimer = null;
-    });
+    lines.push(``);
+    lines.push(`Total Combo Multiplier: ×${totalComboMult.toFixed(2)}`);
+    lines.push(``);
+
+    const finalScore = Math.floor(workingBase * totalComboMult);
+    lines.push(`Final Score: ${formatCompact(finalScore)}`);
+  } else {
+    lines.push(``);
+    lines.push(`Final Score: ${formatCompact(scored)}`);
   }
-  
+
+  this.scoreBreakdown.setText(lines.join('\n'));
+
+  try {
+    this.scoreBreakdown.setAlpha(0);
+    this.tweens.killTweensOf(this.scoreBreakdown);
+    this.tweens.add({
+      targets: this.scoreBreakdown,
+      alpha: 1,
+      duration: 220,
+      ease: 'Cubic.easeOut'
+    });
+  } catch (e) {}
+
+  if (this._scoreDisplayTimer) this._scoreDisplayTimer.remove(false);
+  this._scoreDisplayTimer = this.time.delayedCall(4200, () => {
+    try {
+      this.tweens.add({
+        targets: this.scoreBreakdown,
+        alpha: 0,
+        duration: 300,
+        onComplete: () => this.scoreBreakdown.setText('')
+      });
+    } catch (e) {
+      this.scoreBreakdown.setText('');
+    }
+    this._scoreDisplayTimer = null;
+  });
+}
+
   _isPlayerBehind(player) {
     const humanOnly = false;
     const others = this.players.filter(p => p !== player && (!humanOnly || !p.isAI));
@@ -1314,130 +1427,130 @@ export default class LocalGameScene extends Phaser.Scene {
     const behindCount = [scoreLag, diceLag, ecoLag].filter(x => !!x).length;
     return behindCount >= 2;
   }
-  
+
   _setBuyUIEnabled(enabled) {
-  try {
-    if (enabled) {
-      this.buyDiceBtn.setStyle?.({ color: '#ffaa44' });
-      this.buyEcoBtn.setStyle?.({ color: '#66ccff' });
-      this.buyLuckBtn.setStyle?.({ color: '#ff88ff' });
-    } else {
-      this.buyDiceBtn.disableInteractive?.();
-      this.buyDiceBtn.setStyle?.({ color: '#555555' });
-      this.buyEcoBtn.disableInteractive?.();
-      this.buyEcoBtn.setStyle?.({ color: '#555555' });
-      this.buyLuckBtn.disableInteractive?.();
-      this.buyLuckBtn.setStyle?.({ color: '#555555' });
-    }
-  } catch(e){}
+    try {
+      if (enabled) {
+        this.buyDiceBtn.setStyle?.({ color: '#ffaa44' });
+        this.buyEcoBtn.setStyle?.({ color: '#66ccff' });
+        this.buyLuckBtn.setStyle?.({ color: '#ff88ff' });
+      } else {
+        this.buyDiceBtn.disableInteractive?.();
+        this.buyDiceBtn.setStyle?.({ color: '#555555' });
+        this.buyEcoBtn.disableInteractive?.();
+        this.buyEcoBtn.setStyle?.({ color: '#555555' });
+        this.buyLuckBtn.disableInteractive?.();
+        this.buyLuckBtn.setStyle?.({ color: '#555555' });
+      }
+    } catch(e){}
 
-  try {
-    if (Array.isArray(this.comboToolbar)) {
-      this.comboToolbar.forEach(entry => {
-        try {
-          if (enabled) {
-            entry.ui.btn.setStyle?.({ color: '#66ff66' });
-          } else {
-            entry.ui.btn.disableInteractive?.();
-            entry.ui.btn.setStyle?.({ color: '#555555' });
-          }
-        } catch(e){}
-      });
-    }
-  } catch(e){}
-}
+    try {
+      if (Array.isArray(this.comboToolbar)) {
+        this.comboToolbar.forEach(entry => {
+          try {
+            if (enabled) {
+              entry.ui.btn.setStyle?.({ color: '#66ff66' });
+            } else {
+              entry.ui.btn.disableInteractive?.();
+              entry.ui.btn.setStyle?.({ color: '#555555' });
+            }
+          } catch(e){}
+        });
+      }
+    } catch(e){}
+  }
 
-createHistoryLog() {
-  const pad = 12;
-  const panelWidth = 420;
-  const panelHeight = 380;
-  const panelX = this.scale.width;
-  const panelY = 10;
-  const linesVisibleApprox = 12;
+  createHistoryLog() {
+    const pad = 12;
+    const panelWidth = 420;
+    const panelHeight = 380;
+    const panelX = this.scale.width;
+    const panelY = 10;
+    const linesVisibleApprox = 12;
 
-  this.history = {
-    container: this.add.container(panelX, panelY).setDepth(950),
-    bg: this.add.rectangle(0, 0, panelWidth, panelHeight, 0x000000, 0.75).setOrigin(1, 0),
-    title: this.add.text(-10, 8, 'Activity Log', { fontSize: 14, fontFamily: 'Orbitron, Arial', color: '#66ff66' }).setOrigin(1, 0)
-  };
+    this.history = {
+      container: this.add.container(panelX, panelY).setDepth(950),
+      bg: this.add.rectangle(0, 0, panelWidth, panelHeight, 0x000000, 0.75).setOrigin(1, 0),
+      title: this.add.text(-10, 8, 'Activity Log', { fontSize: 14, fontFamily: 'Orbitron, Arial', color: '#66ff66' }).setOrigin(1, 0)
+    };
 
-  const textX = -panelWidth + pad + 4;
-  const textY = 32;
-  this.history.text = this.add.text(textX, textY, '', {
-    fontSize: 12,
-    fontFamily: 'Orbitron, Arial',
-    color: '#ffffff',
-    align: 'left',
-    wordWrap: { width: panelWidth - pad * 2 }
-  }).setOrigin(0, 0);
+    const textX = -panelWidth + pad + 4;
+    const textY = 32;
+    this.history.text = this.add.text(textX, textY, '', {
+      fontSize: 12,
+      fontFamily: 'Orbitron, Arial',
+      color: '#ffffff',
+      align: 'left',
+      wordWrap: { width: panelWidth - pad * 2 }
+    }).setOrigin(0, 0);
 
-  this.history.hint = this.add.text(-12, panelHeight - 18, 'Scroll to view more', { fontSize: 10, fontFamily: 'Orbitron, Arial', color: '#888888' }).setOrigin(1, 0);
-  this.history.container.add([this.history.bg, this.history.title, this.history.text, this.history.hint]);
+    this.history.hint = this.add.text(-12, panelHeight - 18, 'Scroll to view more', { fontSize: 10, fontFamily: 'Orbitron, Arial', color: '#888888' }).setOrigin(1, 0);
+    this.history.container.add([this.history.bg, this.history.title, this.history.text, this.history.hint]);
 
-  const maskGraphics = this.make.graphics({}, false);
-  maskGraphics.fillStyle(0xffffff);
-  const absLeft = panelX - panelWidth + pad;
-  const absTop = panelY + textY;
-  maskGraphics.fillRect(absLeft, absTop, panelWidth - pad * 2, panelHeight - textY - pad);
-  this.history.mask = maskGraphics.createGeometryMask();
-  this.history.text.setMask(this.history.mask);
-  this.history.entries = [];
-  this.history.scrollY = 0;
-  this.history.maxScroll = 0;
-  this.history.panelWidth = panelWidth;
-  this.history.panelHeight = panelHeight;
-  this.history.textX = textX;
-  this.history.textY = textY;
+    const maskGraphics = this.make.graphics({}, false);
+    maskGraphics.fillStyle(0xffffff);
+    const absLeft = panelX - panelWidth + pad;
+    const absTop = panelY + textY;
+    maskGraphics.fillRect(absLeft, absTop, panelWidth - pad * 2, panelHeight - textY - pad);
+    this.history.mask = maskGraphics.createGeometryMask();
+    this.history.text.setMask(this.history.mask);
+    this.history.entries = [];
+    this.history.scrollY = 0;
+    this.history.maxScroll = 0;
+    this.history.panelWidth = panelWidth;
+    this.history.panelHeight = panelHeight;
+    this.history.textX = textX;
+    this.history.textY = textY;
 
-  this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY) => {
-    const px = pointer.x;
-    const py = pointer.y;
-    const left = panelX - panelWidth;
-    const top = panelY;
-    const right = panelX;
-    const bottom = panelY + panelHeight;
-    if (px >= left && px <= right && py >= top && py <= bottom) {
-      const step = Math.sign(deltaY) * 24;
-      this.history.scrollY = Phaser.Math.Clamp(this.history.scrollY + step, 0, Math.max(0, this.history.maxScroll));
+    this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY) => {
+      const px = pointer.x;
+      const py = pointer.y;
+      const left = panelX - panelWidth;
+      const top = panelY;
+      const right = panelX;
+      const bottom = panelY + panelHeight;
+      if (px >= left && px <= right && py >= top && py <= bottom) {
+        const step = Math.sign(deltaY) * 24;
+        this.history.scrollY = Phaser.Math.Clamp(this.history.scrollY + step, 0, Math.max(0, this.history.maxScroll));
+        this._refreshHistoryDisplay();
+      }
+    });
+
+    this.history.bg.setInteractive();
+    this.history.bg.on('pointerdown', () => {
+      this.history.scrollY = 0;
       this._refreshHistoryDisplay();
-    }
-  });
+    });
+  }
 
-  this.history.bg.setInteractive();
-  this.history.bg.on('pointerdown', () => {
+  _refreshHistoryDisplay() {
+    if (!this.history) return;
+    const joined = this.history.entries.join('\n\n');
+    this.history.text.setText(joined);
+
+    const metrics = this.history.text.getBounds();
+    const contentHeight = metrics.height || 0;
+    const visibleHeight = this.history.panelHeight - this.history.textY - 12;
+
+    this.history.maxScroll = Math.max(0, contentHeight - visibleHeight);
+    this.history.text.y = this.history.textY - this.history.scrollY;
+
+    try {
+      this.tweens.killTweensOf(this.history.text);
+    } catch (e) {}
+  }
+
+  _logActivity(msg) {
+    if (!this.history) return;
+    const ts = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const entry = `[${ts}] ${msg}`;
+    this.history.entries.unshift(entry);
+    // keep newest at top, cap size
+    this.history.entries = this.history.entries.slice(0, 300);
+    // reset scroll to top so user sees newest automatically
     this.history.scrollY = 0;
     this._refreshHistoryDisplay();
-  });
-}
-
-_refreshHistoryDisplay() {
-  if (!this.history) return;
-  const joined = this.history.entries.join('\n\n');
-  this.history.text.setText(joined);
-
-  const metrics = this.history.text.getBounds();
-  const contentHeight = metrics.height || 0;
-  const visibleHeight = this.history.panelHeight - this.history.textY - 12;
-
-  this.history.maxScroll = Math.max(0, contentHeight - visibleHeight);
-  this.history.text.y = this.history.textY - this.history.scrollY;
-
-  try {
-    this.tweens.killTweensOf(this.history.text);
-  } catch (e) {}
-}
-
-_logActivity(msg) {
-  if (!this.history) return;
-  const ts = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const entry = `[${ts}] ${msg}`;
-  this.history.entries.unshift(entry);
-  // keep newest at top, cap size
-  this.history.entries = this.history.entries.slice(0, 300);
-  // reset scroll to top so user sees newest automatically
-  this.history.scrollY = 0;
-  this._refreshHistoryDisplay();
-}
+  }
 
   endGame() {
     this.exitLocked = false;
@@ -1447,9 +1560,7 @@ _logActivity(msg) {
       const humanPlayersExist = this.players.some(p => !p.isAI);
       if (humanPlayersExist) {
         GlobalAchievements.addGame();
-        const roundsPlayed = Math.max(0, (this.currentRound - 1));
-        GlobalAchievements.addRounds(roundsPlayed);
-
+        // don't call addRounds here — we increment per completed round during play
         // top human score (ignore bots)
         const humanScores = this.players.filter(p => !p.isAI).map(p => p.score || 0);
         const topHuman = humanScores.length ? Math.max(...humanScores) : 0;
@@ -1466,16 +1577,6 @@ _logActivity(msg) {
           if ((c.sixOfAKind || 0) > 0) GlobalAchievements.unlockComboAchievement('sixOfAKind');
         }
       });
-	  
-	  // check playtime session
-	  try {
-        if (this._sessionStartTs) {
-          const elapsedMs = Date.now() - this._sessionStartTs;
-          const seconds = Math.floor(elapsedMs / 1000);
-          GlobalAchievements.addPlaySeconds(seconds);
-          this._sessionStartTs = 0;
-        }
-      } catch (e) {}
 
       // Maximum Power: check if any human player reached fully upgraded state
       try {
@@ -1491,6 +1592,22 @@ _logActivity(msg) {
           }
         });
       } catch (e) {}
+
+      // Track wins: if overall top is human, count a win and possibly unlock winners achievements
+      try {
+        const topScore = Math.max(...this.players.map(p => p.score || 0));
+        const winners = this.players.map((p, idx) => ({ p, idx })).filter(x => (x.p.score || 0) === topScore);
+        if (winners && winners.length > 0) {
+          // If at least one top-scorer is a human, we register a win for that human (counts toward wins)
+          const humanWinner = winners.find(w => !w.p.isAI);
+          if (humanWinner) {
+            GlobalAchievements.addWin(1);
+          }
+        }
+      } catch (e) {
+        console.warn('[AchievementsHook] failed to register win', e);
+      }
+
     } catch (e) {
       console.warn('[AchievementsHook] failed to record achievements', e);
     }
@@ -1520,7 +1637,7 @@ _logActivity(msg) {
   }
 
   addBackButton() {
-    const back = this.add.text(50, 50, '← Back', { fontSize: 24, fontFamily: 'Orbitron, Arial', color: '#ff6666' }).setInteractive({ useHandCursor: true });
+    const back = this.add.text(50, 50, '← BACK', { fontSize: 24, fontFamily: 'Orbitron, Arial', color: '#ff6666' }).setInteractive({ useHandCursor: true });
     back.on('pointerdown', () => {
       GlobalAudio.playButton(this);
       if (!this.exitLocked) {
@@ -1533,9 +1650,9 @@ _logActivity(msg) {
 
   showConfirmExit() {
     const bg = this.add.rectangle(600, 300, 500, 250, 0x000000, 0.8);
-    const msg = this.add.text(600, 260, "Are you sure you want\n to return to the main menu?", { fontSize: 26, fontFamily: 'Orbitron, Arial', align: 'center' }).setOrigin(0.5);
-    const yesBtn = this.add.text(550, 340, "Yes", { fontSize: 28, fontFamily: 'Orbitron, Arial', color: '#66ff66' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-    const noBtn = this.add.text(650, 340, "No", { fontSize: 28, fontFamily: 'Orbitron, Arial', color: '#ff6666' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    const msg = this.add.text(600, 260, "ARE YOU SURE YOU WANT\n TO RETURN TO THE MAIN MENU?", { fontSize: 26, fontFamily: 'Orbitron, Arial', align: 'center' }).setOrigin(0.5);
+    const yesBtn = this.add.text(550, 340, "YES", { fontSize: 28, fontFamily: 'Orbitron, Arial', color: '#66ff66' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    const noBtn = this.add.text(650, 340, "NO", { fontSize: 28, fontFamily: 'Orbitron, Arial', color: '#ff6666' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
     yesBtn.on('pointerdown', () => {
       GlobalAudio.playButton(this);
@@ -1552,14 +1669,6 @@ _logActivity(msg) {
   }
 
   cleanupScene() {
-	try {
-      if (this._sessionStartTs) {
-        const elapsedMs = Date.now() - this._sessionStartTs;
-        const seconds = Math.floor(elapsedMs / 1000);
-        GlobalAchievements.addPlaySeconds(seconds);
-        this._sessionStartTs = 0;
-      }
-    } catch (e) {}
     try { if (this._scoreDisplayTimer) { this._scoreDisplayTimer.remove(false); this._scoreDisplayTimer = null; } } catch(e){}
     try {
       if (Array.isArray(this.playerBar)) {
@@ -1574,7 +1683,7 @@ _logActivity(msg) {
       }
       if (this.comboToggleBtn) { try { this.comboToggleBtn.destroy(); } catch(e){}; this.comboToggleBtn = null; }
     } catch(e){}
-	try { if (this.predictionText) { this.predictionText.destroy(); this.predictionText = null; } } catch(e){}
+    try { if (this.predictionText) { this.predictionText.destroy(); this.predictionText = null; } } catch(e){}
     try { if (this.bigUpgradesPanel) {
       try { this.bigUpgradesPanel.panelBg.destroy(); } catch(e){}
       try { this.bigUpgradesPanel.title.destroy(); } catch(e){}

@@ -12,14 +12,14 @@ export default class HelpScene extends Phaser.Scene {
     this.popupOpen = false;
     const centerX = this.cameras.main.centerX;
 
-    this.add.text(centerX, 70, 'Help', {
-      fontSize: '52px',
+    this.add.text(centerX, 70, 'HELP', {
+      fontSize: 60,
       fontFamily: 'Orbitron, Arial',
       color: '#ffffff'
     }).setOrigin(0.5);
 
-    this.add.text(centerX, 130, 'How to Play Scale Dice', {
-      fontSize: '32px',
+    this.add.text(centerX, 130, 'HOW TO PLAY SCALE DICE', {
+      fontSize: 32,
       fontFamily: 'Orbitron, Arial',
       color: '#ffff66'
     }).setOrigin(0.5);
@@ -43,15 +43,15 @@ export default class HelpScene extends Phaser.Scene {
     ];
 
     this.add.text(centerX, 470, helpLines.join('\n'), {
-      fontSize: '20px',
+      fontSize: 20,
       fontFamily: 'Orbitron, Arial',
       color: '#ffffff',
       align: 'center',
       wordWrap: { width: 760 }
     }).setOrigin(0.5);
 
-    this.comboBtn = this.add.text(this.cameras.main.width - 40, 40, 'Special Rules', {
-      fontSize: '20px',
+    this.comboBtn = this.add.text(this.cameras.main.width - 40, 40, 'SPECIAL RULES', {
+      fontSize: 20,
       fontFamily: 'Orbitron, Arial',
       color: '#ffdd66'
     })
@@ -63,7 +63,7 @@ export default class HelpScene extends Phaser.Scene {
       this.showRulesPopup();
     });
 
-    this.backBtn = this.add.text(centerX, 820, '← Back', {
+    this.backBtn = this.add.text(centerX, 820, '← BACK', {
       fontSize: 28,
       fontFamily: 'Orbitron, Arial',
       color: '#ff6666'
@@ -144,7 +144,7 @@ export default class HelpScene extends Phaser.Scene {
     const closeBtn = this.add.text(
       centerX,
       centerY + popupH / 2 - 36,
-      'Close',
+      'CLOSE',
       {
         fontSize: '24px',
         fontFamily: 'Orbitron, Arial',

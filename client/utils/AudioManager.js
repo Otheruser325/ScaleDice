@@ -4,7 +4,7 @@ class AudioManager {
   constructor() {
     this.music = null;
     this.currentTrack = 0;
-    this.tracks = ['dice_league', 'powerhouse', 'energy'];
+    this.tracks = ['dice_league', 'snake_theme', 'gravitor_theme', 'basilisk_theme'];
     this.jukeboxEnabled = false;
     this._onCompleteRef = null;
     this._lastTrackKey = null;

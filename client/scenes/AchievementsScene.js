@@ -13,7 +13,7 @@ export default class AchievementsScene extends Phaser.Scene {
 	
     const centerX = this.cameras.main.centerX;
     const titleY = 60;
-    this.add.text(centerX, titleY, 'Achievements', { fontSize: 40, fontFamily: 'Orbitron, Arial' }).setOrigin(0.5);
+    this.add.text(centerX, titleY, 'ACHIEVEMENTS', { fontSize: 48, fontFamily: 'Orbitron, Arial' }).setOrigin(0.5);
 
     const data = GlobalAchievements.getAll();
     const unlocked = data.unlocked || {};
@@ -25,6 +25,7 @@ export default class AchievementsScene extends Phaser.Scene {
       { key: 'diceaholic', title: 'Diceaholic', desc: 'Play Scale Dice for 12 hours total.' },
       { key: 'rounds100', title: 'Late Warrior', desc: 'Progress 100 rounds in total.' },
       { key: 'rounds500', title: 'Late Nights', desc: 'Progress 500 rounds in total.' },
+	    { key: 'rounds2500', title: 'Forever Going', desc: 'Progress 2,500 rounds in total.' },
       { key: 'score1000', title: "Pilin' Up!", desc: 'Score 1,000 points in a local/online game.' },
       { key: 'score10000', title: "Rackin' Up!", desc: 'Score 10,000 points in a local/online game.' },
       { key: 'score100000', title: 'Hard Labour', desc: 'Score 100,000 points in a local/online game.' },
@@ -35,7 +36,10 @@ export default class AchievementsScene extends Phaser.Scene {
       { key: 'sixOfAKind', title: 'Diceomania', desc: 'Roll a Six-of-a-kind combo.' },
       { key: 'funHouse', title: 'Fun House', desc: 'Roll 5 consecutive full/power house combos in a game.' },
       { key: 'roundhouseStraight', title: 'Roundhouse Straight', desc: 'Roll 10 straights in total.' },
-      { key: 'maximumPower', title: 'Maximum Power', desc: 'Fully upgrade dice, economy and luck in a game.' }
+      { key: 'maximumPower', title: 'Maximum Power', desc: 'Fully upgrade everything (dice, economy, luck, major) in a game.' },
+	    { key: 'winnerWinner', title: 'Winner Winner', desc: 'Win your first match.' },
+      { key: 'realDicetician', title: 'Real Dicetician', desc: 'Win 10 matches.' },
+      { key: 'boomDicealaka', title: 'Boom Dicealaka', desc: 'Score over 10,000 points with one roll.' }
     ];
 
     // ---------- SCROLL PANEL CONFIG ----------
@@ -193,17 +197,17 @@ export default class AchievementsScene extends Phaser.Scene {
 
     // ---------- stats & footer (fixed; not in scroll) ----------
     const statsY = panelTop + panelHeight + 20;
-    this.add.text(centerX, statsY, `Unlocked: ${unlockedCount} / ${items.length}`, { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ffffff' }).setOrigin(0.5);
+    this.add.text(centerX, statsY, `UNLOCKED: ${unlockedCount} / ${items.length}`, { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ffffff' }).setOrigin(0.5);
 
     const played = totals.playTimeSeconds || 0;
     const hours = Math.floor(played / 3600);
     const minutes = Math.floor((played % 3600) / 60);
     const timeStr = `${hours}h ${minutes}m`;
 
-    this.add.text(centerX, statsY + 28, `Games: ${totals.gamesPlayed || 0}   Rounds: ${totals.roundsPlayed || 0}   Best: ${formatCompact(totals.bestSingleMatchScore || 0)}`, { fontSize: 16, fontFamily: 'Orbitron, Arial', color: '#ffffff' }).setOrigin(0.5);
-    this.add.text(centerX, statsY + 50, `Playtime: ${timeStr}   Straights: ${totals.straightsRolled || 0}`, { fontSize: 14, fontFamily: 'Orbitron, Arial', color: '#cccccc' }).setOrigin(0.5);
+    this.add.text(centerX, statsY + 28, `GAMES: ${totals.gamesPlayed || 0}     WINS: ${totals.wins || 0}    ROUNDS: ${totals.roundsPlayed || 0}    BEST: ${formatCompact(totals.bestSingleMatchScore || 0)}`, { fontSize: 16, fontFamily: 'Orbitron, Arial', color: '#ffffff' }).setOrigin(0.5);
+    this.add.text(centerX, statsY + 50, `PLAYTIME: ${timeStr}    STRAIGHTS: ${totals.straightsRolled || 0}`, { fontSize: 14, fontFamily: 'Orbitron, Arial', color: '#cccccc' }).setOrigin(0.5);
 
-    const back = this.add.text(centerX, this.cameras.main.height - 40, '← Back', { fontSize: 26, fontFamily: 'Orbitron, Arial', color: '#ff6666' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    const back = this.add.text(centerX, this.cameras.main.height - 40, '← BACK', { fontSize: 26, fontFamily: 'Orbitron, Arial', color: '#ff6666' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     back.on('pointerdown', () => {
       if (GlobalAudio) GlobalAudio.playButton(this);
       this.scene.start('MenuScene');

@@ -6,12 +6,14 @@ const DEFAULTS = {
     roundsPlayed: 0,
     bestSingleMatchScore: 0,
     playTimeSeconds: 0,
-    straightsRolled: 0
+    straightsRolled: 0,
+	wins: 0
   },
   unlocked: {
     firstPlay: false,
     rounds100: false,
     rounds500: false,
+	rounds2500: false,
     score1000: false,
     score10000: false,
     score100000: false,
@@ -24,7 +26,10 @@ const DEFAULTS = {
     diceaholic: false,
     funHouse: false,
     roundhouseStraight: false,
-    maximumPower: false
+    maximumPower: false,
+	winnerWinner: false,
+    realDicetician: false,
+    boomDicealaka: false
   }
 };
 
@@ -39,19 +44,19 @@ class AchievementsManager {
   // allow a scene to be registered for UI display. Pass `null` to unregister.
   registerScene(scene) {
     this._scene = scene || null;
+
     if (scene && scene.events && typeof scene.events.once === 'function') {
-      scene.events.once('shutdown', () => {
-        if (this._scene === scene) this._scene = null;
-      });
-      scene.events.once('destroy', () => {
-        if (this._scene === scene) this._scene = null;
-      });
+      scene.events.once('shutdown', () => { if (this._scene === scene) this._scene = null; });
+      scene.events.once('destroy', () => { if (this._scene === scene) this._scene = null; });
     }
 
-    // Try to flush queued notifications as soon as a scene is available
-    if (this._scene && this._scene.time) {
-      this._maybeDisplayNotifications();
+    // Start global playtime heartbeat if not already
+    if (!this._playHeartbeatStarted) {
+      this._startPlayHeartbeat();
     }
+
+    // Try flush queued notifications
+    this._maybeDisplayNotifications();
   }
 
   _load() {
@@ -104,12 +109,19 @@ class AchievementsManager {
     this._checkScoreMilestones();
     this._save();
   }
+  
+  addWin(n = 1) {
+    n = Math.max(0, Math.floor(n || 1));
+    this._data.totals.wins = (this._data.totals.wins || 0) + n;
+    if (this._data.totals.wins >= 1) this.maybeUnlock('winnerWinner');
+    if (this._data.totals.wins >= 10) this.maybeUnlock('realDicetician');
+    this._save();
+  }
 
   // add total play seconds (called when session ends or on regular heartbeat if you want)
   addPlaySeconds(seconds) {
     seconds = Math.max(0, Math.floor(seconds || 0));
     this._data.totals.playTimeSeconds = (this._data.totals.playTimeSeconds || 0) + seconds;
-    // check the time milestones
     this._checkTimeMilestones();
     this._save();
   }
@@ -132,6 +144,7 @@ class AchievementsManager {
     const r = this._data.totals.roundsPlayed || 0;
     if (r >= 100) this.maybeUnlock('rounds100');
     if (r >= 500) this.maybeUnlock('rounds500');
+	if (r >= 2500) this.maybeUnlock('rounds2500');
   }
 
   _checkScoreMilestones() {
@@ -158,22 +171,15 @@ class AchievementsManager {
   maybeUnlock(key) {
     if (!key) return false;
     if (this._data.unlocked[key]) return false;
-
-    // create key if missing and set
     if (typeof this._data.unlocked[key] === 'undefined') {
       this._data.unlocked[key] = true;
     } else {
       this._data.unlocked[key] = true;
     }
 
-    // enqueue notification (newest at front)
     this._notifications.unshift(key);
-    // cap stored notifications to avoid runaway memory
     if (this._notifications.length > 200) this._notifications.length = 200;
-
     this._save();
-
-    // try to display immediately if a scene is registered
     this._maybeDisplayNotifications();
 
     return true;
@@ -182,27 +188,16 @@ class AchievementsManager {
   // attempt to display queued notifications using the registered scene (if any)
   _maybeDisplayNotifications() {
     if (!this._notifications || this._notifications.length === 0) return;
-    // if no scene registered, do nothing — keep notifications queued
     if (!this._scene) return;
-
-    // copy and clear current queue (we will display these)
-    const notifs = this._notifications.slice();
-    this._notifications.length = 0;
-
     if (this._achieveNotificationRunning) {
       try {
-        if (this._scene && this._scene.time && typeof this._scene.time.delayedCall === 'function') {
-          this._scene.time.delayedCall(200, () => this._displayAchievementSequence(notifs));
-        } else {
-          this._notifications = notifs.concat(this._notifications);
-        }
-      } catch (e) {
-        this._notifications = notifs.concat(this._notifications);
-        console.warn('[Achievements] delayedCall failed, re-queueing notifs', e);
-      }
-    } else {
-      this._displayAchievementSequence(notifs);
+        this._scene.time.delayedCall(200, () => this._maybeDisplayNotifications());
+      } catch (e) {}
+      return;
     }
+    const notifs = this._notifications.slice();
+    this._notifications.length = 0;
+    this._displayAchievementSequence(notifs);
   }
 
   /**
@@ -228,6 +223,7 @@ class AchievementsManager {
       firstPlay: { title: "I'm New to This", desc: 'Played Scale Dice for the first time.' },
       rounds100: { title: 'Late Warrior', desc: 'Progressed 100 rounds total.' },
       rounds500: { title: 'Late Nights', desc: 'Progressed 500 rounds total.' },
+	  rounds2500: { title: 'Forever Going', desc: 'Progressed 2,500 rounds total.' },
       score1000: { title: "Pilin' Up!", desc: 'Scored 1,000 points in a local/online game.' },
       score10000: { title: "Rackin' Up!", desc: 'Scored 10,000 points in a local/online game.' },
       score100000: { title: 'Hard Labour', desc: 'Scored 100,000 points in a local/online game.' },
@@ -241,7 +237,10 @@ class AchievementsManager {
       diceaholic: { title: 'Diceaholic', desc: 'Played Scale Dice for 12 hours total.' },
       funHouse: { title: 'Fun House', desc: 'Rolled 5 consecutive full houses or power houses in a game.' },
       roundhouseStraight: { title: 'Roundhouse Straight', desc: 'Rolled 10 straights in total.' },
-      maximumPower: { title: 'Maximum Power', desc: 'Fully upgraded dice, economy and luck in a game.' }
+      maximumPower: { title: 'Maximum Power', desc: 'Fully upgraded everything (dice, economy, luck, major) in a game.' },
+	  winnerWinner: { title: 'Winner Winner', desc: 'Win your first match.' },
+      realDicetician: { title: 'Real Dicetician', desc: 'Win 10 matches.' },
+      boomDicealaka: { title: 'Boom Dicealaka', desc: 'Score over 10,000 points with one roll.' }
     };
 
     this._achieveNotificationRunning = true;
@@ -335,6 +334,27 @@ class AchievementsManager {
     };
 
     displayOne(0);
+  }
+  
+  // ---------- playtime heartbeat (global) ----------
+  _startPlayHeartbeat() {
+    if (this._playHeartbeatStarted) return;
+    this._playHeartbeatStarted = true;
+    this._heartbeatId = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        this.addPlaySeconds(1);
+      }
+    }, 1000);
+	
+    window.addEventListener('beforeunload', () => { this._save(); });
+  }
+
+  _bindVisibilityHandler() {
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        this._maybeDisplayNotifications();
+      }
+    });
   }
 }
 
