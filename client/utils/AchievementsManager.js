@@ -13,7 +13,7 @@ const DEFAULTS = {
     firstPlay: false,
     rounds100: false,
     rounds500: false,
-	rounds2500: false,
+ rounds2500: false,
     score1000: false,
     score10000: false,
     score100000: false,
@@ -27,9 +27,13 @@ const DEFAULTS = {
     funHouse: false,
     roundhouseStraight: false,
     maximumPower: false,
-	winnerWinner: false,
+ winnerWinner: false,
     realDicetician: false,
     boomDicealaka: false
+  },
+  completedChallenges: {
+    daily: false,
+    deucifer: false
   }
 };
 
@@ -137,6 +141,19 @@ class AchievementsManager {
   // Mark an existing combo-based achievement - convenience wrapper
   unlockComboAchievement(key) {
     this.maybeUnlock(key);
+  }
+
+  // Complete a challenge
+  completeChallenge(key) {
+    if (!key || !this._data.completedChallenges[key]) {
+      this._data.completedChallenges[key] = true;
+      this._save();
+    }
+  }
+
+  // Check if challenge completed
+  isChallengeCompleted(key) {
+    return this._data.completedChallenges[key] || false;
   }
 
   // Checkers

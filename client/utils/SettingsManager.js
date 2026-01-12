@@ -7,7 +7,7 @@ const DEFAULTS = {
 };
 
 class SettingsManager {
-  constructor(storageKey = 'fives_settings') {
+  constructor(storageKey = 'scaleDice_settings') {
     this.storageKey = storageKey;
   }
 

@@ -32,6 +32,11 @@ export default class LocalPostGameScene extends Phaser.Scene {
         const placements = new Array(stats.players || 0);
         scoredPlayers.forEach((p, i) => placements[p.index] = i + 1);
 
+        // Complete challenge if won
+        if (stats.challengeKey && placements[0] === 1) {
+          GlobalAchievements.completeChallenge(stats.challengeKey);
+        }
+
         // Rank colors
         const rankColors = {
             1: "#FFD700", // Gold
@@ -110,6 +115,12 @@ export default class LocalPostGameScene extends Phaser.Scene {
             Object.entries(p.combos).forEach(([k, v]) => {
                 if (v > 0) comboLines.push(`${k}: ${v}`);
             });
+            // Sort by count descending
+            comboLines.sort((a, b) => {
+              const aCount = parseInt(a.split(': ')[1]);
+              const bCount = parseInt(b.split(': ')[1]);
+              return bCount - aCount;
+            });
 
             const glow = this.add.rectangle(x, y + 10, 480, 90,
                 isWinner ? 0xFFD700 : tint, isWinner ? 0.15 : 0.08
@@ -134,10 +145,11 @@ export default class LocalPostGameScene extends Phaser.Scene {
                 y + 26,
                 comboLines.length ? comboLines.join('  •  ') : 'No combos achieved',
                 {
-                    fontSize: 16,
+                    fontSize: 12,
                     fontFamily: 'Orbitron, Arial',
                     color: comboLines.length ? '#cccccc' : '#777777',
-                    align: 'center'
+                    align: 'center',
+                    wordWrap: { width: 460 }
                 }
             ).setOrigin(0.5);
         });
@@ -216,6 +228,12 @@ export default class LocalPostGameScene extends Phaser.Scene {
                   const v = c[k] ?? 0;
                   if (v > 0) combosToShow.push(`${k}: ${v}`);
                 });
+                // Sort by count descending
+                combosToShow.sort((a, b) => {
+                  const aCount = parseInt(a.split(': ')[1]);
+                  const bCount = parseInt(b.split(': ')[1]);
+                  return bCount - aCount;
+                });
 
                 // Title (larger + coloured)
                 this.add.text(x, y, title, {
@@ -234,16 +252,18 @@ export default class LocalPostGameScene extends Phaser.Scene {
                 }).setOrigin(0.5);
 
                 // Stats block (only combos earned)
+                let combosY = y + 70;
                 if (combosToShow.length) {
-                  this.add.text(x, y + 70, combosToShow.join('\n'), {
-                      fontSize: statSize,
+                  this.add.text(x, combosY, combosToShow.join('\n'), {
+                      fontSize: statSize * 0.67,
                       fontFamily: 'Orbitron, Arial',
                       color: "#ffffff",
-                      align: "center"
+                      align: "center",
+                      lineSpacing: -6
                   }).setOrigin(0.5);
                 } else {
-                  this.add.text(x, y + 70, 'No combos achieved', {
-                      fontSize: statSize,
+                  this.add.text(x, combosY, 'No combos achieved', {
+                      fontSize: statSize * 0.67,
                       fontFamily: 'Orbitron, Arial',
                       color: "#888888",
                       align: "center"
@@ -251,7 +271,8 @@ export default class LocalPostGameScene extends Phaser.Scene {
                 }
 
                 // Buzzword (highlighted slightly bigger)
-                this.add.text(x, y + 150, `"${message}"`, {
+                const buzzY = combosY + (combosToShow.length > 0 ? combosToShow.length * (statSize * 0.67 + 2) + 20 : 30);
+                this.add.text(x, buzzY, `"${message}"`, {
                     fontSize: buzzSize,
                     fontFamily: 'Orbitron, Arial',
                     color: placeColor,

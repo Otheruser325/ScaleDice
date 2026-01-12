@@ -70,7 +70,7 @@ export function showComboText(scene, comboName, intensity = 1) {
   const isRainbow = comboKey === 'fiveOfAKind' || comboKey === 'sixOfAKind';
 
   if (settings.visualEffects === false) {
-    const simple = scene.add.text(600, 200, comboName, {
+    const simple = scene.add.text(600, 180, comboName, {
       fontSize: 40 * Math.max(0.8, intensity),
       fontStyle: 'bold',
       color: baseColor
@@ -80,7 +80,7 @@ export function showComboText(scene, comboName, intensity = 1) {
     return;
   }
 
-  const text = scene.add.text(600, 200, comboName, {
+  const text = scene.add.text(600, 180, comboName, {
     fontSize: 48 * intensity,
     fontFamily: 'Orbitron, Arial',
     fontStyle: 'bold',
@@ -133,7 +133,7 @@ export function showComboText(scene, comboName, intensity = 1) {
   // Exit motion
   scene.tweens.add({
     targets: text,
-    y: 150,
+    y: 130,
     alpha: 0,
     angle: 5,
     duration: isRainbow ? 1200 : 800,

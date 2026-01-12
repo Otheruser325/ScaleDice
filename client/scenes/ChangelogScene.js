@@ -9,9 +9,9 @@ export default class ChangelogScene extends Phaser.Scene {
   create() {
     GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
     const CENTER_X = 600;
-    const VIEW_WIDTH = 320;
+    let VIEW_WIDTH = 320;
     const VIEW_TOP = 160;
-    const VIEW_HEIGHT = 440;
+    const VIEW_HEIGHT = 780;
 
     const data = this.cache.json.get('changelog');
     if (!data) {
@@ -20,11 +20,14 @@ export default class ChangelogScene extends Phaser.Scene {
     }
 
     // Title
-    this.add.text(CENTER_X, 70, data.title ?? 'CHANGELOG', {
+    const titleText = this.add.text(CENTER_X, 70, data.title ?? 'CHANGELOG', {
       fontSize: 48,
       fontFamily: 'Orbitron, Arial',
       color: '#ffffff'
     }).setOrigin(0.5);
+
+    // Set view width to match title width
+    VIEW_WIDTH = Math.max(400, titleText.width + 40);
 
     // Scroll container
     this.content = this.add.container(CENTER_X - VIEW_WIDTH / 2, VIEW_TOP);

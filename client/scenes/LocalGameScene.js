@@ -18,6 +18,8 @@ export default class LocalGameScene extends Phaser.Scene {
     this.costMult = data.costMult ?? 1;
     this.teamsEnabled = data.teamsEnabled ?? false;
     this.teams = data.teams ?? Array.from({ length: this.playerCount }, (_, i) => 'blue');
+    this.bigUpgradesEnabled = data.bigUpgradesEnabled ?? true;
+    this.challengeKey = data.challengeKey || null;
 
     this.players = Array.from({ length: this.playerCount }, (_, i) => ({
       name: (data.names && data.names[i]) || `P${i + 1}`,
@@ -37,6 +39,7 @@ export default class LocalGameScene extends Phaser.Scene {
     this.waitingForResult = false;
     this.diceCosts = [10, 100, 500, 3000, 20000];
     this.teamScoreText = null;
+    this.prediction = null;
 
     this.playerTints = [
       0x66aaff,
@@ -98,7 +101,7 @@ export default class LocalGameScene extends Phaser.Scene {
       { key: 'comboX', title: 'Combo-X', baseCost: 2500 },
       { key: 'masterPredict', title: 'Master Predict', baseCost: 7500 },
       { key: 'fixated', title: 'Fixated', baseCost: 30000 },
-	  { key: 'highStonks', title: 'High Stonks', baseCost: 60000 },
+	    { key: 'highStonks', title: 'High Stonks', baseCost: 60000 },
       { key: 'comboMasher', title: 'Combo Masher', baseCost: 150000 }
     ];
   }
@@ -106,10 +109,9 @@ export default class LocalGameScene extends Phaser.Scene {
   create() {
     this.headerText = this.add.text(600, 15, 'Scale Dice', { fontSize: 22, fontFamily: 'Orbitron, Arial', color: '#cccccc' }).setOrigin(0.5);
     this.roundText = this.add.text(600, 40, `Round ${this.currentRound} / ${this.maxRounds}`, { fontSize: 28, fontFamily: 'Orbitron, Arial' }).setOrigin(0.5);
-    this.lastRollText = this.add.text(600, 72, '', { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ffffaa' }).setOrigin(0.5);
-    this.predictionText = this.add.text(600, 85, '', { fontSize: 16, fontFamily: 'Orbitron, Arial', color: '#88ff88' }).setOrigin(0.5);
-
-    this.turnText = this.add.text(600, 100, '', { fontSize: 24, fontFamily: 'Orbitron, Arial' }).setOrigin(0.5);
+    this.turnText = this.add.text(600, 72, '', { fontSize: 24, fontFamily: 'Orbitron, Arial' }).setOrigin(0.5);
+    this.lastRollText = this.add.text(600, 100, '', { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ffffaa' }).setOrigin(0.5).setDepth(10);
+    this.predictionText = this.add.text(600, 115, '', { fontSize: 16, fontFamily: 'Orbitron, Arial', color: '#88ff88' }).setOrigin(0.5);
 
     this.diceSprites = [];
     for (let i = 0; i < 6; i++) {
@@ -140,7 +142,7 @@ export default class LocalGameScene extends Phaser.Scene {
       .setOrigin(0.5).setInteractive().on('pointerdown', () => this.buyLuck());
     this.luckCostText = this.add.text(600, 680, '', { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ff88ff' }).setOrigin(0.5);
 
-    this.scoreBreakdown = this.add.text(600, 240, "", { fontSize: 20, fontFamily: 'Orbitron, Arial', color: '#ffffaa', align: 'center' }).setOrigin(0.5);
+    this.scoreBreakdown = this.add.text(600, 220, "", { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ffffaa', align: 'center', lineSpacing: -2 }).setOrigin(0.5);
 
     this.exitLocked = true;
     this.events.once('shutdown', this.cleanupScene, this);
@@ -168,7 +170,7 @@ export default class LocalGameScene extends Phaser.Scene {
     });
 
     this.input.keyboard.on('keydown-B', () => {
-      if (this.isRolling || this.waitingForResult) return;
+      if (this.isRolling || this.waitingForResult || !this.bigUpgradesEnabled) return;
       this.toggleBigUpgrades();
     });
 
@@ -311,7 +313,8 @@ export default class LocalGameScene extends Phaser.Scene {
       const lvl = (player.upgrades.getComboLevel && player.upgrades.getComboLevel(key)) || 0;
       const upgradeMult = (player.upgrades.getComboMultiplier && player.upgrades.getComboMultiplier(key)) || 1;
       const baseMult = COMBO_BASE_MULT[key] || 1;
-      const totalMult = baseMult * upgradeMult;
+      const globalMult = player.upgrades.getComboGlobalMultiplier ? player.upgrades.getComboGlobalMultiplier() : 1;
+      const totalMult = baseMult * upgradeMult * globalMult;
 
       entry.ui.lvlText.setText(`Lv ${lvl} (x${totalMult.toFixed(1)})`);
 
@@ -345,6 +348,8 @@ export default class LocalGameScene extends Phaser.Scene {
   }
 
   createBigUpgradesPanelToolbar() {
+    if (!this.bigUpgradesEnabled) return;
+
     if (this.bigUpgradesToolbarContainer) {
       try { this.bigUpgradesToolbarContainer.destroy(true); } catch (e) {}
       this.bigUpgradesToolbarContainer = null;
@@ -400,6 +405,7 @@ export default class LocalGameScene extends Phaser.Scene {
   }
 
   toggleBigUpgrades() {
+    if (!this.bigUpgradesEnabled) return;
     if (this.comboPanelOpen) this.closeComboToolbarInstant();
 
     this.bigUpgradesOpen = !this.bigUpgradesOpen;
@@ -433,29 +439,30 @@ export default class LocalGameScene extends Phaser.Scene {
 
     this.bigUpgradesToolbar.forEach(entry => {
       const scaled = Math.max(1, Math.floor(entry.baseCost * (this.costMult || 1)));
-      entry.buyBtn.setText(`BUY ${formatCompact(scaled)}`);
+      if (entry.buyBtn) entry.buyBtn.setText(`BUY ${formatCompact(scaled)}`);
 
       const purchased = player.upgrades.hasBigUpgrade ? player.upgrades.hasBigUpgrade(entry.key) : false;
 
       if (purchased) {
-        entry.buyBtn.disableInteractive?.();
-        entry.buyBtn.setStyle({ color: '#666666' });
-        entry.title.setStyle?.({ color: '#99ff99' });
+        if (entry.buyBtn) entry.buyBtn.disableInteractive?.();
+        if (entry.buyBtn) entry.buyBtn.setStyle({ color: '#666666' });
+        if (entry.title) entry.title.setStyle?.({ color: '#99ff99' });
       } else {
         const canBuy = isActiveHuman && !this.isRolling && !this.waitingForResult && player.score >= scaled;
         if (!canBuy) {
-          entry.buyBtn.disableInteractive?.();
-          entry.buyBtn.setStyle({ color: '#555555' });
+          if (entry.buyBtn) entry.buyBtn.disableInteractive?.();
+          if (entry.buyBtn) entry.buyBtn.setStyle({ color: '#555555' });
         } else {
-          entry.buyBtn.setInteractive?.({ useHandCursor: true });
-          entry.buyBtn.setStyle({ color: '#66ff66' });
+          if (entry.buyBtn) entry.buyBtn.setInteractive?.({ useHandCursor: true });
+          if (entry.buyBtn) entry.buyBtn.setStyle({ color: '#66ff66' });
         }
-        entry.title.setStyle?.({ color: '#ffffff' });
+        if (entry.title) entry.title.setStyle?.({ color: '#ffffff' });
       }
     });
   }
 
   attemptBuyBigUpgrade(key, title, baseCost) {
+    if (!this.bigUpgradesEnabled) return;
     const player = this.players[this.currentPlayerIndex];
     if (!player) return;
     if (this.currentPlayerIndex !== this.getLocalPlayerIndex()) {
@@ -585,6 +592,53 @@ export default class LocalGameScene extends Phaser.Scene {
       });
       this._logActivity(`${player.name} received a big boost (${formatCompact(boost)}). Go catch 'em!`);
     }
+
+    // Clairvoyance prediction at turn start
+    if (!this.prediction && player.upgrades.hasBigUpgrade && player.upgrades.hasBigUpgrade('clairvoyance')) {
+      const chance = player.upgrades.getClairvoyanceChance();
+      if (Math.random() < chance) {
+        const luckBonus = player.upgrades.getLuckBonus();
+        const baseLuck = player.luck || 1;
+        const effectiveLuck = Phaser.Math.Clamp(baseLuck + luckBonus, 0.5, 6.0);
+        let pred = Array.from({ length: player.diceUnlocked }, () => Phaser.Math.Between(1, 6));
+        pred = pred.map(v => {
+          const rerollChance = Phaser.Math.Clamp((effectiveLuck - 1) / 5, 0, 1);
+          if (Math.random() < rerollChance) {
+            const bias = Math.pow(Math.random(), 1 / Math.max(0.001, effectiveLuck));
+            return Phaser.Math.Clamp(Math.ceil(bias * 6), 1, 6);
+          }
+          return v;
+        });
+        if (effectiveLuck >= 2) {
+          const boostFraction = Phaser.Math.Clamp((effectiveLuck - 1) / 5, 0, 1);
+          const toCoerce = Math.floor(boostFraction * (player.diceUnlocked - 1));
+          if (toCoerce > 0) {
+            const counts = {};
+            pred.forEach(n => counts[n] = (counts[n] || 0) + 1);
+            let targetFace = 6;
+            let bestCount = -1;
+            Object.keys(counts).forEach(k => {
+              const c = counts[k];
+              if (c > bestCount) { bestCount = c; targetFace = parseInt(k, 10); }
+            });
+            if (effectiveLuck >= 4 && Math.random() < 0.6) targetFace = 6;
+            let coerced = 0;
+            const indices = Array.from({ length: pred.length }, (_, i) => i).sort(() => Math.random() - 0.5);
+            for (let idx of indices) {
+              if (coerced >= toCoerce) break;
+              if (pred[idx] !== targetFace && Math.random() < 0.9) {
+                pred[idx] = targetFace;
+                coerced++;
+              }
+            }
+          }
+        }
+        this.prediction = pred;
+        if (!player.isAI) {
+          this.predictionText.setText(`Prediction: ${this.prediction.join(', ')}`);
+        }
+      }
+    }
   }
 
   getInitialLuck(isAI, difficulty) {
@@ -693,6 +747,7 @@ export default class LocalGameScene extends Phaser.Scene {
     };
 
     const tryBuyBigNow = (key) => {
+      if (!this.bigUpgradesEnabled) return false;
       const def = this._bigUpgradeDefs.find(d => d.key === key);
       if (!def) return false;
 
@@ -848,7 +903,7 @@ export default class LocalGameScene extends Phaser.Scene {
 
   const player = this.players[this.currentPlayerIndex];
   GlobalAudio.playDice(this);
-  const raw = this.dice.rollMany(player.diceUnlocked);
+  let raw = this.dice.rollMany(player.diceUnlocked);
 
   if (!Array.isArray(this._lastComboKey) || this._lastComboKey.length !== this.playerCount) {
     this._lastComboKey = Array(this.playerCount).fill(null);
@@ -867,85 +922,68 @@ export default class LocalGameScene extends Phaser.Scene {
     }));
   }
 
-  if (!player.isAI && player.upgrades.getClairvoyanceChance && player.upgrades.getClairvoyanceChance() > 0) {
-    const chance = player.upgrades.getClairvoyanceChance();
-    if (Math.random() < chance) {
-      const pred = Array.from({ length: player.diceUnlocked }, () => Phaser.Math.Between(4, 6));
-      if (this.currentPlayerIndex === this.getLocalPlayerIndex()) {
-        this.predictionText.setText(`Prediction: ${pred.join(', ')}`);
-        this.time.delayedCall(4000, () => {
-          try { this.predictionText.setText(''); } catch (e) {}
+  if (this.prediction) {
+    raw = this.prediction.slice();
+    // Clear prediction after use
+    this.prediction = null;
+    this.time.delayedCall(4000, () => {
+      try { this.predictionText.setText(''); } catch (e) {}
+    });
+  } else {
+    this.predictionText.setText('');
+    const luckBonus = player.upgrades.getLuckBonus();
+    const baseLuck = player.luck || 1;
+    const effectiveLuck = Phaser.Math.Clamp(baseLuck + luckBonus, 0.5, 6.0);
+
+    const finalLuck = raw.map(v => {
+      const rerollChance = Phaser.Math.Clamp((effectiveLuck - 1) / 5, 0, 1);
+      if (Math.random() < rerollChance) {
+        const bias = Math.pow(Math.random(), 1 / Math.max(0.001, effectiveLuck));
+        return Phaser.Math.Clamp(Math.ceil(bias * 6), 1, 6);
+      }
+      return v;
+    });
+
+    if (effectiveLuck >= 2) {
+      const boostFraction = Phaser.Math.Clamp((effectiveLuck - 1) / 5, 0, 1);
+      const toCoerce = Math.floor(boostFraction * (player.diceUnlocked - 1));
+      if (toCoerce > 0) {
+        const counts = {};
+        finalLuck.forEach(n => counts[n] = (counts[n] || 0) + 1);
+        let targetFace = 6;
+        let bestCount = -1;
+        Object.keys(counts).forEach(k => {
+          const c = counts[k];
+          if (c > bestCount) { bestCount = c; targetFace = parseInt(k, 10); }
         });
-      }
+        if (effectiveLuck >= 4 && Math.random() < 0.6) targetFace = 6;
 
-      const nudgeCount = Math.max(1, Math.floor(player.diceUnlocked * 0.25));
-      const idxs = Phaser.Utils.Array.NumberArray(0, player.diceUnlocked - 1);
-      Phaser.Utils.Array.Shuffle(idxs);
-      for (let k = 0; k < nudgeCount; k++) {
-        const idx = idxs[k];
-        if (Math.random() < 0.7) {
-          raw[idx] = pred[idx];
-        }
-      }
-    } else {
-      this.predictionText.setText('');
-    }
-  }
-
-  const luckBonus = player.upgrades.getLuckBonus();
-  const baseLuck = player.luck || 1;
-  const effectiveLuck = Phaser.Math.Clamp(baseLuck + luckBonus, 0.5, 6.0);
-
-  const final = raw.map(v => {
-    const rerollChance = Phaser.Math.Clamp((effectiveLuck - 1) / 5, 0, 1);
-    if (Math.random() < rerollChance) {
-      const bias = Math.pow(Math.random(), 1 / Math.max(0.001, effectiveLuck));
-      return Phaser.Math.Clamp(Math.ceil(bias * 6), 1, 6);
-    }
-    return v;
-  });
-
-  if (effectiveLuck >= 2) {
-    const boostFraction = Phaser.Math.Clamp((effectiveLuck - 1) / 5, 0, 1);
-    const toCoerce = Math.floor(boostFraction * (player.diceUnlocked - 1));
-    if (toCoerce > 0) {
-      const counts = {};
-      final.forEach(n => counts[n] = (counts[n] || 0) + 1);
-      let targetFace = 6;
-      let bestCount = -1;
-      Object.keys(counts).forEach(k => {
-        const c = counts[k];
-        if (c > bestCount) { bestCount = c; targetFace = parseInt(k, 10); }
-      });
-      if (effectiveLuck >= 4 && Math.random() < 0.6) targetFace = 6;
-
-      let coerced = 0;
-      const indices = Array.from({ length: final.length }, (_, i) => i).sort(() => Math.random() - 0.5);
-      for (let idx of indices) {
-        if (coerced >= toCoerce) break;
-        if (final[idx] !== targetFace && Math.random() < 0.9) {
-          final[idx] = targetFace;
-          coerced++;
+        let coerced = 0;
+        const indices = Array.from({ length: finalLuck.length }, (_, i) => i).sort(() => Math.random() - 0.5);
+        for (let idx of indices) {
+          if (coerced >= toCoerce) break;
+          if (finalLuck[idx] !== targetFace && Math.random() < 0.9) {
+            finalLuck[idx] = targetFace;
+            coerced++;
+          }
         }
       }
     }
+    raw = finalLuck;
   }
 
   const idx = this.currentPlayerIndex;
-  player.lastRoll = final.slice();
-  this.lastRollText.setText(`Last: ${final.join(', ')}`);
+  player.lastRoll = raw.slice();
 
   const activeDice = this.diceSprites.slice(0, player.diceUnlocked);
-  await animateDiceRoll(this, final, activeDice);
+  await animateDiceRoll(this, raw, activeDice);
 
-  const combo = checkCombo(final);
+  const combo = checkCombo(raw);
 
-  const base = final.reduce((a, b) => a + b, 0);
-  const isFixated = player.upgrades.hasBigUpgrade && player.upgrades.hasBigUpgrade('fixated');
-  const baseBeforeDice = isFixated ? base * 2 : base;
+  const base = raw.reduce((a, b) => a + b, 0);
 
   const diceMultiplier = player.upgrades.getDiceScoreMultiplier ? player.upgrades.getDiceScoreMultiplier() : 1;
-  let gained = Math.floor(baseBeforeDice * diceMultiplier);
+  let gained = Math.floor(base * diceMultiplier);
 
   if (combo) {
     if (combo.key && this.comboStats[idx] && typeof this.comboStats[idx][combo.key] === 'number') {
@@ -1019,11 +1057,20 @@ export default class LocalGameScene extends Phaser.Scene {
   } catch (e) {}
 
   const comboLabel = combo && combo.key ? ` (${COMBO_DISPLAY_NAMES[combo.key] || combo.key})` : '';
-  this._logActivity(`${player.name} rolled [${final.join(', ')}] -> +${formatCompact(gained)}${comboLabel}`);
+  this._logActivity(`${player.name} rolled [${raw.join(', ')}] -> +${formatCompact(gained)}${comboLabel}`);
 
-  this.updateDiceScoreDisplay(final, gained, combo, player);
+  this.updateDiceScoreDisplay(raw, gained, combo, player);
 
   player.score += gained;
+
+  // Check for in-game score achievements (only for human players)
+  if (!player.isAI) {
+    if (player.score >= 1000) GlobalAchievements.maybeUnlock('score1000');
+    if (player.score >= 10000) GlobalAchievements.maybeUnlock('score10000');
+    if (player.score >= 100000) GlobalAchievements.maybeUnlock('score100000');
+    if (player.score >= 1000000) GlobalAchievements.maybeUnlock('score1000000');
+    if (player.score >= 10000000) GlobalAchievements.maybeUnlock('score10000000');
+  }
 
   this.waitingForResult = true;
   this.rollBtn.setText('RESULTS');
@@ -1056,6 +1103,49 @@ export default class LocalGameScene extends Phaser.Scene {
       player.diceUnlocked = Math.min(6, player.diceUnlocked + 1); // cap at 6 dice
       GlobalAudio.playButton(this);
       this._logActivity(`${player.name} bought Dice → ${player.diceUnlocked} dice`);
+      // Regenerate Clairvoyance prediction if active
+      if (this.prediction && player.upgrades.hasBigUpgrade && player.upgrades.hasBigUpgrade('clairvoyance')) {
+        const luckBonus = player.upgrades.getLuckBonus();
+        const baseLuck = player.luck || 1;
+        const effectiveLuck = Phaser.Math.Clamp(baseLuck + luckBonus, 0.5, 6.0);
+        let pred = Array.from({ length: player.diceUnlocked }, () => Phaser.Math.Between(1, 6));
+        pred = pred.map(v => {
+          const rerollChance = Phaser.Math.Clamp((effectiveLuck - 1) / 5, 0, 1);
+          if (Math.random() < rerollChance) {
+            const bias = Math.pow(Math.random(), 1 / Math.max(0.001, effectiveLuck));
+            return Phaser.Math.Clamp(Math.ceil(bias * 6), 1, 6);
+          }
+          return v;
+        });
+        if (effectiveLuck >= 2) {
+          const boostFraction = Phaser.Math.Clamp((effectiveLuck - 1) / 5, 0, 1);
+          const toCoerce = Math.floor(boostFraction * (player.diceUnlocked - 1));
+          if (toCoerce > 0) {
+            const counts = {};
+            pred.forEach(n => counts[n] = (counts[n] || 0) + 1);
+            let targetFace = 6;
+            let bestCount = -1;
+            Object.keys(counts).forEach(k => {
+              const c = counts[k];
+              if (c > bestCount) { bestCount = c; targetFace = parseInt(k, 10); }
+            });
+            if (effectiveLuck >= 4 && Math.random() < 0.6) targetFace = 6;
+            let coerced = 0;
+            const indices = Array.from({ length: pred.length }, (_, i) => i).sort(() => Math.random() - 0.5);
+            for (let idx of indices) {
+              if (coerced >= toCoerce) break;
+              if (pred[idx] !== targetFace && Math.random() < 0.9) {
+                pred[idx] = targetFace;
+                coerced++;
+              }
+            }
+          }
+        }
+        this.prediction = pred;
+        if (!player.isAI) {
+          this.predictionText.setText(`Prediction: ${this.prediction.join(', ')}`);
+        }
+      }
       this.updateTurnUI();
       return true;
     }
@@ -1165,11 +1255,6 @@ export default class LocalGameScene extends Phaser.Scene {
     this.rollBtn.setStyle({ color: '#66ff66' });
     this.rollBtn.setInteractive();
 
-    try {
-      const prevIdx = this.currentPlayerIndex;
-      if (this.players[prevIdx]) this.players[prevIdx].lastRoll = [];
-    } catch(e){}
-
     this.currentPlayerIndex++;
 
     if (this.currentPlayerIndex >= this.playerCount) {
@@ -1194,6 +1279,7 @@ export default class LocalGameScene extends Phaser.Scene {
     try { this.lastRollText.setText(''); } catch (e) {}
 
     this.updateTurnUI();
+    this.closeComboToolbarInstant();
   }
 
   updateTurnUI() {
@@ -1201,7 +1287,6 @@ export default class LocalGameScene extends Phaser.Scene {
     this.roundText.setText(`Round ${this.currentRound} / ${this.maxRounds}`);
 
     const p = this.players[this.currentPlayerIndex];
-    this.closeComboToolbarInstant();
     this.startTurn(p);
 
     if (this.teamsEnabled) {
@@ -1215,8 +1300,9 @@ export default class LocalGameScene extends Phaser.Scene {
       this.headerText.setText('Scale Dice');
     }
 
-    if (p.lastRoll && p.lastRoll.length) {
-      this.lastRollText.setText(`Last: ${p.lastRoll.join(', ')}`);
+    // Show the current player's last roll from the previous round
+    if (!this.waitingForResult && p.lastRoll && p.lastRoll.length) {
+      this.lastRollText.setText(`Last Roll: ${p.lastRoll.join(', ')}`);
     } else {
       this.lastRollText.setText('');
     }
@@ -1326,6 +1412,15 @@ export default class LocalGameScene extends Phaser.Scene {
 
     this.refreshComboToolbarForPlayer(p);
     this.updatePlayerBar();
+    this.refreshBigUpgradesPanel();
+
+    // Clairvoyance prediction clearing
+    if (!p.upgrades.hasBigUpgrade || !p.upgrades.hasBigUpgrade('clairvoyance') || this.currentPlayerIndex !== this.getLocalPlayerIndex()) {
+      this.prediction = null;
+      if (!p.isAI) {
+        this.predictionText.setText('');
+      }
+    }
   }
 
   updateDiceScoreDisplay(dice, scored, combo = null, player = null) {
@@ -1336,51 +1431,46 @@ export default class LocalGameScene extends Phaser.Scene {
   lines.push(`Rolled: ${dice.join(', ')}`);
   lines.push(`Base Score: ${base}`);
 
-  let workingBase = base;
+  let workingBase = base * (player?.upgrades?.getDiceScoreMultiplier?.() || 1);
 
   if (hasFixated) {
-    workingBase = base * 2;
     lines.push(`Base × 2 (Fixated) = ${workingBase}`);
   }
 
   if (combo && player) {
-    const comboName =
+    let comboName =
       COMBO_DISPLAY_NAMES?.[combo.key] ||
       combo.type ||
       combo.key ||
       'Combo';
 
+    if (combo.key === 'straight') {
+      comboName = combo.type;
+    }
+
     const comboBaseMult = combo.multiplier || 1;
     const comboLevel = player.upgrades.getComboLevel?.(combo.key) || 0;
     const comboUpgradeMult = player.upgrades.getComboMultiplier?.(combo.key) || 1;
+    const comboGlobal = player.upgrades.getComboGlobalMultiplier ? player.upgrades.getComboGlobalMultiplier() : 1;
 
     // ---- Combo Masher ----
     const hasMasher = player.upgrades.hasBigUpgrade?.('comboMasher');
     const streak = this._consecComboStreak?.[this.currentPlayerIndex] || 1;
     const masherMult = hasMasher ? (1 + 0.2 * (streak - 1)) : 1;
-    const totalComboMult = comboBaseMult * comboUpgradeMult * masherMult;
+    const totalComboMult = comboBaseMult * comboUpgradeMult * comboGlobal * masherMult;
 
-    lines.push(``);
-    lines.push(`Combo: ${comboName}`);
-    lines.push(`• Base Multiplier: ×${comboBaseMult.toFixed(2)}`);
-
-    if (comboLevel > 0) {
-      lines.push(`• ${comboName} Level ${comboLevel}: ×${comboUpgradeMult.toFixed(2)}`);
-    }
+    lines.push(`Combo: ${comboName} (Level ${comboLevel}: ×${(comboUpgradeMult * comboGlobal).toFixed(2)})`);
+    lines.push(`Base Multiplier: ×${comboBaseMult.toFixed(2)}`);
 
     if (hasMasher) {
       lines.push(`• Combo Masher Streak: ${streak} (${(masherMult * 100 - 100).toFixed(0)}%)`);
       lines.push(`  ↳ Masher Multiplier: ×${masherMult.toFixed(2)}`);
     }
 
-    lines.push(``);
     lines.push(`Total Combo Multiplier: ×${totalComboMult.toFixed(2)}`);
-    lines.push(``);
-
     const finalScore = Math.floor(workingBase * totalComboMult);
     lines.push(`Final Score: ${formatCompact(finalScore)}`);
   } else {
-    lines.push(``);
     lines.push(`Final Score: ${formatCompact(scored)}`);
   }
 
@@ -1630,7 +1720,8 @@ export default class LocalGameScene extends Phaser.Scene {
       rounds: this.maxRounds,
       names: this.players.map(p => p.name),
       teamsEnabled: this.teamsEnabled ? true : false,
-      teams: this.players.map(p => p.team)
+      teams: this.players.map(p => p.team),
+      challengeKey: this.challengeKey
     });
 
     this.scene.start('LocalPostGameScene');
@@ -1690,6 +1781,21 @@ export default class LocalGameScene extends Phaser.Scene {
       try { this.bigUpgradesPanel.container.destroy(true); } catch(e){}
       this.bigUpgradesPanel = null;
     }} catch(e){}
+    try {
+      if (this.bigUpgradesToolbarContainer) {
+        this.bigUpgradesToolbarContainer.destroy(true);
+        this.bigUpgradesToolbarContainer = null;
+      }
+      if (Array.isArray(this.bigUpgradesToolbar)) {
+        this.bigUpgradesToolbar.forEach(entry => {
+          try { if (entry.buyBtn) entry.buyBtn.destroy(); } catch(e){}
+          try { if (entry.title) entry.title.destroy(); } catch(e){}
+          try { if (entry.desc) entry.desc.destroy(); } catch(e){}
+          try { if (entry.rowBg) entry.rowBg.destroy(); } catch(e){}
+        });
+        this.bigUpgradesToolbar = null;
+      }
+    } catch(e){}
     const uiFields = ['rollBtn','buyDiceBtn','diceCostText','buyEcoBtn','ecoCostText','buyLuckBtn','luckCostText',
       'headerText','roundText','lastRollText','turnText','scoreBreakdown'];
     uiFields.forEach(name => { try { if (this[name] && this[name].destroy) { this[name].destroy(); this[name] = null; } } catch(e){} });

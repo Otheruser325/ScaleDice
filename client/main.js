@@ -10,6 +10,7 @@ import LocalGameScene from './scenes/LocalGameScene.js';
 import LocalPostGameScene from './scenes/LocalPostGameScene.js';
 import OnlineMenuScene from './scenes/OnlineMenuScene.js';
 import ChallengesScene from './scenes/ChallengesScene.js';
+import ChallengeConfigScene from './scenes/ChallengeConfigScene.js';
 
 const config = {
     type: Phaser.AUTO,
@@ -38,7 +39,8 @@ const config = {
         LocalGameScene,
 		LocalPostGameScene,
         OnlineMenuScene,
-        ChallengesScene
+        ChallengesScene,
+        ChallengeConfigScene
     ]
 };
 

@@ -2,6 +2,18 @@
   "title": "SCALE DICE — CHANGELOG",
   "entries": [
     {
+      "version": "1.1.0",
+      "date": "12/01/2026",
+      "tags": ["Updates", "Features", "Bug Fixes"],
+      "changes": [
+        "Added Challenges: a new way to challenge yourself against predetermined opponents.",
+        "Daily Challenge: play against 2-4 AI opponents with random rulesets each day.",
+        "Deucifer's Pit: an extreme challenge designed for veteran players wanting to risk giving their soul for the best odds.",
+        "Minor Changes: \n• added an option to toggle big upgrades during lobby creation\n• improved dice and combo scoring UI in game",
+        "Bug fixes: \n• fixed an issue that caused the Clairvoyance big upgrade to not function properly.\n• fixed in-game toolbar interface behaviour when upgrading or ending turn.\n• minor fixes and improvements."
+      ]
+    },
+    {
       "version": "1.0.0",
       "date": "18/12/2025",
       "tags": ["Release"],

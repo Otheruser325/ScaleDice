@@ -9,6 +9,7 @@ export default class LocalConfigScene extends Phaser.Scene {
         this.selectedPlayers = 2;
         this.selectedRounds = 30;
         this.teamsEnabled = false;
+        this.bigUpgradesEnabled = true;
         this.costMultIndex = 4;
         this.costMultipliers = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4, 5];
         this.playerTeams = ['blue', 'red', 'blue', 'red', 'blue', 'red'];
@@ -189,8 +190,20 @@ export default class LocalConfigScene extends Phaser.Scene {
                 this.refreshScene();
             });
 
+        this.add.text(600, 630, `BIG UPGRADES: ${this.bigUpgradesEnabled ? 'ON' : 'OFF'}`, {
+                fontSize: 22,
+                fontFamily: 'Orbitron, Arial'
+            })
+            .setOrigin(0.5).setInteractive({
+                useHandCursor: true
+            })
+            .on('pointerdown', () => {
+                this.bigUpgradesEnabled = !this.bigUpgradesEnabled;
+                this.refreshScene();
+            });
+
         const mult = this.costMultipliers[this.costMultIndex];
-        this.add.text(600, 630, `UPGRADE COST MULTIPLIER: x${mult}`, {
+        this.add.text(600, 670, `UPGRADE COST MULTIPLIER: x${mult}`, {
                 fontSize: 22,
                 fontFamily: 'Orbitron, Arial'
             })
@@ -203,7 +216,7 @@ export default class LocalConfigScene extends Phaser.Scene {
             });
 
         // ---------------- Start ----------------
-        this.add.text(600, 720, 'START GAME', {
+        this.add.text(600, 750, 'START GAME', {
                 fontSize: 32,
                 fontFamily: 'Orbitron, Arial',
                 color: '#66ff66'
@@ -221,6 +234,7 @@ export default class LocalConfigScene extends Phaser.Scene {
                     difficulty: this.aiDifficulty.slice(0, this.selectedPlayers),
                     teamsEnabled: this.teamsEnabled,
                     teams: this.playerTeams.slice(0, this.selectedPlayers),
+                    bigUpgradesEnabled: this.bigUpgradesEnabled,
                     costMult: this.costMultipliers[this.costMultIndex]
                 });
             });
