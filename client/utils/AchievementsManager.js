@@ -40,6 +40,10 @@ const DEFAULTS = {
 class AchievementsManager {
   constructor() {
     this._data = this._load() || JSON.parse(JSON.stringify(DEFAULTS));
+    // Ensure completedChallenges exists for backward compatibility
+    if (!this._data.completedChallenges) {
+      this._data.completedChallenges = JSON.parse(JSON.stringify(DEFAULTS.completedChallenges));
+    }
     this._notifications = [];
     this._achieveNotificationRunning = false;
     this._scene = null;
@@ -145,7 +149,11 @@ class AchievementsManager {
 
   // Complete a challenge
   completeChallenge(key) {
-    if (!key || !this._data.completedChallenges[key]) {
+    if (!key) return;
+    if (!this._data.completedChallenges) {
+      this._data.completedChallenges = {};
+    }
+    if (!this._data.completedChallenges[key]) {
       this._data.completedChallenges[key] = true;
       this._save();
     }
@@ -153,7 +161,7 @@ class AchievementsManager {
 
   // Check if challenge completed
   isChallengeCompleted(key) {
-    return this._data.completedChallenges[key] || false;
+    return (this._data.completedChallenges && this._data.completedChallenges[key]) || false;
   }
 
   // Checkers
