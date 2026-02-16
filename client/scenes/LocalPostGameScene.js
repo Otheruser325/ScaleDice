@@ -1,7 +1,11 @@
 import GlobalAchievements from '../utils/AchievementsManager.js';
 import GlobalAudio from '../utils/AudioManager.js';
 import GlobalBackground from '../utils/BackgroundManager.js';
+import ChallengeManager from '../utils/ChallengeManager.js';
+import GlobalErrors from '../utils/ErrorManager.js';
 import { formatCompact } from '../utils/FormatManager.js';
+import GlobalLocalization from '../utils/LocalizationManager.js';
+import GlobalSettings from '../utils/SettingsManager.js';
 
 export default class LocalPostGameScene extends Phaser.Scene {
     constructor() {
@@ -10,16 +14,24 @@ export default class LocalPostGameScene extends Phaser.Scene {
 
     create() {
 		try {
+          GlobalErrors.setScene(this);
+        } catch (e) {}
+        try {
           GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
         } catch (e) {}
         try {
           GlobalAchievements.registerScene(this);
         } catch (e) {}
+        GlobalLocalization.init(this);
+        const settings = GlobalSettings.get(this);
+        GlobalLocalization.setLanguage(this, settings.language || 'English');
+        const t = (key, fallback) => GlobalLocalization.t(key, fallback);
+        const fmt = (key, ...args) => GlobalLocalization.format(key, ...args);
 		
         const stats = this.registry.get("localPostGame") || {};
         const totalPlayers = stats.players || 0;
 
-        this.add.text(600, 50, "LOCAL GAME - RESULTS", {
+        this.add.text(600, 50, t('POSTGAME_TITLE', 'LOCAL GAME - RESULTS'), {
             fontSize: 40,
             fontFamily: 'Orbitron, Arial'
         }).setOrigin(0.5);
@@ -32,9 +44,39 @@ export default class LocalPostGameScene extends Phaser.Scene {
         const placements = new Array(stats.players || 0);
         scoredPlayers.forEach((p, i) => placements[p.index] = i + 1);
 
+        // Determine if player won challenge
+        let playerWon = false;
+        if (stats.teamsEnabled && stats.teams && stats.scores) {
+            const bluePlayers = [];
+            const redPlayers = [];
+            for (let i = 0; i < stats.players; i++) {
+                const team = stats.teams[i] || 'blue';
+                const score = stats.scores[i] || 0;
+                if (team === 'blue') {
+                    bluePlayers.push(score);
+                } else {
+                    redPlayers.push(score);
+                }
+            }
+            const blueTotal = bluePlayers.reduce((s, p) => s + p, 0);
+            const redTotal = redPlayers.reduce((s, p) => s + p, 0);
+            const playerTeam = stats.teams[0] || 'blue';
+            playerWon = playerTeam === 'blue' ? blueTotal >= redTotal : redTotal >= blueTotal;
+        } else {
+            playerWon = placements[0] === 1;
+        }
+
         // Complete challenge if won
-        if (stats.challengeKey && placements[0] === 1) {
+        if (stats.challengeKey && playerWon) {
           GlobalAchievements.completeChallenge(stats.challengeKey);
+        }
+        if (stats.challengeKey) {
+          try {
+            ChallengeManager.recordResult(stats.challengeKey, playerWon, {
+              dateKey: stats.challengeDate,
+              reward: stats.challengeReward
+            });
+          } catch (e) {}
         }
 
         // Rank colors
@@ -143,7 +185,7 @@ export default class LocalPostGameScene extends Phaser.Scene {
             this.add.text(
                 x,
                 y + 26,
-                comboLines.length ? comboLines.join('  •  ') : 'No combos achieved',
+                comboLines.length ? comboLines.join('  •  ') : t('POSTGAME_NO_COMBOS', 'No combos achieved'),
                 {
                     fontSize: 12,
                     fontFamily: 'Orbitron, Arial',
@@ -169,8 +211,8 @@ export default class LocalPostGameScene extends Phaser.Scene {
         ).setOrigin(0.5);
     };
 
-    drawTeam(blue, leftX, 'BLUE TEAM', blueTotal, blueWins, 0x003366);
-    drawTeam(red, rightX, 'RED TEAM', redTotal, !blueWins, 0x440000);
+    drawTeam(blue, leftX, t('TEAM_BLUE_LABEL', 'BLUE TEAM'), blueTotal, blueWins, 0x003366);
+    drawTeam(red, rightX, t('TEAM_RED_LABEL', 'RED TEAM'), redTotal, !blueWins, 0x440000);
 } else {
             // non-team display: grid up to 3 columns, center-aligned
             let startY = 140;
@@ -244,7 +286,7 @@ export default class LocalPostGameScene extends Phaser.Scene {
                 }).setOrigin(0.5);
 
                 // Score line
-                this.add.text(x, y + 34, `Score: ${formatCompact(score)}`, {
+                this.add.text(x, y + 34, GlobalLocalization.format('POSTGAME_SCORE_LINE', 'Score: {0}', formatCompact(score)), {
                     fontSize: statSize,
                     fontFamily: 'Orbitron, Arial',
                     color: "#ffff88",
@@ -262,7 +304,7 @@ export default class LocalPostGameScene extends Phaser.Scene {
                       lineSpacing: -6
                   }).setOrigin(0.5);
                 } else {
-                  this.add.text(x, combosY, 'No combos achieved', {
+                  this.add.text(x, combosY, t('POSTGAME_NO_COMBOS', 'No combos achieved'), {
                       fontSize: statSize * 0.67,
                       fontFamily: 'Orbitron, Arial',
                       color: "#888888",
@@ -283,7 +325,7 @@ export default class LocalPostGameScene extends Phaser.Scene {
         }
 
         // -------- Back Button --------
-        const back = this.add.text(650, 800, "RETURN TO MENU", {
+        const back = this.add.text(650, 800, t('POSTGAME_RETURN', 'RETURN TO MENU'), {
             fontSize: 26,
             fontFamily: 'Orbitron, Arial',
             color: "#ff6666"
@@ -300,3 +342,4 @@ export default class LocalPostGameScene extends Phaser.Scene {
         });
     }
 }
+

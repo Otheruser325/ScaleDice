@@ -1,6 +1,9 @@
 import GlobalAchievements from '../utils/AchievementsManager.js';
 import GlobalAudio from '../utils/AudioManager.js';
 import GlobalBackground from '../utils/BackgroundManager.js';
+import GlobalErrors from '../utils/ErrorManager.js';
+import GlobalLocalization from '../utils/LocalizationManager.js';
+import GlobalSettings from '../utils/SettingsManager.js';
 
 export default class MenuScene extends Phaser.Scene {
   constructor() {
@@ -8,17 +11,24 @@ export default class MenuScene extends Phaser.Scene {
   }
 
   create() {
-	try {
+    try {
+      GlobalErrors.setScene(this);
+    } catch (e) {}
+    try {
       GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
     } catch (e) {}
     try {
       GlobalAchievements.registerScene(this);
     } catch (e) {}
-	
-    const centerX = this.cameras.main.centerX;
-    const centerY = 140;
 
-    this.add.text(centerX, 60, 'SCALE DICE', {
+    GlobalLocalization.init(this);
+    const settings = GlobalSettings.get(this);
+    GlobalLocalization.setLanguage(this, settings.language || 'English');
+
+    const centerX = this.cameras.main.centerX;
+    const t = (key, fallback) => GlobalLocalization.t(key, fallback);
+
+    this.add.text(centerX, 60, t('APP_TITLE', 'SCALE DICE'), {
       fontSize: 60,
       fontFamily: 'Orbitron, Arial'
     }).setOrigin(0.5);
@@ -55,13 +65,13 @@ export default class MenuScene extends Phaser.Scene {
       return { img, txt };
     };
 
-    makeIcon(leftStartX, topY, 'settingsIcon', 'SETTINGS', 'SettingsScene');
-    makeIcon(leftStartX + (iconSize + iconPadding), topY, 'achievementIcon', 'ACHIEVEMENTS', 'AchievementsScene');
-    makeIcon(rightStartX - (iconSize + iconPadding), topY, 'helpIcon', 'HELP', 'HelpScene');
-    makeIcon(rightStartX, topY, 'changelogIcon', 'CHANGELOG', 'ChangelogScene');
+    makeIcon(leftStartX, topY, 'settingsIcon', t('UI_SETTINGS', 'SETTINGS'), 'SettingsScene');
+    makeIcon(leftStartX + (iconSize + iconPadding), topY, 'achievementIcon', t('UI_ACHIEVEMENTS', 'ACHIEVEMENTS'), 'AchievementsScene');
+    makeIcon(rightStartX - (iconSize + iconPadding), topY, 'helpIcon', t('UI_HELP', 'HELP'), 'HelpScene');
+    makeIcon(rightStartX, topY, 'changelogIcon', t('UI_CHANGELOG', 'CHANGELOG'), 'ChangelogScene');
 
     const playBtnY = this.cameras.main.centerY;
-    const playBtn = this.add.text(centerX, playBtnY, '▶ PLAY', {
+    const playBtn = this.add.text(centerX, playBtnY, `> ${t('UI_PLAY', 'PLAY')}`, {
       fontSize: 96,
       fontFamily: 'Orbitron, Arial',
       color: '#66ff66'
@@ -81,15 +91,22 @@ export default class MenuScene extends Phaser.Scene {
     });
 
     const footerY = this.cameras.main.height - 40;
-    const musicText = this.add.text(centerX, footerY, 'MUSIC: ON', { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#cccccc' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    const musicText = this.add.text(centerX, footerY, '', { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#cccccc' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    const refreshMusic = () => {
+      const musicOn = GlobalSettings.get(this)?.music !== false;
+      musicText.setText(musicOn ? t('UI_MUSIC_ON', 'MUSIC: ON') : t('UI_MUSIC_OFF', 'MUSIC: OFF'));
+    };
+    refreshMusic();
+
     musicText.on('pointerdown', () => {
       if (!GlobalAudio || typeof GlobalAudio.toggleMusic !== 'function') return;
       GlobalAudio.toggleMusic(this);
-      musicText.setText(GlobalAudio.isMusicOn ? 'MUSIC: ON' : 'MUSIC: OFF');
+      refreshMusic();
       GlobalAudio.playButton(this);
     });
 
-    // Start / resume music safely
     if (GlobalAudio && typeof GlobalAudio.playMusic === 'function') GlobalAudio.playMusic(this);
   }
 }
+
+

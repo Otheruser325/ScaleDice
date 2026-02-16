@@ -1,5 +1,10 @@
-import GlobalBackground from '../utils/BackgroundManager.js';
+﻿import GlobalBackground from '../utils/BackgroundManager.js';
+import GlobalErrors from '../utils/ErrorManager.js';
 import GlobalFonts from '../utils/FontManager.js';
+import GlobalLocalization from '../utils/LocalizationManager.js';
+import GlobalSettings from '../utils/SettingsManager.js';
+
+const t = (key, fallback) => GlobalLocalization.t(key, fallback);
 
 export default class PreloadScene extends Phaser.Scene {
   constructor() {
@@ -11,6 +16,12 @@ export default class PreloadScene extends Phaser.Scene {
   }
 
   preload() {
+    try {
+        GlobalErrors.setScene(this);
+      } catch (e) {}
+	  try {
+        GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
+    } catch (e) {}
     this.cameras.main.setBackgroundColor('#000000');
 
     this._fontPromise = GlobalFonts.init([
@@ -25,7 +36,7 @@ export default class PreloadScene extends Phaser.Scene {
     const titleStyle = { fontSize: '64px', color: '#ffffff', fontFamily: 'Orbitron, Arial' };
     const loadingStyle = { fontSize: '20px', color: '#000000', fontFamily: 'Orbitron, Arial' };
 
-    this.add.text(600, 100, 'SCALE DICE', titleStyle).setOrigin(0.5);
+    this.titleText = this.add.text(600, 100, t('APP_TITLE', 'SCALE DICE'), titleStyle).setOrigin(0.5);
 
     const barX = 600 - 150;
     const barY = 350;
@@ -35,7 +46,7 @@ export default class PreloadScene extends Phaser.Scene {
     const progressBarBg = this.add.rectangle(600, barY, barW, barH, 0x444444).setOrigin(0.5);
     const progressBarFill = this.add.rectangle(barX, barY, 0, barH, 0xFFEE55).setOrigin(0, 0.5);
     this.loadingPercent = this.add.text(600, barY, '0%', loadingStyle).setOrigin(0.5);
-    this.loadingText = this.add.text(600, 300, 'Loading...', { fontSize: '28px', color: '#ffffff', fontFamily: 'Orbitron, Arial' }).setOrigin(0.5);
+    this.loadingText = this.add.text(600, 300, t('PRELOAD_LOADING', 'Loading...'), { fontSize: '28px', color: '#ffffff', fontFamily: 'Orbitron, Arial' }).setOrigin(0.5);
 
     this.load.on('progress', (value) => {
       progressBarFill.width = Math.max(2, Math.round(barW * value));
@@ -86,6 +97,13 @@ export default class PreloadScene extends Phaser.Scene {
     this.load.audio('gravitor_theme', 'assets/music/gravitor_theme.mp3');
     this.load.audio('basilisk_theme', 'assets/music/basilisk_theme.mp3');
 
+    this.load.xml('loc:English', 'config/locs/English.xml');
+    this.load.xml('loc:French', 'config/locs/French.xml');
+    this.load.xml('loc:Spanish', 'config/locs/Spanish.xml');
+    this.load.xml('loc:Italian', 'config/locs/Italian.xml');
+    this.load.xml('loc:Portuguese', 'config/locs/Portuguese.xml');
+    this.load.xml('loc:Welsh', 'config/locs/Welsh.xml');
+
     this.load.json('changelog', 'config/changelog.json');
 
     this.load.image('bg', 'assets/bg/Background-floor.png');
@@ -106,15 +124,30 @@ export default class PreloadScene extends Phaser.Scene {
   }
 
   create() {
+    const settings = GlobalSettings.loadInto(this);
+
+    // Initialize localization and apply saved language (if any)
+    GlobalLocalization.init(this);
+    const lang = settings?.language || 'English';
+    GlobalLocalization.setLanguage(this, lang);
+
     GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
+
+    if (this.titleText) {
+        this.titleText.setText(t('APP_TITLE', 'SCALE DICE'));
+    }
+    if (this.loadingText) {
+        this.loadingText.setText(t('PRELOAD_LOADING', 'Loading...'));
+    }
 
     const saved = JSON.parse(localStorage.getItem('scaleDice_settings')) || {};
     const defaults = {
       audio: true,
       music: true,
       visualEffects: true,
-      shuffleTrack: false,
-      trackIndex: 0
+      shuffleTrack: true,
+      trackIndex: 0,
+      language: 'English'
     };
 
     this.registry.set('settings', { ...defaults, ...saved });

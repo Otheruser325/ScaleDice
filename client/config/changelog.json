@@ -2,6 +2,18 @@
   "title": "SCALE DICE — CHANGELOG",
   "entries": [
     {
+      "version": "1.2.0",
+      "date": "15/02/2026",
+      "tags": ["Updates", "Features", "Bug Fixes"],
+      "changes": [
+        "Added a new challenge: High Stakes, a dedicated challenge against two Medium computer opponents for those who love big numbers and high risk-reward gameplay.\n• Economy can be upgraded up to 250 times in this mode, as well as some exclusive big upgrades to turn the tide to your favor!",
+        "Four new achievements have been added: Challenger, Problem Solver, Veteran Player and Neverending Experience.",
+        "Added localisation support for 6 languages: English, French, Italian, Portuguese, Spanish and Welsh.",
+        "Gameplay Changes: \n• you can now play up to 6 players instead of the usual 4\n• added an option in the local game configuration menu to customise your big upgrades (as many as you wish). It can also replace the default big upgrades with your own upgrades to enhance the gameplay experience to a marginal amount!\n• added a new default big upgrade: the \"Rollicane\", which gives a dice a 25% chance to spin during mid-motion roll, giving constant points the longer it spins (will still display the usual pip count like a regular roll).\n• improved AI behaviour and difficulty scaling in the Medium, Hard and Nightmare difficulties, as well as some minor improvements to the Baby/Easy difficulty.",
+        "Bug Fixes: \n• fixed teams mode challenge winning logic to properly account for total team score instead of individual player score\n• several UI-related fixes and improvements for an improved player experience"
+      ]
+    },
+    {
       "version": "1.1.0",
       "date": "12/01/2026",
       "tags": ["Updates", "Features", "Bug Fixes"],
@@ -10,7 +22,7 @@
         "Daily Challenge: play against 2-4 AI opponents with random rulesets each day.",
         "Deucifer's Pit: an extreme challenge designed for veteran players wanting to risk giving their soul for the best odds.",
         "Minor Changes: \n• added an option to toggle big upgrades during lobby creation\n• improved dice and combo scoring UI in game",
-        "Bug fixes: \n• fixed an issue that caused the Clairvoyance big upgrade to not function properly.\n• fixed in-game toolbar interface behaviour when upgrading or ending turn.\n• minor fixes and improvements."
+        "Bug Fixes: \n• fixed an issue that caused the Clairvoyance big upgrade to not function properly.\n• fixed in-game toolbar interface behaviour when upgrading or ending turn.\n• minor fixes and improvements."
       ]
     },
     {

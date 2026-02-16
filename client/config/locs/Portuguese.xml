@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<LocData>
+    <Language>
+	<IDS>
+            <T id="ACH_BADGE_COMPLETE" l="0">COMPLETO</T>
+            <T id="ACH_BADGE_LOCKED" l="0">BLOQUEADO</T>
+            <T id="ACH_BOOM_DICEALAKA_DESC" l="0">Marque mais de 10.000 pontos em uma única jogada.</T>
+            <T id="ACH_BOOM_DICEALAKA_TITLE" l="0">Boom Dicealaka</T>
+            <T id="ACH_DAILY_10_DESC" l="0">Vença 10 desafios diários.</T>
+            <T id="ACH_DAILY_10_TITLE" l="0">Solucionador</T>
+            <T id="ACH_DAILY_1_DESC" l="0">Vença um desafio diário.</T>
+            <T id="ACH_DAILY_1_TITLE" l="0">Desafiante</T>
+            <T id="ACH_FIRSTPLAY_DESC" l="0">Jogue Scale Dice pela primeira vez.</T>
+            <T id="ACH_FIRSTPLAY_TITLE" l="0">Sou novo nisso</T>
+            <T id="ACH_FIVE_OF_A_KIND_DESC" l="0">Tire uma combinação de cinco iguais.</T>
+            <T id="ACH_FIVE_OF_A_KIND_TITLE" l="0">Perfeição</T>
+            <T id="ACH_FOUR_OF_A_KIND_DESC" l="0">Tire uma combinação de quatro iguais.</T>
+            <T id="ACH_FOUR_OF_A_KIND_TITLE" l="0">Grande jogada</T>
+            <T id="ACH_FUN_HOUSE_DESC" l="0">Faça 5 full/power house consecutivos em uma partida.</T>
+            <T id="ACH_FUN_HOUSE_TITLE" l="0">Casa da diversão</T>
+            <T id="ACH_MAX_POWER_DESC" l="0">Melhore tudo ao máximo (dados, economia, sorte, maior) em uma partida.</T>
+            <T id="ACH_MAX_POWER_TITLE" l="0">Poder máximo</T>
+            <T id="ACH_ROUNDHOUSE_STRAIGHT_DESC" l="0">Faça 10 sequências no total.</T>
+            <T id="ACH_ROUNDHOUSE_STRAIGHT_TITLE" l="0">Sequência giratória</T>
+            <T id="ACH_ROUNDS_100_DESC" l="0">Progrida 100 rodadas no total.</T>
+            <T id="ACH_ROUNDS_100_TITLE" l="0">Guerreiro tardio</T>
+            <T id="ACH_ROUNDS_2500_DESC" l="0">Progrida 2.500 rodadas no total.</T>
+            <T id="ACH_ROUNDS_2500_TITLE" l="0">Para sempre</T>
+            <T id="ACH_ROUNDS_500_DESC" l="0">Progrida 500 rodadas no total.</T>
+            <T id="ACH_ROUNDS_500_TITLE" l="0">Noites longas</T>
+            <T id="ACH_SCORE_10000000_DESC" l="0">Marque 10.000.000 pontos em um jogo local/online.</T>
+            <T id="ACH_SCORE_10000000_TITLE" l="0">Golpe de dados</T>
+            <T id="ACH_SCORE_1000000_DESC" l="0">Marque 1.000.000 pontos em um jogo local/online.</T>
+            <T id="ACH_SCORE_1000000_TITLE" l="0">Milionário</T>
+            <T id="ACH_SCORE_100000_DESC" l="0">Marque 100.000 pontos em um jogo local/online.</T>
+            <T id="ACH_SCORE_100000_TITLE" l="0">Trabalho duro</T>
+            <T id="ACH_SCORE_10000_DESC" l="0">Marque 10.000 pontos em um jogo local/online.</T>
+            <T id="ACH_SCORE_10000_TITLE" l="0">Somando</T>
+            <T id="ACH_SCORE_1000_DESC" l="0">Marque 1.000 pontos em um jogo local/online.</T>
+            <T id="ACH_SCORE_1000_TITLE" l="0">Acumulando</T>
+            <T id="ACH_SIX_OF_A_KIND_DESC" l="0">Tire uma combinação de seis iguais.</T>
+            <T id="ACH_SIX_OF_A_KIND_TITLE" l="0">Diceomania</T>
+            <T id="ACH_STATS_LINE_GAME" l="0">PARTIDAS: {0}     VITÓRIAS: {1}    RODADAS: {2}    MELHOR: {3}</T>
+            <T id="ACH_STATS_LINE_PLAY" l="0">TEMPO DE JOGO: {0}    SEQUÊNCIAS: {1}</T>
+            <T id="ACH_STATS_UNLOCKED" l="0">DESBLOQUEADOS: {0} / {1}</T>
+            <T id="ACH_TIME_12H_DESC" l="0">Jogue Scale Dice por 12 horas no total.</T>
+            <T id="ACH_TIME_12H_TITLE" l="0">Viciado em dados</T>
+            <T id="ACH_TIME_1H_DESC" l="0">Jogue Scale Dice por 1 hora no total.</T>
+            <T id="ACH_TIME_1H_TITLE" l="0">Vício</T>
+            <T id="ACH_TIME_24H_DESC" l="0">Jogue Scale Dice por 24 horas no total.</T>
+            <T id="ACH_TIME_24H_TITLE" l="0">Experiência sem fim</T>
+            <T id="ACH_TIME_FORMAT" l="0">{0}h {1}m</T>
+            <T id="ACH_TITLE" l="0">CONQUISTAS</T>
+            <T id="ACH_WINS_10_DESC" l="0">Vença 10 partidas.</T>
+            <T id="ACH_WINS_10_TITLE" l="0">Dicetático</T>
+            <T id="ACH_WINS_1_DESC" l="0">Vença sua primeira partida.</T>
+            <T id="ACH_WINS_1_TITLE" l="0">Vencedor vencedor</T>
+            <T id="ACH_WINS_50_DESC" l="0">Vença 50 partidas.</T>
+            <T id="ACH_WINS_50_TITLE" l="0">Jogador veterano</T>
+            <T id="APP_TITLE" l="0">SCALE DICE</T>
+            <T id="CHALLENGES_TITLE" l="0">DESAFIOS</T>
+            <T id="CHALLENGE_AI_LABEL" l="0">IA {0}</T>
+            <T id="CHALLENGE_BIGS" l="0">Grandes upgrades: {0}</T>
+            <T id="CHALLENGE_BROKER_BOT" l="0">Bot Corretor</T>
+            <T id="CHALLENGE_COMING_SOON" l="0">Em breve...</T>
+            <T id="CHALLENGE_COMING_SOON_DESC" l="0">Mais desafios em futuras atualizações.</T>
+            <T id="CHALLENGE_COMPLETE" l="0">COMPLETO</T>
+            <T id="CHALLENGE_COST_MULT" l="0">Multiplicador de custo: x{0}</T>
+            <T id="CHALLENGE_DAILY_LIST_DESC" l="0">Desafio diário PvC aleatório contra o computador.</T>
+            <T id="CHALLENGE_DAILY_MENU_DESC" l="0">Desafio PvC aleatório que muda diariamente.</T>
+            <T id="CHALLENGE_DAILY_TITLE" l="0">Desafio diário</T>
+            <T id="CHALLENGE_DESC_FALLBACK" l="0">Descrição do desafio</T>
+            <T id="CHALLENGE_DEUCIFER_LIST_DESC" l="0">Desafio veterano de 50 rodadas contra Deucifer.</T>
+            <T id="CHALLENGE_DEUCIFER_MENU_DESC" l="0">Desafio veterano de 50 rodadas contra Deucifer Pesadelo.</T>
+            <T id="CHALLENGE_DEUCIFER_NAME" l="0">Deucifer</T>
+            <T id="CHALLENGE_DEUCIFER_TITLE" l="0">Fosso de Deucifer</T>
+            <T id="CHALLENGE_FAILED" l="0">FALHOU</T>
+            <T id="CHALLENGE_GENERIC" l="0">DESAFIO</T>
+            <T id="CHALLENGE_HIGH_STAKES_DESC" l="0">Enfrente dois bots Médios em uma corrida econômica de alto risco. A economia pode chegar ao nível 250.</T>
+            <T id="CHALLENGE_HIGH_STAKES_LIST_DESC" l="0">Desafio dedicado contra 2 bots Médios com economia estendida.</T>
+            <T id="CHALLENGE_HIGH_STAKES_TITLE" l="0">Altas apostas</T>
+            <T id="CHALLENGE_HUMAN_LABEL" l="0">Humano</T>
+            <T id="CHALLENGE_NOT_READY" l="0">NÃO PRONTO</T>
+            <T id="CHALLENGE_PLAYER" l="0">Jogador</T>
+            <T id="CHALLENGE_PLAYERS" l="0">Jogadores: {0}</T>
+            <T id="CHALLENGE_PLAYERS_LABEL" l="0">Jogadores:</T>
+            <T id="CHALLENGE_REWARD" l="0"> Recompensa: +{0} fichas.</T>
+            <T id="CHALLENGE_REWARD_LINE" l="0">Recompensa: +{0} fichas</T>
+            <T id="CHALLENGE_RISK_BOT" l="0">Bot Risco</T>
+            <T id="CHALLENGE_START" l="0">INICIAR DESAFIO</T>
+            <T id="CHALLENGE_TEAMS_ENABLED" l="0">Equipes: ativadas</T>
+            <T id="CHALLENGE_WAVES" l="0">Rodadas: {0}</T>
+            <T id="CHANGELOG_TITLE" l="0">REGISTRO DE ALTERAÇÕES</T>
+            <T id="CONFIG_AI" l="0">COMPUTADOR</T>
+            <T id="CONFIG_BIG_UPGRADES" l="0">GRANDES UPGRADES: {0}</T>
+            <T id="CONFIG_COST_MULTIPLIER" l="0">MULTIPLICADOR DE CUSTO DE UPGRADES: x{0}</T>
+            <T id="CONFIG_HUMAN" l="0">HUMANO</T>
+            <T id="CONFIG_PLAYERS_UPPER" l="0">JOGADORES</T>
+            <T id="CONFIG_PROMPT_PLAYER_NAME" l="0">Nome do jogador {0}</T>
+            <T id="CONFIG_ROUNDS" l="0">RODADAS</T>
+            <T id="CONFIG_RULES_SCALING" l="0">REGRAS E ESCALONAMENTO</T>
+            <T id="CONFIG_START_GAME" l="0">INICIAR PARTIDA</T>
+            <T id="CONFIG_TEAMS" l="0">EQUIPES: {0}</T>
+            <T id="DIFFICULTY_EASY" l="0">Fácil</T>
+            <T id="DIFFICULTY_HARD" l="0">Difícil</T>
+            <T id="DIFFICULTY_MEDIUM" l="0">Médio</T>
+            <T id="DIFFICULTY_NIGHTMARE" l="0">Pesadelo</T>
+            <T id="ERROR_DETAILS" l="0">Mostrar detalhes</T>
+            <T id="ERROR_GENERIC" l="0">Erro</T>
+            <T id="ERROR_NO_DETAILS" l="0">Sem mais detalhes</T>
+            <T id="ERROR_RANGE" l="0">Erro de intervalo</T>
+            <T id="ERROR_RECOVER" l="0">Tentar recuperar</T>
+            <T id="ERROR_REFERENCE" l="0">Erro de referência</T>
+            <T id="ERROR_RELOAD" l="0">Recarregar página</T>
+            <T id="ERROR_SYNTAX" l="0">Erro de sintaxe</T>
+            <T id="ERROR_TYPE" l="0">Erro de tipo</T>
+            <T id="GAME_BUY_DICE" l="0">COMPRAR DADOS</T>
+            <T id="GAME_ECO_MAX" l="0">ECO MÁX</T>
+            <T id="GAME_ECO_UPGRADE" l="0">Upgrade de eco: {0} (Nv {1}/{2})</T>
+            <T id="GAME_END_TURN" l="0">ENCERRAR TURNO</T>
+            <T id="GAME_EXIT_CONFIRM" l="0">TEM CERTEZA QUE DESEJA
+VOLTAR AO MENU PRINCIPAL?</T>
+            <T id="GAME_HISTORY_LOG" l="0">Registro de atividades</T>
+            <T id="GAME_LAST_ROLL" l="0">Última jogada: {0}</T>
+            <T id="GAME_LUCK_MAX" l="0">SORTE MÁX</T>
+            <T id="GAME_LUCK_UPGRADE" l="0">Upgrade de sorte: {0} (Nv {1}/25)</T>
+            <T id="GAME_MAX_DICE" l="0">Máx dados</T>
+            <T id="GAME_NEXT_DICE" l="0">Próximo dado: {0} ({1})</T>
+            <T id="GAME_RESULTS" l="0">RESULTADOS</T>
+            <T id="GAME_ROLLICANE_TICK" l="0">Rollicane +{0}</T>
+            <T id="GAME_ROLLING" l="0">Rolando...</T>
+            <T id="GAME_ROLL_DICE" l="0">ROLAR DADOS</T>
+            <T id="GAME_ROUND_LABEL" l="0">Rodada {0} / {1}</T>
+            <T id="GAME_SCROLL_MORE" l="0">Role para ver mais</T>
+            <T id="GAME_STAT_DICE" l="0">Dados {0}</T>
+            <T id="GAME_STAT_INCOME" l="0">Renda +{0}/turno</T>
+            <T id="GAME_STAT_INCOME_SHORT" l="0">Renda +0</T>
+            <T id="GAME_STAT_LUCK" l="0">Sorte x{0}</T>
+            <T id="GAME_TEAM_SCORE" l="0">Scale Dice - Azul: {0}  Vermelho: {1}</T>
+            <T id="GAME_TITLE" l="0">Scale Dice</T>
+            <T id="GAME_TURN_LINE" l="0">Turno de {0}  |  Pontos: {1}  |  Dados: {2}</T>
+            <T id="GAME_UPGRADE_ECONOMY" l="0">MELHORAR ECONOMIA</T>
+            <T id="GAME_UPGRADE_LUCK" l="0">MELHORAR SORTE</T>
+            <T id="GAME_WAITING" l="0">Aguardando...</T>
+            <T id="HELP_BODY_SCALE_DICE" l="0">Scale Dice é um jogo de dados estratégico incremental por turnos. O objetivo é simples:
+marcar o máximo de pontos possível durante a partida rolando dados e explorando combos e upgrades.
+
+Em cada turno você rola os dados disponíveis. A soma das faces se torna sua pontuação base do turno.
+Certas combinações de faces (combos) multiplicam sua pontuação base: quanto mais raro o combo, maior o multiplicador.
+
+Há três upgrades principais disponíveis durante a partida:
+- Dados: aumenta quantos dados você rola (mais dados -&gt; maior potencial de pontuação base).
+- Economia: aumenta a renda passiva por turno para comprar upgrades mais rápido.
+- Sorte: aumenta a chance de obter faces melhores / pequenos rerolls (ajuda a conseguir combos).
+
+Os upgrades de combo são desbloqueados ao atingir uma quantidade específica de dados; cada upgrade aumenta o multiplicador daquele combo
+em ~10% por nível (linear) e pode ser comprado várias vezes durante a mesma partida.
+
+Solo ou em equipes: vence a maior pontuação. Divirta-se otimizando compras vs. risco na rolagem!</T>
+            <T id="HELP_SPECIAL_RULES" l="0">REGRAS ESPECIAIS</T>
+            <T id="HELP_SPECIAL_RULES_BODY" l="0">Equipes:
+Partidas no estilo Vermelho vs Azul podem ser habilitadas em um lobby.
+A pontuação de cada equipe é a soma das pontuações de todos os seus jogadores.
+A equipe com a maior pontuação total vence.
+
+Mult. de custo:
+Ajusta o preço dos upgrades globalmente durante a partida.
+Valores mais baixos criam partidas mais rápidas e caóticas.
+Valores mais altos desaceleram a progressão e recompensam a estratégia de longo prazo.</T>
+            <T id="HELP_SPECIAL_RULES_TITLE" l="0">Regras especiais</T>
+            <T id="HELP_SUBTITLE_SCALE_DICE" l="0">COMO JOGAR SCALE DICE</T>
+            <T id="HELP_TITLE" l="0">AJUDA</T>
+            <T id="LANG_ENGLISH" l="0">Inglês</T>
+            <T id="LANG_FRENCH" l="0">Francês</T>
+            <T id="LANG_ITALIAN" l="0">Italiano</T>
+            <T id="LANG_PORTUGUESE" l="0">Português</T>
+            <T id="LANG_SPANISH" l="0">Espanhol</T>
+            <T id="LANG_WELSH" l="0">Galês</T>
+            <T id="LOCAL_SETUP_TITLE" l="0">JOGO LOCAL - CONFIGURAÇÃO</T>
+            <T id="ONLINE_TITLE" l="0">MODO ONLINE</T>
+            <T id="POSTGAME_NO_COMBOS" l="0">Nenhum combo alcançado</T>
+            <T id="POSTGAME_RETURN" l="0">VOLTAR AO MENU</T>
+            <T id="POSTGAME_SCORE_LINE" l="0">Pontuação: {0}</T>
+            <T id="POSTGAME_TITLE" l="0">JOGO LOCAL - RESULTADOS</T>
+            <T id="PRELOAD_LOADING" l="0">CARREGANDO...</T>
+            <T id="SETTINGS_TITLE" l="0">CONFIGURAÇÕES</T>
+            <T id="SET_JUKEBOX" l="0">JUKEBOX</T>
+            <T id="SET_LANGUAGE" l="0">IDIOMA: {0}</T>
+            <T id="SET_MUSIC_OFF" l="0">MÚSICA: OFF</T>
+            <T id="SET_MUSIC_ON" l="0">MÚSICA: ON</T>
+            <T id="SET_MUSIC_TRACKS" l="0">FAIXAS MUSICAIS</T>
+            <T id="SET_OFF" l="0">OFF</T>
+            <T id="SET_ON" l="0">ON</T>
+            <T id="SET_SHUFFLE_OFF" l="0">ALEATÓRIO: OFF</T>
+            <T id="SET_SHUFFLE_ON" l="0">ALEATÓRIO: ON</T>
+            <T id="SET_SOUND_OFF" l="0">EFEITOS SONOROS: OFF</T>
+            <T id="SET_SOUND_ON" l="0">EFEITOS SONOROS: ON</T>
+            <T id="SET_VISUAL_OFF" l="0">EFEITOS VISUAIS: OFF</T>
+            <T id="SET_VISUAL_ON" l="0">EFEITOS VISUAIS: ON</T>
+            <T id="TEAM_BLUE" l="0">AZUL</T>
+            <T id="TEAM_BLUE_LABEL" l="0">EQUIPE AZUL</T>
+            <T id="TEAM_RED" l="0">VERMELHO</T>
+            <T id="TEAM_RED_LABEL" l="0">EQUIPE VERMELHA</T>
+            <T id="TRACK_BASILISK_THEME" l="0">Tema Basilisco</T>
+            <T id="TRACK_DICE_LEAGUE" l="0">Liga dos Dados</T>
+            <T id="TRACK_GRAVITOR_THEME" l="0">Tema Gravitor</T>
+            <T id="TRACK_SNAKE_THEME" l="0">Tema Serpente</T>
+            <T id="UI_ACHIEVEMENTS" l="0">CONQUISTAS</T>
+            <T id="UI_BACK" l="0">&lt;- VOLTAR</T>
+            <T id="UI_CHANGELOG" l="0">ALTERAÇÕES</T>
+            <T id="UI_CLOSE" l="0">FECHAR</T>
+            <T id="UI_HELP" l="0">AJUDA</T>
+            <T id="UI_LOCAL_PLAY" l="0">JOGO LOCAL</T>
+            <T id="UI_MUSIC_OFF" l="0">MÚSICA: OFF</T>
+            <T id="UI_MUSIC_ON" l="0">MÚSICA: ON</T>
+            <T id="UI_NO" l="0">NÃO</T>
+            <T id="UI_ONLINE_PLAY" l="0">JOGO ONLINE</T>
+            <T id="UI_PLAY" l="0">JOGAR</T>
+            <T id="UI_SETTINGS" l="0">CONFIGURAÇÕES</T>
+            <T id="UI_YES" l="0">SIM</T>
+        </IDS>
+   </Language>
+</LocData>

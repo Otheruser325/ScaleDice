@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<LocData>
+    <Language>
+	<IDS>
+            <T id="ACH_BADGE_COMPLETE" l="0">TERMINÉ</T>
+            <T id="ACH_BADGE_LOCKED" l="0">VERROUILLÉ</T>
+            <T id="ACH_BOOM_DICEALAKA_DESC" l="0">Marquez plus de 10 000 points en un seul lancer.</T>
+            <T id="ACH_BOOM_DICEALAKA_TITLE" l="0">Boom Dicealaka</T>
+            <T id="ACH_DAILY_10_DESC" l="0">Gagnez 10 défis quotidiens.</T>
+            <T id="ACH_DAILY_10_TITLE" l="0">Résolveur de problèmes</T>
+            <T id="ACH_DAILY_1_DESC" l="0">Gagnez un défi quotidien.</T>
+            <T id="ACH_DAILY_1_TITLE" l="0">Challenger</T>
+            <T id="ACH_FIRSTPLAY_DESC" l="0">Jouez à Scale Dice pour la première fois.</T>
+            <T id="ACH_FIRSTPLAY_TITLE" l="0">Je débute</T>
+            <T id="ACH_FIVE_OF_A_KIND_DESC" l="0">Obtenez une combinaison de cinq identiques.</T>
+            <T id="ACH_FIVE_OF_A_KIND_TITLE" l="0">Perfection</T>
+            <T id="ACH_FOUR_OF_A_KIND_DESC" l="0">Obtenez une combinaison de quatre identiques.</T>
+            <T id="ACH_FOUR_OF_A_KIND_TITLE" l="0">Gros coup</T>
+            <T id="ACH_FUN_HOUSE_DESC" l="0">Obtenez 5 full/power house consécutifs dans une partie.</T>
+            <T id="ACH_FUN_HOUSE_TITLE" l="0">Maison des fous</T>
+            <T id="ACH_MAX_POWER_DESC" l="0">Améliorez tout au maximum (dés, économie, chance, majeur) dans une partie.</T>
+            <T id="ACH_MAX_POWER_TITLE" l="0">Puissance maximale</T>
+            <T id="ACH_ROUNDHOUSE_STRAIGHT_DESC" l="0">Obtenez 10 suites au total.</T>
+            <T id="ACH_ROUNDHOUSE_STRAIGHT_TITLE" l="0">Suite tournoyante</T>
+            <T id="ACH_ROUNDS_100_DESC" l="0">Atteignez 100 rounds au total.</T>
+            <T id="ACH_ROUNDS_100_TITLE" l="0">Guerrier tardif</T>
+            <T id="ACH_ROUNDS_2500_DESC" l="0">Atteignez 2 500 rounds au total.</T>
+            <T id="ACH_ROUNDS_2500_TITLE" l="0">Toujours en route</T>
+            <T id="ACH_ROUNDS_500_DESC" l="0">Atteignez 500 rounds au total.</T>
+            <T id="ACH_ROUNDS_500_TITLE" l="0">Nuits tardives</T>
+            <T id="ACH_SCORE_10000000_DESC" l="0">Marquez 10 000 000 points en partie locale/en ligne.</T>
+            <T id="ACH_SCORE_10000000_TITLE" l="0">Coup de dés</T>
+            <T id="ACH_SCORE_1000000_DESC" l="0">Marquez 1 000 000 points en partie locale/en ligne.</T>
+            <T id="ACH_SCORE_1000000_TITLE" l="0">Millionnaire</T>
+            <T id="ACH_SCORE_100000_DESC" l="0">Marquez 100 000 points en partie locale/en ligne.</T>
+            <T id="ACH_SCORE_100000_TITLE" l="0">Dur labeur</T>
+            <T id="ACH_SCORE_10000_DESC" l="0">Marquez 10 000 points en partie locale/en ligne.</T>
+            <T id="ACH_SCORE_10000_TITLE" l="0">Ça grimpe !</T>
+            <T id="ACH_SCORE_1000_DESC" l="0">Marquez 1 000 points en partie locale/en ligne.</T>
+            <T id="ACH_SCORE_1000_TITLE" l="0">Ça monte !</T>
+            <T id="ACH_SIX_OF_A_KIND_DESC" l="0">Obtenez une combinaison de six identiques.</T>
+            <T id="ACH_SIX_OF_A_KIND_TITLE" l="0">Désomanie</T>
+            <T id="ACH_STATS_LINE_GAME" l="0">PARTIES : {0}     VICTOIRES : {1}    ROUNDS : {2}    MEILLEUR : {3}</T>
+            <T id="ACH_STATS_LINE_PLAY" l="0">TEMPS DE JEU : {0}    SUITES : {1}</T>
+            <T id="ACH_STATS_UNLOCKED" l="0">DÉBLOQUÉS : {0} / {1}</T>
+            <T id="ACH_TIME_12H_DESC" l="0">Jouez à Scale Dice pendant 12 heures au total.</T>
+            <T id="ACH_TIME_12H_TITLE" l="0">Désomane</T>
+            <T id="ACH_TIME_1H_DESC" l="0">Jouez à Scale Dice pendant 1 heure au total.</T>
+            <T id="ACH_TIME_1H_TITLE" l="0">Addiction</T>
+            <T id="ACH_TIME_24H_DESC" l="0">Jouez à Scale Dice pendant 24 heures au total.</T>
+            <T id="ACH_TIME_24H_TITLE" l="0">Expérience sans fin</T>
+            <T id="ACH_TIME_FORMAT" l="0">{0}h {1}m</T>
+            <T id="ACH_TITLE" l="0">SUCCÈS</T>
+            <T id="ACH_WINS_10_DESC" l="0">Gagnez 10 parties.</T>
+            <T id="ACH_WINS_10_TITLE" l="0">Vrai dicéticien</T>
+            <T id="ACH_WINS_1_DESC" l="0">Gagnez votre première partie.</T>
+            <T id="ACH_WINS_1_TITLE" l="0">Gagnant gagnant</T>
+            <T id="ACH_WINS_50_DESC" l="0">Gagnez 50 parties.</T>
+            <T id="ACH_WINS_50_TITLE" l="0">Joueur vétéran</T>
+            <T id="APP_TITLE" l="0">SCALE DICE</T>
+            <T id="CHALLENGES_TITLE" l="0">DÉFIS</T>
+            <T id="CHALLENGE_AI_LABEL" l="0">IA {0}</T>
+            <T id="CHALLENGE_BIGS" l="0">Grandes améliorations : {0}</T>
+            <T id="CHALLENGE_BROKER_BOT" l="0">Bot Courtier</T>
+            <T id="CHALLENGE_COMING_SOON" l="0">Bientôt...</T>
+            <T id="CHALLENGE_COMING_SOON_DESC" l="0">Plus de défis dans de futures mises à jour.</T>
+            <T id="CHALLENGE_COMPLETE" l="0">TERMINÉ</T>
+            <T id="CHALLENGE_COST_MULT" l="0">Multiplicateur de coût : x{0}</T>
+            <T id="CHALLENGE_DAILY_LIST_DESC" l="0">Défi quotidien PvO aléatoire contre l&apos;ordinateur.</T>
+            <T id="CHALLENGE_DAILY_MENU_DESC" l="0">Défi PvO aléatoire qui change chaque jour.</T>
+            <T id="CHALLENGE_DAILY_TITLE" l="0">Défi quotidien</T>
+            <T id="CHALLENGE_DESC_FALLBACK" l="0">Description du défi</T>
+            <T id="CHALLENGE_DEUCIFER_LIST_DESC" l="0">Défi vétéran de 50 rounds contre Deucifer.</T>
+            <T id="CHALLENGE_DEUCIFER_MENU_DESC" l="0">Défi vétéran de 50 rounds contre Deucifer Cauchemar.</T>
+            <T id="CHALLENGE_DEUCIFER_NAME" l="0">Deucifer</T>
+            <T id="CHALLENGE_DEUCIFER_TITLE" l="0">Fosse de Deucifer</T>
+            <T id="CHALLENGE_FAILED" l="0">ÉCHOUÉ</T>
+            <T id="CHALLENGE_GENERIC" l="0">DÉFI</T>
+            <T id="CHALLENGE_HIGH_STAKES_DESC" l="0">Affrontez deux bots Moyens dans une course économique à haut risque. L&apos;économie peut monter au niveau 250.</T>
+            <T id="CHALLENGE_HIGH_STAKES_LIST_DESC" l="0">Défi dédié contre 2 bots Moyens avec économie étendue.</T>
+            <T id="CHALLENGE_HIGH_STAKES_TITLE" l="0">Haute mise</T>
+            <T id="CHALLENGE_HUMAN_LABEL" l="0">Humain</T>
+            <T id="CHALLENGE_NOT_READY" l="0">PAS PRÊT</T>
+            <T id="CHALLENGE_PLAYER" l="0">Joueur</T>
+            <T id="CHALLENGE_PLAYERS" l="0">Joueurs : {0}</T>
+            <T id="CHALLENGE_PLAYERS_LABEL" l="0">Joueurs :</T>
+            <T id="CHALLENGE_REWARD" l="0"> Récompense : +{0} jetons.</T>
+            <T id="CHALLENGE_REWARD_LINE" l="0">Récompense : +{0} jetons</T>
+            <T id="CHALLENGE_RISK_BOT" l="0">Bot Risque</T>
+            <T id="CHALLENGE_START" l="0">COMMENCER LE DÉFI</T>
+            <T id="CHALLENGE_TEAMS_ENABLED" l="0">Équipes : activées</T>
+            <T id="CHALLENGE_WAVES" l="0">Manches : {0}</T>
+            <T id="CHANGELOG_TITLE" l="0">JOURNAL DES MODIFICATIONS</T>
+            <T id="CONFIG_AI" l="0">ORDINATEUR</T>
+            <T id="CONFIG_BIG_UPGRADES" l="0">GRANDES AMÉLIORATIONS : {0}</T>
+            <T id="CONFIG_COST_MULTIPLIER" l="0">MULTIPLICATEUR DE COÛT DES AMÉLIORATIONS : x{0}</T>
+            <T id="CONFIG_HUMAN" l="0">HUMAIN</T>
+            <T id="CONFIG_PLAYERS_UPPER" l="0">JOUEURS</T>
+            <T id="CONFIG_PROMPT_PLAYER_NAME" l="0">Nom du joueur {0}</T>
+            <T id="CONFIG_ROUNDS" l="0">MANCHES</T>
+            <T id="CONFIG_RULES_SCALING" l="0">RÈGLES &amp; ÉCHELLE</T>
+            <T id="CONFIG_START_GAME" l="0">DÉMARRER LA PARTIE</T>
+            <T id="CONFIG_TEAMS" l="0">ÉQUIPES : {0}</T>
+            <T id="DIFFICULTY_EASY" l="0">Facile</T>
+            <T id="DIFFICULTY_HARD" l="0">Difficile</T>
+            <T id="DIFFICULTY_MEDIUM" l="0">Moyen</T>
+            <T id="DIFFICULTY_NIGHTMARE" l="0">Cauchemar</T>
+            <T id="ERROR_DETAILS" l="0">Voir les détails</T>
+            <T id="ERROR_GENERIC" l="0">Erreur</T>
+            <T id="ERROR_NO_DETAILS" l="0">Aucun détail supplémentaire</T>
+            <T id="ERROR_RANGE" l="0">Erreur de plage</T>
+            <T id="ERROR_RECOVER" l="0">Tenter la récupération</T>
+            <T id="ERROR_REFERENCE" l="0">Erreur de référence</T>
+            <T id="ERROR_RELOAD" l="0">Recharger la page</T>
+            <T id="ERROR_SYNTAX" l="0">Erreur de syntaxe</T>
+            <T id="ERROR_TYPE" l="0">Erreur de type</T>
+            <T id="GAME_BUY_DICE" l="0">ACHETER DES DÉS</T>
+            <T id="GAME_ECO_MAX" l="0">ÉCO MAX</T>
+            <T id="GAME_ECO_UPGRADE" l="0">Amélioration éco : {0} (Niv {1}/{2})</T>
+            <T id="GAME_END_TURN" l="0">FIN DU TOUR</T>
+            <T id="GAME_EXIT_CONFIRM" l="0">ÊTES-VOUS SÛR DE VOULOIR
+RETOURNER AU MENU PRINCIPAL ?</T>
+            <T id="GAME_HISTORY_LOG" l="0">Journal d&apos;activité</T>
+            <T id="GAME_LAST_ROLL" l="0">Dernier lancer : {0}</T>
+            <T id="GAME_LUCK_MAX" l="0">CHANCE MAX</T>
+            <T id="GAME_LUCK_UPGRADE" l="0">Amélioration chance : {0} (Niv {1}/25)</T>
+            <T id="GAME_MAX_DICE" l="0">Dés max</T>
+            <T id="GAME_NEXT_DICE" l="0">Prochain dé : {0} ({1})</T>
+            <T id="GAME_RESULTS" l="0">RÉSULTATS</T>
+            <T id="GAME_ROLLICANE_TICK" l="0">Rollicane +{0}</T>
+            <T id="GAME_ROLLING" l="0">Lancer...</T>
+            <T id="GAME_ROLL_DICE" l="0">LANCER LES DÉS</T>
+            <T id="GAME_ROUND_LABEL" l="0">Manche {0} / {1}</T>
+            <T id="GAME_SCROLL_MORE" l="0">Faites défiler pour voir plus</T>
+            <T id="GAME_STAT_DICE" l="0">Dés {0}</T>
+            <T id="GAME_STAT_INCOME" l="0">Revenu +{0}/tour</T>
+            <T id="GAME_STAT_INCOME_SHORT" l="0">Revenu +0</T>
+            <T id="GAME_STAT_LUCK" l="0">Chance x{0}</T>
+            <T id="GAME_TEAM_SCORE" l="0">Scale Dice - Bleu : {0}  Rouge : {1}</T>
+            <T id="GAME_TITLE" l="0">Scale Dice</T>
+            <T id="GAME_TURN_LINE" l="0">Tour de {0}  |  Score : {1}  |  Dés : {2}</T>
+            <T id="GAME_UPGRADE_ECONOMY" l="0">AMÉLIORER L&apos;ÉCONOMIE</T>
+            <T id="GAME_UPGRADE_LUCK" l="0">AMÉLIORER LA CHANCE</T>
+            <T id="GAME_WAITING" l="0">En attente...</T>
+            <T id="HELP_BODY_SCALE_DICE" l="0">Scale Dice est un jeu de dés stratégique incrémental au tour par tour. L&apos;objectif est simple :
+marquer un maximum de points pendant la partie en lançant les dés et en exploitant les combos et améliorations.
+
+À chaque tour, vous lancez vos dés disponibles. La somme des faces devient votre score de base pour le tour.
+Certaines combinaisons (combos) multiplient ce score de base : plus le combo est rare, plus le multiplicateur est élevé.
+
+Trois améliorations principales sont disponibles pendant une partie :
+- Dés : augmente le nombre de dés lancés (plus de dés -&gt; potentiel de score brut plus élevé).
+- Économie : augmente le revenu passif par tour pour acheter des améliorations plus vite.
+- Chance : augmente vos chances d&apos;obtenir de meilleures faces / petits relancers (aide à obtenir des combos).
+
+Les améliorations de combos se débloquent lorsque vous atteignez un certain nombre de dés ; chaque amélioration augmente
+le multiplicateur du combo d&apos;environ 10 % par niveau (linéaire) et peut être achetée plusieurs fois dans la même partie.
+
+Solo ou équipes : le score le plus élevé gagne. Amusez-vous à optimiser achats et prises de risque !</T>
+            <T id="HELP_SPECIAL_RULES" l="0">RÈGLES SPÉCIALES</T>
+            <T id="HELP_SPECIAL_RULES_BODY" l="0">Équipes :
+Les matchs Rouge contre Bleu peuvent être activés dans un lobby.
+Le score de chaque équipe est la somme des scores de tous ses joueurs.
+L&apos;équipe ayant le score total le plus élevé gagne.
+
+Multiplicateur de coût :
+Ajuste globalement le prix des améliorations pendant une partie.
+Des valeurs plus basses rendent les parties plus rapides et chaotiques.
+Des valeurs plus élevées ralentissent la progression et récompensent la stratégie à long terme.</T>
+            <T id="HELP_SPECIAL_RULES_TITLE" l="0">Règles spéciales</T>
+            <T id="HELP_SUBTITLE_SCALE_DICE" l="0">COMMENT JOUER À SCALE DICE</T>
+            <T id="HELP_TITLE" l="0">AIDE</T>
+            <T id="LANG_ENGLISH" l="0">Anglais</T>
+            <T id="LANG_FRENCH" l="0">Français</T>
+            <T id="LANG_ITALIAN" l="0">Italien</T>
+            <T id="LANG_PORTUGUESE" l="0">Portugais</T>
+            <T id="LANG_SPANISH" l="0">Espagnol</T>
+            <T id="LANG_WELSH" l="0">Gallois</T>
+            <T id="LOCAL_SETUP_TITLE" l="0">PARTIE LOCALE - CONFIGURATION</T>
+            <T id="ONLINE_TITLE" l="0">MODE EN LIGNE</T>
+            <T id="POSTGAME_NO_COMBOS" l="0">Aucune combinaison obtenue</T>
+            <T id="POSTGAME_RETURN" l="0">RETOUR AU MENU</T>
+            <T id="POSTGAME_SCORE_LINE" l="0">Score : {0}</T>
+            <T id="POSTGAME_TITLE" l="0">PARTIE LOCALE - RÉSULTATS</T>
+            <T id="PRELOAD_LOADING" l="0">CHARGEMENT...</T>
+            <T id="SETTINGS_TITLE" l="0">PARAMÈTRES</T>
+            <T id="SET_JUKEBOX" l="0">JUKEBOX</T>
+            <T id="SET_LANGUAGE" l="0">LANGUE : {0}</T>
+            <T id="SET_MUSIC_OFF" l="0">MUSIQUE : OFF</T>
+            <T id="SET_MUSIC_ON" l="0">MUSIQUE : ON</T>
+            <T id="SET_MUSIC_TRACKS" l="0">PISTES MUSICALES</T>
+            <T id="SET_OFF" l="0">OFF</T>
+            <T id="SET_ON" l="0">ON</T>
+            <T id="SET_SHUFFLE_OFF" l="0">LECTURE ALÉATOIRE : OFF</T>
+            <T id="SET_SHUFFLE_ON" l="0">LECTURE ALÉATOIRE : ON</T>
+            <T id="SET_SOUND_OFF" l="0">EFFETS SONORES : OFF</T>
+            <T id="SET_SOUND_ON" l="0">EFFETS SONORES : ON</T>
+            <T id="SET_VISUAL_OFF" l="0">EFFETS VISUELS : OFF</T>
+            <T id="SET_VISUAL_ON" l="0">EFFETS VISUELS : ON</T>
+            <T id="TEAM_BLUE" l="0">BLEU</T>
+            <T id="TEAM_BLUE_LABEL" l="0">ÉQUIPE BLEUE</T>
+            <T id="TEAM_RED" l="0">ROUGE</T>
+            <T id="TEAM_RED_LABEL" l="0">ÉQUIPE ROUGE</T>
+            <T id="TRACK_BASILISK_THEME" l="0">Thème Basilic</T>
+            <T id="TRACK_DICE_LEAGUE" l="0">Ligue des Dés</T>
+            <T id="TRACK_GRAVITOR_THEME" l="0">Thème Gravitor</T>
+            <T id="TRACK_SNAKE_THEME" l="0">Thème Serpent</T>
+            <T id="UI_ACHIEVEMENTS" l="0">SUCCÈS</T>
+            <T id="UI_BACK" l="0">&lt;- RETOUR</T>
+            <T id="UI_CHANGELOG" l="0">JOURNAL</T>
+            <T id="UI_CLOSE" l="0">FERMER</T>
+            <T id="UI_HELP" l="0">AIDE</T>
+            <T id="UI_LOCAL_PLAY" l="0">JEU LOCAL</T>
+            <T id="UI_MUSIC_OFF" l="0">MUSIQUE : OFF</T>
+            <T id="UI_MUSIC_ON" l="0">MUSIQUE : ON</T>
+            <T id="UI_NO" l="0">NON</T>
+            <T id="UI_ONLINE_PLAY" l="0">JEU EN LIGNE</T>
+            <T id="UI_PLAY" l="0">JOUER</T>
+            <T id="UI_SETTINGS" l="0">PARAMÈTRES</T>
+            <T id="UI_YES" l="0">OUI</T>
+        </IDS>
+   </Language>
+</LocData>

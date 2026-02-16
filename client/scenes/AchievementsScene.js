@@ -1,7 +1,10 @@
+﻿import GlobalAchievements, { ACHIEVEMENT_DEFS } from '../utils/AchievementsManager.js';
 import GlobalAudio from '../utils/AudioManager.js';
-import GlobalAchievements from '../utils/AchievementsManager.js';
 import GlobalBackground from '../utils/BackgroundManager.js';
+import GlobalErrors from '../utils/ErrorManager.js';
 import { formatCompact } from '../utils/FormatManager.js';
+import GlobalLocalization from '../utils/LocalizationManager.js';
+import GlobalSettings from '../utils/SettingsManager.js';
 
 export default class AchievementsScene extends Phaser.Scene {
   constructor() {
@@ -9,40 +12,34 @@ export default class AchievementsScene extends Phaser.Scene {
   }
 
   create() {
-	GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
-	
+    try {
+      GlobalErrors.setScene(this);
+    } catch (e) {}
+    try {
+      GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
+    } catch (e) {}
+    try {
+      GlobalAchievements.registerScene(this);
+    } catch (e) {}
+    GlobalLocalization.init(this);
+    const settings = GlobalSettings.get(this);
+    GlobalLocalization.setLanguage(this, settings.language || 'English');
+
     const centerX = this.cameras.main.centerX;
     const titleY = 60;
-    this.add.text(centerX, titleY, 'ACHIEVEMENTS', { fontSize: 48, fontFamily: 'Orbitron, Arial' }).setOrigin(0.5);
+    const t = (key, fallback) => GlobalLocalization.t(key, fallback);
+    this.add.text(centerX, titleY, t('ACH_TITLE', 'ACHIEVEMENTS'), { fontSize: 48, fontFamily: 'Orbitron, Arial' }).setOrigin(0.5);
 
     const data = GlobalAchievements.getAll();
     const unlocked = data.unlocked || {};
     const totals = data.totals || {};
 
-    const items = [
-      { key: 'firstPlay', title: "I'm New to This", desc: 'Play Scale Dice for the first time.' },
-      { key: 'addiction', title: 'Addiction', desc: 'Play Scale Dice for 1 hour total.' },
-      { key: 'diceaholic', title: 'Diceaholic', desc: 'Play Scale Dice for 12 hours total.' },
-      { key: 'rounds100', title: 'Late Warrior', desc: 'Progress 100 rounds in total.' },
-      { key: 'rounds500', title: 'Late Nights', desc: 'Progress 500 rounds in total.' },
-	    { key: 'rounds2500', title: 'Forever Going', desc: 'Progress 2,500 rounds in total.' },
-      { key: 'score1000', title: "Pilin' Up!", desc: 'Score 1,000 points in a local/online game.' },
-      { key: 'score10000', title: "Rackin' Up!", desc: 'Score 10,000 points in a local/online game.' },
-      { key: 'score100000', title: 'Hard Labour', desc: 'Score 100,000 points in a local/online game.' },
-      { key: 'score1000000', title: 'Millionaire', desc: 'Score 1,000,000 points in a local/online game.' },
-      { key: 'score10000000', title: 'Strike It Dice', desc: 'Score 10,000,000 points in a local/online game.' },
-      { key: 'fourOfAKind', title: 'Big Shot', desc: 'Roll a Four-of-a-kind combo.' },
-      { key: 'fiveOfAKind', title: 'Perfection', desc: 'Roll a Five-of-a-kind combo.' },
-      { key: 'sixOfAKind', title: 'Diceomania', desc: 'Roll a Six-of-a-kind combo.' },
-      { key: 'funHouse', title: 'Fun House', desc: 'Roll 5 consecutive full/power house combos in a game.' },
-      { key: 'roundhouseStraight', title: 'Roundhouse Straight', desc: 'Roll 10 straights in total.' },
-      { key: 'maximumPower', title: 'Maximum Power', desc: 'Fully upgrade everything (dice, economy, luck, major) in a game.' },
-	    { key: 'winnerWinner', title: 'Winner Winner', desc: 'Win your first match.' },
-      { key: 'realDicetician', title: 'Real Dicetician', desc: 'Win 10 matches.' },
-      { key: 'boomDicealaka', title: 'Boom Dicealaka', desc: 'Score over 10,000 points with one roll.' }
-    ];
+    const items = ACHIEVEMENT_DEFS.map(def => ({
+      key: def.key,
+      title: t(def.titleKey, def.title),
+      desc: t(def.descKey, def.desc)
+    }));
 
-    // ---------- SCROLL PANEL CONFIG ----------
     const panelWidth = Math.min(1100, this.cameras.main.width - 120);
     const panelHeight = Math.min(520, this.cameras.main.height - 240);
     const panelLeft = centerX - panelWidth / 2;
@@ -68,7 +65,7 @@ export default class AchievementsScene extends Phaser.Scene {
 
     const contentWidth = panelWidth - panelPad * 2;
     const colWidth = Math.floor((contentWidth - this.ach.colGap) / this.ach.cols);
-	
+
     this.ach.baseY = panelTop + panelPad;
     this.ach.listContainer = this.add.container(panelLeft + panelPad, this.ach.baseY).setDepth(3);
 
@@ -97,7 +94,7 @@ export default class AchievementsScene extends Phaser.Scene {
         wordWrap: { width: colWidth - 110 }
       }).setOrigin(0, 0);
 
-      const badge = this.add.text(colWidth - 12, 10, achieved ? 'COMPLETED' : 'LOCKED', {
+      const badge = this.add.text(colWidth - 12, 10, achieved ? t('ACH_BADGE_COMPLETE', 'COMPLETED') : t('ACH_BADGE_LOCKED', 'LOCKED'), {
         fontSize: 12, fontFamily: 'Orbitron, Arial', color: badgeColor
       }).setOrigin(1, 0);
 
@@ -107,31 +104,7 @@ export default class AchievementsScene extends Phaser.Scene {
       itemContainer.on('pointerover', () => itemBg.setFillStyle(0x1b1b1b, 0.35));
       itemContainer.on('pointerout', () => itemBg.setFillStyle(0x0b0b0b, 0.25));
       itemContainer.on('pointerdown', () => {
-        if (achieved) {
-          GlobalAudio.playButton(this);
-          const px = panelLeft + panelWidth / 2;
-          const py = panelTop + panelHeight - 60;
-          const popupRect = this.add.rectangle(px, py, 520, 70, 0x111111, 0.95).setDepth(1200);
-          popupRect.setStrokeStyle(2, 0x66ff66);
-          const ptitle = this.add.text(px - 240, py - 12, it.title, { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#66ff66' }).setDepth(1201).setOrigin(0, 0);
-          const pdesc = this.add.text(px - 240, py + 10, it.desc, { fontSize: 12, fontFamily: 'Orbitron, Arial', color: '#ffffff' }).setDepth(1201).setOrigin(0, 0);
-          this.tweens.add({ targets: [popupRect, ptitle, pdesc], alpha: 1, duration: 160 });
-          this.time.delayedCall(1400, () => {
-            try { popupRect.destroy(); } catch (e) {}
-            try { ptitle.destroy(); } catch (e) {}
-            try { pdesc.destroy(); } catch (e) {}
-          });
-        } else {
-          GlobalAudio.playButton(this);
-          this.tweens.add({
-            targets: itemContainer,
-            x: itemContainer.x - 6,
-            duration: 60,
-            yoyo: true,
-            repeat: 0,
-            onComplete: () => { itemContainer.x = x; }
-          });
-        }
+        GlobalAudio.playButton(this);
       });
 
       this.ach.listContainer.add(itemContainer);
@@ -143,7 +116,6 @@ export default class AchievementsScene extends Phaser.Scene {
     const visibleHeight = panelHeight - panelPad * 2;
     this.ach.maxScroll = Math.max(0, contentHeight - visibleHeight);
 
-    // ---------- MASK so list won't overflow ----------
     const maskG = this.make.graphics();
     maskG.fillStyle(0xffffff);
     const maskLeft = panelLeft + panelPad;
@@ -152,7 +124,6 @@ export default class AchievementsScene extends Phaser.Scene {
     const mask = maskG.createGeometryMask();
     this.ach.listContainer.setMask(mask);
 
-    // ---------- simple scrollbar visuals (right edge) ----------
     const barX = panelLeft + panelWidth - 10;
     const barTop = panelTop + panelPad;
     const barHeight = panelHeight - panelPad * 2;
@@ -176,7 +147,6 @@ export default class AchievementsScene extends Phaser.Scene {
       this._updateScroll();
     });
 
-    // ---------- wheel scrolling ----------
     this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY) => {
       const px = pointer.x;
       const py = pointer.y;
@@ -195,25 +165,24 @@ export default class AchievementsScene extends Phaser.Scene {
       this._updateScroll();
     });
 
-    // ---------- stats & footer (fixed; not in scroll) ----------
     const statsY = panelTop + panelHeight + 20;
-    this.add.text(centerX, statsY, `UNLOCKED: ${unlockedCount} / ${items.length}`, { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ffffff' }).setOrigin(0.5);
+    this.add.text(centerX, statsY, GlobalLocalization.format('ACH_STATS_UNLOCKED', 'UNLOCKED: {0} / {1}', unlockedCount, items.length), { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ffffff' }).setOrigin(0.5);
 
     const played = totals.playTimeSeconds || 0;
     const hours = Math.floor(played / 3600);
     const minutes = Math.floor((played % 3600) / 60);
-    const timeStr = `${hours}h ${minutes}m`;
+    const timeStr = GlobalLocalization.format('ACH_TIME_FORMAT', '{0}h {1}m', hours, minutes);
 
-    this.add.text(centerX, statsY + 28, `GAMES: ${totals.gamesPlayed || 0}     WINS: ${totals.wins || 0}    ROUNDS: ${totals.roundsPlayed || 0}    BEST: ${formatCompact(totals.bestSingleMatchScore || 0)}`, { fontSize: 16, fontFamily: 'Orbitron, Arial', color: '#ffffff' }).setOrigin(0.5);
-    this.add.text(centerX, statsY + 50, `PLAYTIME: ${timeStr}    STRAIGHTS: ${totals.straightsRolled || 0}`, { fontSize: 14, fontFamily: 'Orbitron, Arial', color: '#cccccc' }).setOrigin(0.5);
+    this.add.text(centerX, statsY + 28, GlobalLocalization.format('ACH_STATS_LINE_GAME', 'GAMES: {0}     WINS: {1}    ROUNDS: {2}    BEST: {3}', totals.gamesPlayed || 0, totals.wins || 0, totals.roundsPlayed || 0, formatCompact(totals.bestSingleMatchScore || 0)), { fontSize: 16, fontFamily: 'Orbitron, Arial', color: '#ffffff' }).setOrigin(0.5);
+    this.add.text(centerX, statsY + 50, GlobalLocalization.format('ACH_STATS_LINE_PLAY', 'PLAYTIME: {0}    STRAIGHTS: {1}', timeStr, totals.straightsRolled || 0), { fontSize: 14, fontFamily: 'Orbitron, Arial', color: '#cccccc' }).setOrigin(0.5);
 
-    const back = this.add.text(centerX, this.cameras.main.height - 40, '← BACK', { fontSize: 26, fontFamily: 'Orbitron, Arial', color: '#ff6666' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    const back = this.add.text(centerX, this.cameras.main.height - 40, t('UI_BACK', '<- BACK'), { fontSize: 26, fontFamily: 'Orbitron, Arial', color: '#ff6666' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     back.on('pointerdown', () => {
       if (GlobalAudio) GlobalAudio.playButton(this);
       this.scene.start('MenuScene');
     });
-	
-	this.input.keyboard.on('keydown-ESC', () => {
+
+    this.input.keyboard.on('keydown-ESC', () => {
       if (GlobalAudio) GlobalAudio.playButton(this);
       this.scene.start('MenuScene');
     });

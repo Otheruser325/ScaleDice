@@ -1,11 +1,15 @@
-import Dice from '../utils/DiceManager.js';
+﻿import { animateDiceRoll, animateDiceSpin } from '../utils/AnimationManager.js';
 import { COMBO_BASE_MULT, COMBO_DISPLAY_NAMES, checkCombo, showComboText, playComboFX } from '../utils/ComboManager.js';
-import { animateDiceRoll } from '../utils/AnimationManager.js';
-import { formatCompact } from '../utils/FormatManager.js';
-import UpgradeManager from '../utils/UpgradeManager.js';
 import GlobalAudio from '../utils/AudioManager.js';
 import GlobalAchievements from '../utils/AchievementsManager.js';
 import GlobalBackground from '../utils/BackgroundManager.js';
+import GlobalDebug from '../utils/DebugManager.js';
+import DiceManager from '../utils/DiceManager.js';
+import GlobalErrors from '../utils/ErrorManager.js';
+import { formatCompact } from '../utils/FormatManager.js';
+import GlobalLocalization from '../utils/LocalizationManager.js';
+import GlobalSettings from '../utils/SettingsManager.js';
+import UpgradeManager from '../utils/UpgradeManager.js';
 
 export default class LocalGameScene extends Phaser.Scene {
   constructor() {
@@ -20,6 +24,8 @@ export default class LocalGameScene extends Phaser.Scene {
     this.teams = data.teams ?? Array.from({ length: this.playerCount }, (_, i) => 'blue');
     this.bigUpgradesEnabled = data.bigUpgradesEnabled ?? true;
     this.challengeKey = data.challengeKey || null;
+    this.challengeDate = data.challengeDate || null;
+    this.challengeReward = data.challengeReward || 0;
 
     this.players = Array.from({ length: this.playerCount }, (_, i) => ({
       name: (data.names && data.names[i]) || `P${i + 1}`,
@@ -33,6 +39,12 @@ export default class LocalGameScene extends Phaser.Scene {
       lastRoll: []
     }));
 
+    if (this.challengeKey === 'highStakes') {
+      this.players.forEach(p => {
+        if (p?.upgrades?.setEconomyCap) p.upgrades.setEconomyCap(250);
+      });
+    }
+
     this.currentPlayerIndex = 0;
     this.currentRound = 1;
     this.isRolling = false;
@@ -40,12 +52,17 @@ export default class LocalGameScene extends Phaser.Scene {
     this.diceCosts = [10, 100, 500, 3000, 20000];
     this.teamScoreText = null;
     this.prediction = null;
+    this.exitModal = null;
+    this.endTurnBtn = null;
+    GlobalDebug.setNamespace('LocalGameScene');
 
     this.playerTints = [
       0x66aaff,
       0xffdd66,
       0x66ff99,
-      0xff6666
+      0xff6666,
+      0xffaa44,
+      0xee88ff
     ];
 
     this._lastTurnGivenRoundFor = Array(this.playerCount).fill(0);
@@ -65,7 +82,7 @@ export default class LocalGameScene extends Phaser.Scene {
     }));
 
     this._consecutiveComboCounter = Array(this.playerCount).fill(0);
-    this.dice = new Dice();
+    this.dice = new DiceManager();
 
     this.comboRequirements = {
       pair: 2,
@@ -95,20 +112,76 @@ export default class LocalGameScene extends Phaser.Scene {
       { key: 'sixOfAKind', req: 6 }
     ];
 
-    this._bigUpgradeDefs = [
-      { key: 'clairvoyance', title: 'Clairvoyance', baseCost: 500 },
-      { key: 'stockExchange', title: 'Stock Exchange', baseCost: 1000 },
-      { key: 'comboX', title: 'Combo-X', baseCost: 2500 },
-      { key: 'masterPredict', title: 'Master Predict', baseCost: 7500 },
-      { key: 'fixated', title: 'Fixated', baseCost: 30000 },
-	    { key: 'highStonks', title: 'High Stonks', baseCost: 60000 },
-      { key: 'comboMasher', title: 'Combo Masher', baseCost: 150000 }
-    ];
+    this._bigUpgradeDefs = [];
+    
+    // Use custom big upgrades if provided, otherwise use defaults
+    if (data.customBigUpgrades && Array.isArray(data.customBigUpgrades)) {
+      this._bigUpgradeDefs = data.customBigUpgrades;
+    } else {
+      this._bigUpgradeDefs = [
+        { key: 'clairvoyance', title: 'Clairvoyance', baseCost: 500 },
+        { key: 'stockExchange', title: 'Stock Exchange', baseCost: 1000 },
+        { key: 'comboX', title: 'Combo-X', baseCost: 2500 },
+        { key: 'masterPredict', title: 'Master Predict', baseCost: 7500 },
+        { key: 'fixated', title: 'Fixated', baseCost: 30000 },
+        { key: 'highStonks', title: 'High Stonks', baseCost: 60000 },
+        { key: 'comboMasher', title: 'Combo Masher', baseCost: 150000 },
+        { key: 'rollicane', title: 'Rollicane', baseCost: 400000 }
+      ];
+
+      if (this.challengeKey === 'highStakes') {
+        this._bigUpgradeDefs.push(
+          { key: 'ultraStonks', title: 'Ultra Stonks', baseCost: 750000 },
+          { key: 'scoreInvestor', title: 'Score Investor', baseCost: 2000000 },
+          { key: 'comboOverclock', title: 'Combo Overclock', baseCost: 6000000 }
+        );
+      }
+    }
+
+    // Normalize defs so default upgrades retain their baseline effects/values.
+    try {
+      const normalizer = new UpgradeManager();
+      if (this.challengeKey === 'highStakes') {
+        const challengeKeys = ['ultraStonks', 'scoreInvestor', 'comboOverclock'];
+        challengeKeys.forEach((key) => {
+          if (!this._bigUpgradeDefs.some(def => def && def.key === key)) {
+            const fallbackDef = normalizer.getBigUpgradeDef(key);
+            if (fallbackDef) this._bigUpgradeDefs.push(fallbackDef);
+          }
+        });
+      }
+      normalizer.setBigUpgradeDefs(this._bigUpgradeDefs);
+      this._bigUpgradeDefs = this._bigUpgradeDefs
+        .map(def => normalizer.getBigUpgradeDef(def?.key) || def)
+        .filter(Boolean);
+    } catch (e) {}
+
+    this.players.forEach(p => {
+      if (p?.upgrades?.setBigUpgradeDefs) {
+        p.upgrades.setBigUpgradeDefs(this._bigUpgradeDefs);
+      }
+    });
+
+    this._t = (key, fallback) => GlobalLocalization.t(key, fallback);
+    this._fmt = (key, ...args) => GlobalLocalization.format(key, ...args);
   }
 
   create() {
-    this.headerText = this.add.text(600, 15, 'Scale Dice', { fontSize: 22, fontFamily: 'Orbitron, Arial', color: '#cccccc' }).setOrigin(0.5);
-    this.roundText = this.add.text(600, 40, `Round ${this.currentRound} / ${this.maxRounds}`, { fontSize: 28, fontFamily: 'Orbitron, Arial' }).setOrigin(0.5);
+    try {
+      GlobalErrors.setScene(this);
+    } catch (e) {}
+    try {
+      GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
+    } catch (e) {}
+    try {
+      GlobalAchievements.registerScene(this);
+    } catch (e) {}
+    GlobalLocalization.init(this);
+    const settings = GlobalSettings.get(this);
+    GlobalLocalization.setLanguage(this, settings.language || 'English');
+
+    this.headerText = this.add.text(600, 15, this._t('GAME_TITLE', 'Scale Dice'), { fontSize: 22, fontFamily: 'Orbitron, Arial', color: '#cccccc' }).setOrigin(0.5);
+    this.roundText = this.add.text(600, 40, this._fmt('GAME_ROUND_LABEL', 'Round {0} / {1}', this.currentRound, this.maxRounds), { fontSize: 28, fontFamily: 'Orbitron, Arial' }).setOrigin(0.5);
     this.turnText = this.add.text(600, 72, '', { fontSize: 24, fontFamily: 'Orbitron, Arial' }).setOrigin(0.5);
     this.lastRollText = this.add.text(600, 100, '', { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ffffaa' }).setOrigin(0.5).setDepth(10);
     this.predictionText = this.add.text(600, 115, '', { fontSize: 16, fontFamily: 'Orbitron, Arial', color: '#88ff88' }).setOrigin(0.5);
@@ -121,24 +194,27 @@ export default class LocalGameScene extends Phaser.Scene {
       this.diceSprites.push(die);
     }
 
-    this.rollBtn = this.add.text(600, 470, 'ROLL DICE', { fontSize: 36, fontFamily: 'Orbitron, Arial', color: '#66ff66' })
+    this.rollBtn = this.add.text(600, 470, this._t('GAME_ROLL_DICE', 'ROLL DICE'), { fontSize: 36, fontFamily: 'Orbitron, Arial', color: '#66ff66' })
       .setOrigin(0.5).setInteractive()
       .on('pointerdown', () => {
-        if (this.isRolling || this.waitingForResult) return;
-        const p = this.players[this.currentPlayerIndex];
-        if (p.isAI) return;
+        if (!this.canHumanRoll()) return;
         this.handleRoll();
       });
 
-    this.buyDiceBtn = this.add.text(600, 530, 'BUY DICE', { fontSize: 26, fontFamily: 'Orbitron, Arial', color: '#ffaa44' })
+    this.endTurnBtn = this.add.text(600, 502, this._t('GAME_END_TURN', 'END TURN'), { fontSize: 28, fontFamily: 'Orbitron, Arial', color: '#666666' })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => this.attemptEndTurn());
+
+    this.buyDiceBtn = this.add.text(600, 530, this._t('GAME_BUY_DICE', 'BUY DICE'), { fontSize: 26, fontFamily: 'Orbitron, Arial', color: '#ffaa44' })
       .setOrigin(0.5).setInteractive().on('pointerdown', () => this.buyDice());
     this.diceCostText = this.add.text(600, 560, '', { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ffaa44' }).setOrigin(0.5);
 
-    this.buyEcoBtn = this.add.text(600, 590, 'UPGRADE ECONOMY', { fontSize: 24, fontFamily: 'Orbitron, Arial', color: '#66ccff' })
+    this.buyEcoBtn = this.add.text(600, 590, this._t('GAME_UPGRADE_ECONOMY', 'UPGRADE ECONOMY'), { fontSize: 24, fontFamily: 'Orbitron, Arial', color: '#66ccff' })
       .setOrigin(0.5).setInteractive().on('pointerdown', () => this.buyEconomy());
     this.ecoCostText = this.add.text(600, 620, '', { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#66ccff' }).setOrigin(0.5);
 
-    this.buyLuckBtn = this.add.text(600, 650, 'UPGRADE LUCK', { fontSize: 24, fontFamily: 'Orbitron, Arial', color: '#ff88ff' })
+    this.buyLuckBtn = this.add.text(600, 650, this._t('GAME_UPGRADE_LUCK', 'UPGRADE LUCK'), { fontSize: 24, fontFamily: 'Orbitron, Arial', color: '#ff88ff' })
       .setOrigin(0.5).setInteractive().on('pointerdown', () => this.buyLuck());
     this.luckCostText = this.add.text(600, 680, '', { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ff88ff' }).setOrigin(0.5);
 
@@ -149,10 +225,19 @@ export default class LocalGameScene extends Phaser.Scene {
     this.events.once('destroy', this.cleanupScene, this);
 
     this.input.keyboard.on('keydown-SPACE', (e) => {
-      const p = this.players[this.currentPlayerIndex];
-      if (this.currentPlayerIndex === this.getLocalPlayerIndex() && !p.isAI && !this.isRolling && !this.waitingForResult) {
+      if (this.canHumanRoll()) {
         this.handleRoll();
       }
+    });
+
+    this.input.keyboard.on('keydown-R', () => {
+      if (this.canHumanRoll()) {
+        this.handleRoll();
+      }
+    });
+
+    this.input.keyboard.on('keydown-T', () => {
+      this.attemptEndTurn();
     });
 
     this.input.keyboard.on('keydown-BACKSPACE', (e) => {
@@ -160,7 +245,7 @@ export default class LocalGameScene extends Phaser.Scene {
       if (!this.exitLocked) {
         this.scene.start('MenuScene');
       } else {
-        this.showConfirmExit();
+        this.toggleExitModal();
       }
     });
 
@@ -179,27 +264,21 @@ export default class LocalGameScene extends Phaser.Scene {
       if (!this.exitLocked) {
         this.scene.start('MenuScene');
       } else {
-        this.showConfirmExit();
+        this.toggleExitModal();
       }
     });
 
     this.comboPanelOpen = false;
-	this.bigUpgradesOpen = false;
-	this.comboToolbarContainer = null;
+	  this.bigUpgradesOpen = false;
+	  this.comboToolbarContainer = null;
     this.bigUpgradesToolbarContainer = null;
     this.comboToolbar = [];
     this.createComboToolbar();
     this.createPlayerBar();
     this.addBackButton();
-    this.updateTurnUI();
     this.createHistoryLog();
+    this.updateTurnUI();
     this.createBigUpgradesPanelToolbar();
-    try {
-      GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
-    } catch (e) {}
-    try {
-      GlobalAchievements.registerScene(this);
-    } catch (e) {}
 
     try {
       if (this.players.some(p => !p.isAI)) {
@@ -210,6 +289,34 @@ export default class LocalGameScene extends Phaser.Scene {
 
   getLocalPlayerIndex() {
     return this.currentPlayerIndex;
+  }
+
+  canHumanRoll() {
+    const p = this.players[this.currentPlayerIndex];
+    return Boolean(
+      p &&
+      this.currentPlayerIndex === this.getLocalPlayerIndex() &&
+      !p.isAI &&
+      !this.isRolling &&
+      !this.waitingForResult
+    );
+  }
+
+  canHumanEndTurn() {
+    const p = this.players[this.currentPlayerIndex];
+    return Boolean(
+      p &&
+      this.currentPlayerIndex === this.getLocalPlayerIndex() &&
+      !p.isAI &&
+      !this.isRolling &&
+      this.waitingForResult
+    );
+  }
+
+  attemptEndTurn() {
+    if (!this.canHumanEndTurn()) return false;
+    this.endTurn('manual');
+    return true;
   }
 
   getAvailableComboKeysForPlayer(player) {
@@ -271,14 +378,14 @@ export default class LocalGameScene extends Phaser.Scene {
           p.score -= cost;
           p.upgrades.upgradeCombo(key);
           GlobalAudio.playButton(this);
-          this._logActivity(`${p.name} upgraded ${COMBO_DISPLAY_NAMES[key] || key} → Lv ${p.upgrades.getComboLevel(key)}`);
+          this._logActivity(`${p.name} upgraded ${COMBO_DISPLAY_NAMES[key] || key} -> Lv ${p.upgrades.getComboLevel(key)}`);
           this.updateTurnUI();
         }
       });
     });
 
     if (this.comboToggleBtn) try { this.comboToggleBtn.destroy(); } catch(e){}
-    this.comboToggleBtn = this.add.text(leftPad - 18, startY - 24, '▶', { fontSize: 20, fontFamily: 'Orbitron, Arial', color: '#ffffff' })
+    this.comboToggleBtn = this.add.text(leftPad - 18, startY - 24, '>', { fontSize: 20, fontFamily: 'Orbitron, Arial', color: '#ffffff' })
       .setOrigin(0.5).setDepth(1003).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.toggleComboToolbar());
 
@@ -304,7 +411,7 @@ export default class LocalGameScene extends Phaser.Scene {
       ease: 'Cubic.easeOut'
     });
 
-    try { this.comboToggleBtn.setText(this.comboPanelOpen ? '◀' : '▶'); } catch(e){}
+    try { this.comboToggleBtn.setText(this.comboPanelOpen ? '<' : '>'); } catch(e){}
   }
 
   refreshComboToolbarForPlayer(player) {
@@ -343,7 +450,7 @@ export default class LocalGameScene extends Phaser.Scene {
       const hiddenX = leftPad - panelWidth - 20;
       try { this.comboToolbarContainer.x = hiddenX; } catch (e) {}
     }
-    try { if (this.comboToggleBtn) { this.comboToggleBtn.setText('▶'); } } catch(e){}
+    try { if (this.comboToggleBtn) { this.comboToggleBtn.setText('>'); } } catch(e){}
     this.comboPanelOpen = false;
   }
 
@@ -366,25 +473,90 @@ export default class LocalGameScene extends Phaser.Scene {
     this.bigUpgradesToolbarContainer.x = startX - 40;
     this.bigUpgradesToolbarContainer.setVisible(false);
 
-    const items = [
-      { key: 'clairvoyance', title: 'Clairvoyance', desc: '25% chance to predict your next roll.', baseCost: 500 },
-      { key: 'stockExchange', title: 'Stock Exchange', desc: 'Economy +50% income.', baseCost: 1000 },
-      { key: 'comboX', title: 'Combo-X', desc: 'Combo multipliers +50%.', baseCost: 2500 },
-      { key: 'masterPredict', title: 'Master Predict', desc: 'Make clairvoyance 50% (requires Clairvoyance).', baseCost: 7500 },
-      { key: 'fixated', title: 'Fixated', desc: 'Dice-earned scores ×2.', baseCost: 30000 },
-      { key: 'highStonks', title: 'High Stonks', desc: 'Economy +5% per completed round.', baseCost: 60000 },
-      { key: 'comboMasher', title: 'Combo Masher', desc: '+20% combo per consecutive same-type combo.', baseCost: 150000 }
-    ];
+    const descriptions = {
+      clairvoyance: '25% chance to predict your next roll.',
+      stockExchange: 'Economy +50% income.',
+      comboX: 'Combo multipliers +50%.',
+      masterPredict: 'Make clairvoyance 50% (requires Clairvoyance).',
+      fixated: 'Dice-earned scores x2.',
+      highStonks: 'Economy +5% per completed round.',
+      comboMasher: '+20% combo per consecutive same-type combo.',
+      rollicane: '25% per die to spin 2-10s and gain points each second.',
+      ultraStonks: 'Economy income is massively boosted.',
+      scoreInvestor: 'Gain bonus income each turn from current score.',
+      comboOverclock: 'Combo multipliers are overclocked.'
+    };
+    const toNumber = (value, fallback = null) => {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : fallback;
+    };
+    const toPercent = (value) => `${Math.round((toNumber(value, 0) || 0) * 100)}%`;
+
+    const describeUpgrade = (def) => {
+      if (!def) return '';
+      if (!def.effect) return descriptions[def.key] || '';
+
+      const effect = def.effect;
+      const value = def.value;
+      const values = def.values || {};
+
+      switch (effect) {
+        case 'predictChance':
+          return `${toPercent(value)} chance to predict your next roll.`;
+        case 'ecoMultiplier':
+          return `Economy income x${toNumber(value, 1)}.`;
+        case 'comboMultiplier':
+          return `Combo multipliers x${toNumber(value, 1)}.`;
+        case 'rollMultiplier':
+          return `Dice-earned scores x${toNumber(value, 1)}.`;
+        case 'ecoRoundMultiplier':
+          return `Economy +${toPercent(value)} per completed round.`;
+        case 'comboCostMultiplier':
+          return `Combo upgrade costs x${toNumber(value, 1)}.`;
+        case 'comboStreak': {
+          const pct = toPercent(values.percentage ?? value);
+          const multNote = values.isMultiplicative ? ' (multiplicative)' : '';
+          return `+${pct} combo per consecutive same-type combo${multNote}.`;
+        }
+        case 'spinEffect': {
+          const chance = toPercent(values.chance ?? value);
+          const minSec = toNumber(values.minSec, 2);
+          const maxSec = toNumber(values.maxSec, 10);
+          return `${chance} per die to spin ${minSec}-${maxSec}s and gain points each second.`;
+        }
+        case 'interestRate':
+          return `Gain ${toPercent(value)} of current score each turn.`;
+        default:
+          return descriptions[def.key] || '';
+      }
+    };
+
+    const items = this._bigUpgradeDefs.map(def => ({
+      key: def.key,
+      title: def.title || def.key,
+      desc: describeUpgrade(def),
+      baseCost: def.baseCost
+    }));
 
     this.bigUpgradesToolbar = [];
 
-    let y = startY;
-    items.forEach(it => {
-      const rowBg = this.add.rectangle(0, y, panelWidth, 56, 0x0b0b0b, 0.92).setOrigin(0, 0.5);
+    const upgradesPerColumn = 12;
+    const maxColumns = 5;
+    const columnGap = 14;
+    const rowHeight = 64;
+    const itemsToShow = items.slice(0, upgradesPerColumn * maxColumns);
+    const columns = Math.max(1, Math.min(maxColumns, Math.ceil(itemsToShow.length / upgradesPerColumn)));
+
+    itemsToShow.forEach((it, index) => {
+      const col = Math.floor(index / upgradesPerColumn);
+      const row = index % upgradesPerColumn;
+      const x = col * (panelWidth + columnGap);
+      const y = startY + row * rowHeight;
+      const rowBg = this.add.rectangle(x, y, panelWidth, 56, 0x0b0b0b, 0.92).setOrigin(0, 0.5);
       rowBg.setStrokeStyle(1, 0x222222);
-      const title = this.add.text(8, y - 12, it.title, { fontSize: 14, fontFamily: 'Orbitron, Arial', color: '#ffffff' }).setOrigin(0, 0);
-      const desc = this.add.text(8, y + 6, it.desc, { fontSize: 11, fontFamily: 'Orbitron, Arial', color: '#cccccc', wordWrap: { width: panelWidth - 120 } }).setOrigin(0, 0);
-      const buyBtn = this.add.text(panelWidth - 96, y - 8, `BUY ${formatCompact(it.baseCost)}`, { fontSize: 14, fontFamily: 'Orbitron, Arial', color: '#66ff66' })
+      const title = this.add.text(x + 8, y - 12, it.title, { fontSize: 14, fontFamily: 'Orbitron, Arial', color: '#ffffff' }).setOrigin(0, 0);
+      const desc = this.add.text(x + 8, y + 6, it.desc, { fontSize: 11, fontFamily: 'Orbitron, Arial', color: '#cccccc', wordWrap: { width: panelWidth - 120 } }).setOrigin(0, 0);
+      const buyBtn = this.add.text(x + panelWidth - 96, y - 8, `BUY ${formatCompact(it.baseCost)}`, { fontSize: 14, fontFamily: 'Orbitron, Arial', color: '#66ff66' })
         .setOrigin(0, 0).setInteractive({ useHandCursor: true });
 
       buyBtn.on('pointerdown', () => {
@@ -393,11 +565,10 @@ export default class LocalGameScene extends Phaser.Scene {
 
       this.bigUpgradesToolbarContainer.add([rowBg, title, desc, buyBtn]);
       this.bigUpgradesToolbar.push({ key: it.key, rowBg, title, desc, buyBtn, baseCost: it.baseCost });
-      y += 64;
     });
 
-    if (this.bigToggleBtn) try { this.bigToggleBtn.destroy(); } catch(e){}
-    this.bigToggleBtn = this.add.text(startX - 18, startY - 24, '▶', { fontSize: 20, fontFamily: 'Orbitron, Arial', color: '#ffffff' })
+    if (this.bigToggleBtn) try { this.bigToggleBtn.destroy(); } catch (e) {}
+    this.bigToggleBtn = this.add.text(startX - 18, startY - 24, '>', { fontSize: 20, fontFamily: 'Orbitron, Arial', color: '#ffffff' })
       .setOrigin(0.5).setDepth(1003).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.toggleBigUpgrades());
 
@@ -419,7 +590,7 @@ export default class LocalGameScene extends Phaser.Scene {
         duration: 260,
         ease: 'Cubic.easeOut'
       });
-      this.bigToggleBtn.setText(this.bigUpgradesOpen ? '◀' : '▶');
+      this.bigToggleBtn.setText(this.bigUpgradesOpen ? '<' : '>');
     } catch (e) {}
     if (this.bigUpgradesOpen) this.refreshBigUpgradesPanel();
   }
@@ -427,7 +598,7 @@ export default class LocalGameScene extends Phaser.Scene {
   closeBigUpgradesInstant() {
     try {
       this.bigUpgradesToolbarContainer.setVisible(false);
-      this.bigToggleBtn.setText('▶');
+      this.bigToggleBtn.setText('>');
     } catch (e) {}
     this.bigUpgradesOpen = false;
   }
@@ -534,8 +705,12 @@ export default class LocalGameScene extends Phaser.Scene {
       ui.dice?.setText(`🎲 ${p.diceUnlocked}`);
       const effective = Math.min(p.luck + p.upgrades.getLuckBonus(), 6);
       ui.luck?.setText(`🍀 x${effective.toFixed(1)}`);
-      const incomeVal = Math.floor(p.upgrades.getEconomyIncome() * ((p.upgrades.hasBigUpgrade && p.upgrades.hasBigUpgrade('stockExchange')) ? 1.5 : 1) * (p.upgrades.hasBigUpgrade && p.upgrades.hasBigUpgrade('highStonks') ? p.upgrades.getHighStonksMultiplier(this.currentRound - 1) : 1));
-      ui.income?.setText(incomeVal > 0 ? `💰 +${formatCompact(incomeVal)}/turn` : '');
+      const incomeVal = Math.floor(
+        p.upgrades.getEconomyIncome() *
+        (p.upgrades.getEconomyMultiplier ? p.upgrades.getEconomyMultiplier() : 1) *
+        (p.upgrades.getHighStonksMultiplier ? p.upgrades.getHighStonksMultiplier(this.currentRound - 1) : 1)
+      );
+      ui.income?.setText(incomeVal > 0 ? `💰 +${formatCompact(incomeVal)}` : '');
       ui.ring?.setVisible(i === this.currentPlayerIndex);
       const isActive = i === this.currentPlayerIndex;
 
@@ -556,6 +731,7 @@ export default class LocalGameScene extends Phaser.Scene {
 
     try {
       this._logActivity(`${player.name}'s turn started`);
+      GlobalDebug.turnStart({ playerIndex: this.currentPlayerIndex, playerName: player.name, round: this.currentRound });
     } catch (e) {}
 
     this._lastTurnGivenRoundFor[this.currentPlayerIndex] = this.currentRound;
@@ -576,6 +752,15 @@ export default class LocalGameScene extends Phaser.Scene {
         onComplete: () => ecoText.destroy()
       });
       this._logActivity(`${player.name} received ${formatCompact(income)} income`);
+    }
+
+    const investorRate = player.upgrades.getInterestRate ? player.upgrades.getInterestRate() : 0;
+    if (investorRate > 0) {
+      const investorIncome = Math.floor(player.score * investorRate);
+      if (investorIncome > 0) {
+        player.score += investorIncome;
+        this._logActivity(`${player.name} received ${formatCompact(investorIncome)} interest income`);
+      }
     }
 
     if (this.currentRound >= this.maxRounds - 4 && this._isPlayerBehind(player)) {
@@ -684,8 +869,11 @@ export default class LocalGameScene extends Phaser.Scene {
     const diceCost = this.diceCosts[player.diceUnlocked - 1];
     const scaledDiceCost = Math.floor((diceCost || Infinity) * this.costMult);
     const expectedBase = player.diceUnlocked * 3.5;
+    const isNightmare = player.difficulty === 'Nightmare';
+    let comboTargets = null;
 
-    let availableComboKeys = this.getAvailableComboKeysForPlayer(player);
+    const allComboKeys = this.getAvailableComboKeysForPlayer(player);
+    let availableComboKeys = allComboKeys.slice();
 
     const totalComboLevels = (() => {
       try {
@@ -696,14 +884,37 @@ export default class LocalGameScene extends Phaser.Scene {
       } catch (e) { return 0; }
     })();
 
-    const pickBestComboROI = () => {
+    const getComboScaledCost = (key) => {
+      const rawCost = player.upgrades.getComboCost(key);
+      return Math.floor(rawCost * this.costMult);
+    };
+
+    const shouldSkipComboForCap = (key, targets) => {
+      if (!targets) return false;
+      const target = targets[key];
+      if (!Number.isFinite(target)) return false;
+      const lvl = player.upgrades.getComboLevel?.(key) || 0;
+      return lvl >= target;
+    };
+
+    const canAffordCombo = (key, cost, targets = null) => {
+      if (shouldSkipComboForCap(key, targets)) return false;
+      if (player.score < cost) return false;
+      if (isNightmare) {
+        const req = this.comboRequirements[key] ?? 2;
+        const lvl = player.upgrades.getComboLevel?.(key) || 0;
+        if (req >= 6 && lvl >= 30 && player.score < cost * 2) return false;
+      }
+      return true;
+    };
+
+    const pickBestComboROI = (keys = availableComboKeys) => {
       let best = null;
-      for (let key of availableComboKeys) {
+      for (let key of keys) {
         const req = this.comboRequirements[key] ?? 2;
         if (player.diceUnlocked < req) continue;
-        const rawCost = player.upgrades.getComboCost(key);
-        const cost = Math.floor(rawCost * this.costMult);
-        if (player.score < cost) continue;
+        const cost = getComboScaledCost(key);
+        if (!canAffordCombo(key, cost, comboTargets)) continue;
         const baseMult = COMBO_BASE_MULT[key] || 1;
         const upgradeMult = player.upgrades.getComboMultiplier(key) || 1;
         const totalMult = baseMult * upgradeMult;
@@ -712,6 +923,70 @@ export default class LocalGameScene extends Phaser.Scene {
         if (!best || roi > best.roi) best = { key, roi, cost };
       }
       return best;
+    };
+
+    const buildComboTargets = () => {
+      const dice = player.diceUnlocked;
+      if (dice < 4) return null;
+
+      const diff = player.difficulty;
+      const isHard = diff === 'Hard' || diff === 'Nightmare';
+      const isMedium = diff === 'Medium';
+      const isEasy = diff === 'Easy';
+      const isBaby = diff === 'Baby';
+      if (!isHard && !isMedium && !isEasy && !isBaby) return null;
+
+      const roundsLeft = this.maxRounds - this.currentRound + 1;
+      const lateGame = roundsLeft <= Math.max(6, Math.floor(this.maxRounds * 0.35));
+      if (isMedium && !lateGame) return null;
+
+      let targetByReq = null;
+      if (diff === 'Nightmare') {
+        targetByReq = { 4: 15, 5: 25, 6: 40 };
+      } else if (diff === 'Hard') {
+        targetByReq = { 4: 10, 5: 20, 6: 30 };
+      } else if (diff === 'Medium') {
+        targetByReq = { 4: 6, 5: 12, 6: 20 };
+      } else if (diff === 'Easy') {
+        targetByReq = { 4: 5, 5: 10, 6: 15 };
+      } else if (diff === 'Baby') {
+        targetByReq = { 4: 3, 5: 5, 6: 7 };
+      }
+
+      if (!targetByReq) return null;
+
+      const targets = {};
+      allComboKeys.forEach(key => {
+        const req = this.comboRequirements[key] ?? 2;
+        if (req < 4) return;
+        const target = targetByReq[req];
+        if (target) targets[key] = target;
+      });
+
+      return Object.keys(targets).length ? targets : null;
+    };
+
+    const tryBuyComboTargets = (targets) => {
+      if (!targets) return false;
+      const keys = Object.keys(targets)
+        .filter(key => allComboKeys.includes(key))
+        .sort((a, b) => {
+          const ra = this.comboRequirements[a] ?? 2;
+          const rb = this.comboRequirements[b] ?? 2;
+          if (rb !== ra) return rb - ra;
+          const la = (player.upgrades.getComboLevel?.(a)) || 0;
+          const lb = (player.upgrades.getComboLevel?.(b)) || 0;
+          return la - lb;
+        });
+
+      for (let key of keys) {
+        const target = targets[key] ?? 0;
+        const lvl = player.upgrades.getComboLevel?.(key) || 0;
+        if (lvl >= target) continue;
+        if (tryBuyComboNow(key)) return true;
+      }
+
+      return false;
     };
 
     const tryBuyEconomyNow = () => {
@@ -740,30 +1015,29 @@ export default class LocalGameScene extends Phaser.Scene {
     const tryBuyComboNow = (key) => {
       const req = this.comboRequirements[key] ?? 2;
       if (player.diceUnlocked < req) return false;
-      const rawCost = player.upgrades.getComboCost(key);
-      const cost = Math.floor(rawCost * this.costMult);
-      if (player.score < cost) return false;
+      const cost = getComboScaledCost(key);
+      if (!canAffordCombo(key, cost, comboTargets)) return false;
       return this.buyCombo(key, true);
     };
 
-    const tryBuyBigNow = (key) => {
+    const tryBuyBigNow = (def) => {
       if (!this.bigUpgradesEnabled) return false;
-      const def = this._bigUpgradeDefs.find(d => d.key === key);
-      if (!def) return false;
+      if (!def || !def.key) return false;
+      const key = def.key;
 
       if (player.upgrades.hasBigUpgrade?.(key)) return false;
 
-      const cost = Math.max(1, Math.floor(def.baseCost * (this.costMult || 1)));
+      const baseCost = Number(def.baseCost);
+      if (!Number.isFinite(baseCost)) return false;
+      const cost = Math.max(1, Math.floor(baseCost * (this.costMult || 1)));
       if (player.score < cost) return false;
-
-      const allowBigBuy = (player.difficulty === 'Hard' || player.difficulty === 'Nightmare') || ['clairvoyance','stockExchange','comboX','masterPredict','fixated'].includes(key);
-      if (!allowBigBuy) return false;
 
       player.score -= cost;
       const ok = player.upgrades.buyBigUpgrade?.(key);
       if (ok) {
+        try { GlobalAudio.playButton(this); } catch (e) {}
         this._logActivity(
-          `${player.name} bought ${def.title} for ${formatCompact(cost)}`
+          `${player.name} bought ${def.title || def.key} for ${formatCompact(cost)}`
         );
 
         try { this.refreshBigUpgradesPanel(); } catch {}
@@ -775,13 +1049,27 @@ export default class LocalGameScene extends Phaser.Scene {
       return false;
     };
 
-    const bigPriority = ['clairvoyance','stockExchange','comboX','masterPredict','fixated','highStonks','comboMasher'];
+    const bigDefs = Array.isArray(this._bigUpgradeDefs) ? this._bigUpgradeDefs : [];
+    const bigPriorityDefs = bigDefs.filter(d => d && d.key);
+    const isHard = player.difficulty === 'Hard' || player.difficulty === 'Nightmare';
+    const isMedium = player.difficulty === 'Medium';
+    comboTargets = buildComboTargets();
+    const weakComboKeys = availableComboKeys
+      .slice()
+      .sort((a, b) => {
+        const ra = this.comboRequirements[a] ?? 2;
+        const rb = this.comboRequirements[b] ?? 2;
+        if (ra !== rb) return ra - rb;
+        const la = player.upgrades.getComboLevel?.(a) || 0;
+        const lb = player.upgrades.getComboLevel?.(b) || 0;
+        return la - lb;
+      });
 
     // DECISION TREE
 
     // Hard / Nightmare bots: prefer dice early, then economy, then luck, then combos (ROI)
-    if (player.difficulty === 'Hard' || player.difficulty === 'Nightmare') {
-      availableComboKeys = availableComboKeys.filter(
+    if (isHard) {
+      const roiComboKeys = availableComboKeys.filter(
         key => !this._shouldBotSkipCombo(player, key)
       );
 
@@ -789,16 +1077,23 @@ export default class LocalGameScene extends Phaser.Scene {
         if (tryBuyDiceNow()) return;
       }
 
-      for (let k of bigPriority) {
-        if (tryBuyBigNow(k)) return;
+      for (let def of bigPriorityDefs) {
+        if (tryBuyBigNow(def)) return;
       }
 
-      if (tryBuyEconomyNow()) return;
+      if (isNightmare) {
+        if (tryBuyEconomyNow()) return;
+        if (tryBuyLuckNow()) return;
+        if (tryBuyComboTargets(comboTargets)) return;
+      } else {
+        if (tryBuyComboTargets(comboTargets)) return;
+        if (tryBuyEconomyNow()) return;
+        if (tryBuyLuckNow()) return;
+      }
 
-      if (tryBuyLuckNow()) return;
-
-      if (totalComboLevels < 30) {
-        const best = pickBestComboROI();
+      const comboCap = comboTargets ? 999 : 60;
+      if (totalComboLevels < comboCap) {
+        const best = pickBestComboROI(roiComboKeys);
         if (best && tryBuyComboNow(best.key)) return;
       }
 
@@ -811,14 +1106,16 @@ export default class LocalGameScene extends Phaser.Scene {
     }
 
     // Medium bots
-    if (player.difficulty === 'Medium') {
+    if (isMedium) {
       if (diceCost && player.score >= scaledDiceCost) {
         if (tryBuyDiceNow()) return;
       }
 
-      for (let k of ['clairvoyance','stockExchange','comboX','masterPredict','fixated']) {
-        if (tryBuyBigNow(k)) return;
+      for (let def of bigPriorityDefs) {
+        if (tryBuyBigNow(def)) return;
       }
+
+      if (tryBuyComboTargets(comboTargets)) return;
 
       if (tryBuyEconomyNow()) return;
 
@@ -830,7 +1127,7 @@ export default class LocalGameScene extends Phaser.Scene {
       for (let k of mediumPriority) {
         const req = this.comboRequirements[k] ?? 2;
         if (player.diceUnlocked < req) continue;
-        if (totalComboLevels >= 30) continue;
+        if (totalComboLevels >= 60) continue;
         if (tryBuyComboNow(k)) return;
       }
 
@@ -854,14 +1151,15 @@ export default class LocalGameScene extends Phaser.Scene {
         if (tryBuyLuckNow()) return;
       }
 
-      const easyBigs = ['clairvoyance','stockExchange','comboX'];
-      for (let k of easyBigs) {
-        if (tryBuyBigNow(k)) return;
+      const easyBigs = bigPriorityDefs.slice(0, 6);
+      for (let def of easyBigs) {
+        if (tryBuyBigNow(def)) return;
       }
 
-      for (let k of ['triple','twoPair','pair']) {
-        const req = this.comboRequirements[k] ?? 2;
-        if (player.diceUnlocked < req) continue;
+      if (tryBuyComboTargets(comboTargets)) return;
+
+      for (let k of weakComboKeys) {
+        if (shouldSkipComboForCap(k, comboTargets)) continue;
         if (tryBuyComboNow(k)) return;
       }
 
@@ -880,9 +1178,16 @@ export default class LocalGameScene extends Phaser.Scene {
         if (tryBuyLuckNow()) return;
       }
 
-      const babyBigs = ['clairvoyance','stockExchange','comboX'];
-      for (let k of babyBigs) {
-        if (tryBuyBigNow(k)) return;
+      const babyBigs = bigPriorityDefs.slice(0, 4);
+      for (let def of babyBigs) {
+        if (tryBuyBigNow(def)) return;
+      }
+
+      if (tryBuyComboTargets(comboTargets)) return;
+
+      for (let k of weakComboKeys) {
+        if (shouldSkipComboForCap(k, comboTargets)) continue;
+        if (tryBuyComboNow(k)) return;
       }
 
       this.handleRoll();
@@ -895,13 +1200,17 @@ export default class LocalGameScene extends Phaser.Scene {
   async handleRoll() {
   if (this.isRolling) return;
 
+  const activePlayer = this.players[this.currentPlayerIndex];
+  if (activePlayer && !activePlayer.isAI && !this.canHumanRoll()) return;
+
   this.isRolling = true;
   this._setBuyUIEnabled(false);
   this.rollBtn.disableInteractive();
-  this.rollBtn.setText('Rolling...');
+  this.rollBtn.setText(this._t('GAME_ROLLING', 'Rolling...'));
   this.rollBtn.setStyle({ color: '#c4c70bd2' });
 
   const player = this.players[this.currentPlayerIndex];
+  GlobalDebug.rollStart({ playerIndex: this.currentPlayerIndex, playerName: player?.name });
   GlobalAudio.playDice(this);
   let raw = this.dice.rollMany(player.diceUnlocked);
 
@@ -979,6 +1288,7 @@ export default class LocalGameScene extends Phaser.Scene {
   await animateDiceRoll(this, raw, activeDice);
 
   const combo = checkCombo(raw);
+  let comboTotalMult = 1;
 
   const base = raw.reduce((a, b) => a + b, 0);
 
@@ -1003,17 +1313,18 @@ export default class LocalGameScene extends Phaser.Scene {
       }
       this._lastComboKey[idx] = combo.key;
 
-      if (player.upgrades.hasBigUpgrade && player.upgrades.hasBigUpgrade('comboMasher')) {
-        const streak = Math.max(1, this._consecComboStreak[idx] || 1);
-        const extra = 1 + 0.2 * (streak - 1);
+      const streak = Math.max(1, this._consecComboStreak[idx] || 1);
+      const streakMult = player.upgrades.getComboStreakMultiplier ? player.upgrades.getComboStreakMultiplier(streak) : 1;
+      if (streakMult !== 1) {
         mult = Math.round(mult * 100) / 100;
-        mult *= extra;
+        mult *= streakMult;
       }
     } catch (e) {
       this._lastComboKey[idx] = combo.key;
       if (typeof this._consecComboStreak[idx] === 'undefined') this._consecComboStreak[idx] = 1;
     }
 
+    comboTotalMult = mult;
     gained = Math.floor(gained * mult);
 
     showComboText(this, combo.type, combo.intensity);
@@ -1048,6 +1359,7 @@ export default class LocalGameScene extends Phaser.Scene {
   } else {
     this._lastComboKey[idx] = null;
     this._consecComboStreak[idx] = 0;
+    comboTotalMult = 1;
   }
 
   try {
@@ -1063,6 +1375,21 @@ export default class LocalGameScene extends Phaser.Scene {
 
   player.score += gained;
 
+  // Rollicane phase adds a time tradeoff and grants points every second while spinning.
+  const rollMultiplierForRollicane = diceMultiplier * (combo ? comboTotalMult : 1);
+  const rollicaneBonus = await this.runRollicanePhase(player, raw, activeDice, rollMultiplierForRollicane);
+  if (rollicaneBonus > 0) {
+    this._logActivity(`${player.name} gained ${formatCompact(rollicaneBonus)} from Dice Spin`);
+  }
+  GlobalDebug.rollResult({
+    playerIndex: this.currentPlayerIndex,
+    playerName: player?.name,
+    dice: raw,
+    scored: gained + rollicaneBonus
+  });
+
+  this.isRolling = false;
+
   // Check for in-game score achievements (only for human players)
   if (!player.isAI) {
     if (player.score >= 1000) GlobalAchievements.maybeUnlock('score1000');
@@ -1073,15 +1400,80 @@ export default class LocalGameScene extends Phaser.Scene {
   }
 
   this.waitingForResult = true;
-  this.rollBtn.setText('RESULTS');
+  this.rollBtn.setText(this._t('GAME_RESULTS', 'RESULTS'));
   this.rollBtn.setStyle({ color: '#888888' });
   this.rollBtn.disableInteractive();
 
   this.updateTurnUI();
-  this.time.delayedCall(2000, () => {
-    this.endTurn();
-  });
+  if (player.isAI) {
+    this.time.delayedCall(1200, () => this.endTurn('ai'));
+  }
 }
+
+  async runRollicanePhase(player, rolledFaces, activeDice, rollMultiplier = 1) {
+    const spinConfig = player?.upgrades?.getSpinEffectConfig?.();
+    if (!spinConfig) return 0;
+    if (!Array.isArray(rolledFaces) || !rolledFaces.length) return 0;
+
+    const chance = Math.max(0, Math.min(1, Number(spinConfig.chance ?? 0)));
+    if (!Number.isFinite(chance) || chance <= 0) return 0;
+
+    const minSecRaw = Number(spinConfig.minSec ?? 2);
+    const maxSecRaw = Number(spinConfig.maxSec ?? 10);
+    const minSec = Math.max(0.1, Number.isFinite(minSecRaw) ? minSecRaw : 2);
+    const maxSec = Math.max(minSec, Number.isFinite(maxSecRaw) ? maxSecRaw : minSec);
+    const spinLabel = spinConfig.label || 'Rollicane';
+
+    const spinning = [];
+    for (let i = 0; i < rolledFaces.length; i++) {
+      if (Math.random() < chance) {
+        const seconds = (Number.isInteger(minSec) && Number.isInteger(maxSec))
+          ? Phaser.Math.Between(minSec, maxSec)
+          : Phaser.Math.FloatBetween(minSec, maxSec);
+        spinning.push({
+          index: i,
+          face: rolledFaces[i],
+          seconds
+        });
+      }
+    }
+
+    if (!spinning.length) return 0;
+
+    let totalBonus = 0;
+
+    this._logActivity(`${player.name} triggered ${spinLabel} (${spinning.length} dice spinning)`);
+
+    await animateDiceSpin(this, activeDice, spinning, {
+      onTick: (_second, activeForSecond) => {
+        const baseTick = activeForSecond.reduce((sum, entry) => sum + entry.face, 0);
+        if (baseTick <= 0) return;
+
+        const tickGain = Math.floor(baseTick * Math.max(1, rollMultiplier));
+        totalBonus += tickGain;
+        player.score += tickGain;
+
+        const tickLabel = this._fmt('GAME_ROLLICANE_TICK', 'Rollicane +{0}', formatCompact(tickGain));
+        const tickText = this.add.text(600, 260, tickLabel, {
+          fontSize: 20,
+          fontFamily: 'Orbitron, Arial',
+          color: '#99eeff'
+        }).setOrigin(0.5).setDepth(30);
+
+        this.tweens.add({
+          targets: tickText,
+          y: 230,
+          alpha: 0,
+          duration: 650,
+          onComplete: () => tickText.destroy()
+        });
+
+        this.updateTurnUI();
+      }
+    });
+
+    return totalBonus;
+  }
 
   buyDice(automated = false) {
     if (this.currentPlayerIndex < 0 || this.currentPlayerIndex >= this.playerCount) return false;
@@ -1102,7 +1494,7 @@ export default class LocalGameScene extends Phaser.Scene {
       player.score -= cost;
       player.diceUnlocked = Math.min(6, player.diceUnlocked + 1); // cap at 6 dice
       GlobalAudio.playButton(this);
-      this._logActivity(`${player.name} bought Dice → ${player.diceUnlocked} dice`);
+      this._logActivity(`${player.name} bought Dice -> ${player.diceUnlocked} dice`);
       // Regenerate Clairvoyance prediction if active
       if (this.prediction && player.upgrades.hasBigUpgrade && player.upgrades.hasBigUpgrade('clairvoyance')) {
         const luckBonus = player.upgrades.getLuckBonus();
@@ -1165,11 +1557,12 @@ export default class LocalGameScene extends Phaser.Scene {
 
     const cost = player.upgrades.getScaledEconomyCost?.(this.costMult) ?? Math.floor(player.upgrades.getEconomyCost() * this.costMult);
 
-    if (player.upgrades.getEconomyLevel() < 50 && player.score >= cost) {
+    const ecoCap = player.upgrades.getEconomyCap ? player.upgrades.getEconomyCap() : 50;
+    if (player.upgrades.getEconomyLevel() < ecoCap && player.score >= cost) {
       player.score -= cost;
       player.upgrades.upgradeEconomy();
       GlobalAudio.playButton(this);
-      this._logActivity(`${player.name} upgraded Economy → Lv ${player.upgrades.getEconomyLevel()}`);
+      this._logActivity(`${player.name} upgraded Economy -> Lv ${player.upgrades.getEconomyLevel()}`);
       this.updateTurnUI();
       return true;
     }
@@ -1179,7 +1572,8 @@ export default class LocalGameScene extends Phaser.Scene {
 
   shouldBuyEconomy(player) {
     const ecoLvl = player.upgrades.getEconomyLevel();
-    if (ecoLvl >= 50) return false;
+    const ecoCap = player.upgrades.getEconomyCap ? player.upgrades.getEconomyCap() : 50;
+    if (ecoLvl >= ecoCap) return false;
     const cost = Math.floor(player.upgrades.getEconomyCost() * this.costMult);
     return player.score > cost * 1.5;
   }
@@ -1203,7 +1597,7 @@ export default class LocalGameScene extends Phaser.Scene {
       player.score -= cost;
       player.upgrades.upgradeLuck();
       GlobalAudio.playButton(this);
-      this._logActivity(`${player.name} upgraded Luck → Lv ${player.upgrades.getLuckLevel()} (x${(Math.min(player.luck + player.upgrades.getLuckBonus(),6)).toFixed(1)})`);
+      this._logActivity(`${player.name} upgraded Luck -> Lv ${player.upgrades.getLuckLevel()} (x${(Math.min(player.luck + player.upgrades.getLuckBonus(),6)).toFixed(1)})`);
       this.updateTurnUI();
       return true;
     }
@@ -1238,7 +1632,7 @@ export default class LocalGameScene extends Phaser.Scene {
       player.score -= cost;
       player.upgrades.upgradeCombo(key);
       GlobalAudio.playButton(this);
-      this._logActivity(`${player.name} upgraded ${COMBO_DISPLAY_NAMES[key] || key} → Lv ${player.upgrades.getComboLevel(key)}`);
+      this._logActivity(`${player.name} upgraded ${COMBO_DISPLAY_NAMES[key] || key} -> Lv ${player.upgrades.getComboLevel(key)}`);
       this.updateTurnUI();
       return true;
     }
@@ -1246,12 +1640,18 @@ export default class LocalGameScene extends Phaser.Scene {
     return false;
   }
 
-  endTurn() {
+  endTurn(reason = 'auto') {
+    const endingIndex = this.currentPlayerIndex;
+    const endingPlayer = this.players[endingIndex];
+    if (endingPlayer) {
+      GlobalDebug.turnEnd({ playerIndex: endingIndex, playerName: endingPlayer.name, reason });
+    }
+
     this.isRolling = false;
     this.waitingForResult = false;
     this._setBuyUIEnabled(true);
 
-    this.rollBtn.setText('ROLL DICE');
+    this.rollBtn.setText(this._t('GAME_ROLL_DICE', 'ROLL DICE'));
     this.rollBtn.setStyle({ color: '#66ff66' });
     this.rollBtn.setInteractive();
 
@@ -1283,8 +1683,8 @@ export default class LocalGameScene extends Phaser.Scene {
   }
 
   updateTurnUI() {
-    this.headerText.setText('Scale Dice');
-    this.roundText.setText(`Round ${this.currentRound} / ${this.maxRounds}`);
+    this.headerText.setText(this._t('GAME_TITLE', 'Scale Dice'));
+    this.roundText.setText(this._fmt('GAME_ROUND_LABEL', 'Round {0} / {1}', this.currentRound, this.maxRounds));
 
     const p = this.players[this.currentPlayerIndex];
     this.startTurn(p);
@@ -1295,57 +1695,63 @@ export default class LocalGameScene extends Phaser.Scene {
         if (pl.team === 'red') red += pl.score;
         else blue += pl.score;
       });
-      this.headerText.setText(`Scale Dice — Blue: ${formatCompact(blue)}  Red: ${formatCompact(red)}`);
+      this.headerText.setText(this._fmt('GAME_TEAM_SCORE', 'Scale Dice - Blue: {0}  Red: {1}', formatCompact(blue), formatCompact(red)));
     } else {
-      this.headerText.setText('Scale Dice');
+      this.headerText.setText(this._t('GAME_TITLE', 'Scale Dice'));
     }
 
     // Show the current player's last roll from the previous round
     if (!this.waitingForResult && p.lastRoll && p.lastRoll.length) {
-      this.lastRollText.setText(`Last Roll: ${p.lastRoll.join(', ')}`);
+      this.lastRollText.setText(this._fmt('GAME_LAST_ROLL', 'Last Roll: {0}', p.lastRoll.join(', ')));
     } else {
       this.lastRollText.setText('');
     }
 
-    const isActiveHuman = (this.currentPlayerIndex === this.getLocalPlayerIndex()) && !p.isAI && !this.isRolling && !this.waitingForResult;
+    const isActiveHumanTurn = (this.currentPlayerIndex === this.getLocalPlayerIndex()) && !p.isAI && !this.isRolling;
+    const canRollNow = isActiveHumanTurn && !this.waitingForResult;
+    const canEndTurnNow = isActiveHumanTurn && this.waitingForResult;
 
     if (this.isRolling || this.waitingForResult) {
       this._setBuyUIEnabled(false);
     }
 
     if (this.waitingForResult) {
-      this.rollBtn.setText('RESULTS');
+      this.rollBtn.setText(this._t('GAME_RESULTS', 'RESULTS'));
       this.rollBtn.disableInteractive();
       this.rollBtn.setStyle({ color: '#888888' });
     } else {
       if (p.isAI) {
-        this.rollBtn.setText('Waiting...');
+        this.rollBtn.setText(this._t('GAME_WAITING', 'Waiting...'));
         this.rollBtn.disableInteractive();
         this.rollBtn.setStyle({ color: '#888888' });
         if (!this.isRolling && !this.waitingForResult) {
           this.time.delayedCall(700, () => this.runBotTurn(p));
         }
+      } else if (!this.isRolling) {
+        this.rollBtn.setText(this._t('GAME_ROLL_DICE', 'ROLL DICE'));
+        this.rollBtn.setStyle({ color: '#66ff66' });
+        this.rollBtn.setInteractive();
       } else {
-        if (!this.isRolling && !this.waitingForResult) {
-          this.rollBtn.setText('ROLL DICE');
-          this.rollBtn.setStyle({ color: '#66ff66' });
-          this.rollBtn.setInteractive();
-        } else if (this.isRolling) {
-          this.rollBtn.setText('Rolling...');
-          this.rollBtn.disableInteractive();
-          this.rollBtn.setStyle({ color: '#c4c70bd2' });
-        } else if (this.waitingForResult) {
-          this.rollBtn.setText('RESULTS');
-          this.rollBtn.disableInteractive();
-          this.rollBtn.setStyle({ color: '#888888' });
-        }
+        this.rollBtn.setText(this._t('GAME_ROLLING', 'Rolling...'));
+        this.rollBtn.disableInteractive();
+        this.rollBtn.setStyle({ color: '#c4c70bd2' });
+      }
+    }
+
+    if (this.endTurnBtn) {
+      if (canEndTurnNow) {
+        this.endTurnBtn.setInteractive({ useHandCursor: true });
+        this.endTurnBtn.setStyle({ color: '#ff4444' });
+      } else {
+        this.endTurnBtn.disableInteractive();
+        this.endTurnBtn.setStyle({ color: '#666666' });
       }
     }
 
     const nextDiceBase = this.diceCosts[p.diceUnlocked - 1];
     const nextDiceCost = nextDiceBase ? Math.floor(nextDiceBase * this.costMult) : null;
 
-    if (isActiveHuman && !this.isRolling && !this.waitingForResult && nextDiceCost && p.score >= nextDiceCost && p.diceUnlocked <= 5) {
+    if (canRollNow && nextDiceCost && p.score >= nextDiceCost && p.diceUnlocked <= 5) {
       this.buyDiceBtn.setInteractive();
       this.buyDiceBtn.setStyle({ color: '#ffaa44' });
     } else {
@@ -1354,7 +1760,7 @@ export default class LocalGameScene extends Phaser.Scene {
     }
 
     const ecoCost = p.upgrades.getScaledEconomyCost?.(this.costMult) ?? Math.floor(p.upgrades.getEconomyCost() * this.costMult);
-    if (isActiveHuman && !this.isRolling && !this.waitingForResult && p.upgrades.canUpgradeEconomy(p.score, this.costMult) && p.score >= ecoCost) {
+    if (canRollNow && p.upgrades.canUpgradeEconomy(p.score, this.costMult) && p.score >= ecoCost) {
       this.buyEcoBtn.setInteractive();
       this.buyEcoBtn.setStyle({ color: '#66ccff' });
     } else {
@@ -1363,7 +1769,7 @@ export default class LocalGameScene extends Phaser.Scene {
     }
 
     const luckCost = p.upgrades.getScaledLuckCost?.(this.costMult) ?? Math.floor(p.upgrades.getLuckCost() * this.costMult);
-    if (isActiveHuman && !this.isRolling && !this.waitingForResult && p.upgrades.canUpgradeLuck(p.score, p.luck, this.costMult) && p.score >= luckCost) {
+    if (canRollNow && p.upgrades.canUpgradeLuck(p.score, p.luck, this.costMult) && p.score >= luckCost) {
       this.buyLuckBtn.setInteractive();
       this.buyLuckBtn.setStyle({ color: '#ff88ff' });
     } else {
@@ -1371,12 +1777,12 @@ export default class LocalGameScene extends Phaser.Scene {
       this.buyLuckBtn.setStyle({ color: '#555555' });
     }
 
-    this.turnText.setText(`${p.name}'s Turn  |  Score: ${formatCompact(p.score)}  |  Dice: ${p.diceUnlocked}`);
+    this.turnText.setText(this._fmt('GAME_TURN_LINE', "{0}'s Turn  |  Score: {1}  |  Dice: {2}", p.name, formatCompact(p.score), p.diceUnlocked));
 
     this.diceSprites.forEach((d, i) => {
       if (i < p.diceUnlocked) {
         d.setVisible(true);
-        if (p.lastRoll && this.waitingForResult) {
+        if (p.lastRoll && (this.waitingForResult || this.isRolling)) {
           d.setTexture(`dice${p.lastRoll[i] ?? Math.min(i + 1, 6)}`);
         } else {
           d.setTexture(`dice${Math.min(i + 1, 6)}`);
@@ -1388,17 +1794,22 @@ export default class LocalGameScene extends Phaser.Scene {
 
     const diceLevel = Math.max(0, Math.min(5, p.diceUnlocked - 1));
     const diceLevelText = diceLevel >= 5 ? 'MAX' : `Lv ${diceLevel}/5`;
-    this.diceCostText.setText(nextDiceCost ? `Next Dice: ${formatCompact(nextDiceCost)} (${diceLevelText})` : 'Max Dice');
+    this.diceCostText.setText(
+      nextDiceCost
+        ? this._fmt('GAME_NEXT_DICE', 'Next Dice: {0} ({1})', formatCompact(nextDiceCost), diceLevelText)
+        : this._t('GAME_MAX_DICE', 'Max Dice')
+    );
 
+    const ecoCap = p.upgrades.getEconomyCap ? p.upgrades.getEconomyCap() : 50;
     this.ecoCostText.setText(
-      p.upgrades.getEconomyLevel() < 50
-        ? `Eco Upgrade: ${formatCompact(ecoCost)} (Lv ${p.upgrades.getEconomyLevel()}/50)`
-        : 'Eco MAX'
+      p.upgrades.getEconomyLevel() < ecoCap
+        ? this._fmt('GAME_ECO_UPGRADE', 'Eco Upgrade: {0} (Lv {1}/{2})', formatCompact(ecoCost), p.upgrades.getEconomyLevel(), ecoCap)
+        : this._t('GAME_ECO_MAX', 'Eco MAX')
     );
     this.luckCostText.setText(
       p.upgrades.getLuckLevel() < 25
-        ? `Luck Upgrade: ${formatCompact(luckCost)} (Lv ${p.upgrades.getLuckLevel()}/25)`
-        : 'Luck MAX'
+        ? this._fmt('GAME_LUCK_UPGRADE', 'Luck Upgrade: {0} (Lv {1}/25)', formatCompact(luckCost), p.upgrades.getLuckLevel())
+        : this._t('GAME_LUCK_MAX', 'Luck MAX')
     );
 
     const available = this.getAvailableComboKeysForPlayer(p);
@@ -1434,7 +1845,7 @@ export default class LocalGameScene extends Phaser.Scene {
   let workingBase = base * (player?.upgrades?.getDiceScoreMultiplier?.() || 1);
 
   if (hasFixated) {
-    lines.push(`Base × 2 (Fixated) = ${workingBase}`);
+    lines.push(`Base x 2 (Fixated) = ${workingBase}`);
   }
 
   if (combo && player) {
@@ -1453,21 +1864,22 @@ export default class LocalGameScene extends Phaser.Scene {
     const comboUpgradeMult = player.upgrades.getComboMultiplier?.(combo.key) || 1;
     const comboGlobal = player.upgrades.getComboGlobalMultiplier ? player.upgrades.getComboGlobalMultiplier() : 1;
 
-    // ---- Combo Masher ----
-    const hasMasher = player.upgrades.hasBigUpgrade?.('comboMasher');
-    const streak = this._consecComboStreak?.[this.currentPlayerIndex] || 1;
-    const masherMult = hasMasher ? (1 + 0.2 * (streak - 1)) : 1;
-    const totalComboMult = comboBaseMult * comboUpgradeMult * comboGlobal * masherMult;
+    // ---- Combo Streak ----
+    const streak = Math.max(1, this._consecComboStreak?.[this.currentPlayerIndex] || 1);
+    const streakMult = player.upgrades.getComboStreakMultiplier ? player.upgrades.getComboStreakMultiplier(streak) : 1;
+    const totalComboMult = comboBaseMult * comboUpgradeMult * comboGlobal * streakMult;
 
-    lines.push(`Combo: ${comboName} (Level ${comboLevel}: ×${(comboUpgradeMult * comboGlobal).toFixed(2)})`);
-    lines.push(`Base Multiplier: ×${comboBaseMult.toFixed(2)}`);
+    lines.push(`Combo: ${comboName} (Level ${comboLevel}: x${(comboUpgradeMult * comboGlobal).toFixed(2)})`);
+    lines.push(`Base Multiplier: x${comboBaseMult.toFixed(2)}`);
 
-    if (hasMasher) {
-      lines.push(`• Combo Masher Streak: ${streak} (${(masherMult * 100 - 100).toFixed(0)}%)`);
-      lines.push(`  ↳ Masher Multiplier: ×${masherMult.toFixed(2)}`);
+    if (streakMult !== 1) {
+      const streakLabel = player.upgrades.getComboStreakLabel?.() || 'Combo Streak';
+      const bonusPct = (streakMult * 100 - 100).toFixed(0);
+      lines.push(`- ${streakLabel}: ${streak} (${bonusPct}%)`);
+      lines.push(`  -> Streak Multiplier: x${streakMult.toFixed(2)}`);
     }
 
-    lines.push(`Total Combo Multiplier: ×${totalComboMult.toFixed(2)}`);
+    lines.push(`Total Combo Multiplier: x${totalComboMult.toFixed(2)}`);
     const finalScore = Math.floor(workingBase * totalComboMult);
     lines.push(`Final Score: ${formatCompact(finalScore)}`);
   } else {
@@ -1561,7 +1973,7 @@ export default class LocalGameScene extends Phaser.Scene {
     this.history = {
       container: this.add.container(panelX, panelY).setDepth(950),
       bg: this.add.rectangle(0, 0, panelWidth, panelHeight, 0x000000, 0.75).setOrigin(1, 0),
-      title: this.add.text(-10, 8, 'Activity Log', { fontSize: 14, fontFamily: 'Orbitron, Arial', color: '#66ff66' }).setOrigin(1, 0)
+      title: this.add.text(-10, 8, this._t('GAME_HISTORY_LOG', 'Activity Log'), { fontSize: 14, fontFamily: 'Orbitron, Arial', color: '#66ff66' }).setOrigin(1, 0)
     };
 
     const textX = -panelWidth + pad + 4;
@@ -1574,7 +1986,7 @@ export default class LocalGameScene extends Phaser.Scene {
       wordWrap: { width: panelWidth - pad * 2 }
     }).setOrigin(0, 0);
 
-    this.history.hint = this.add.text(-12, panelHeight - 18, 'Scroll to view more', { fontSize: 10, fontFamily: 'Orbitron, Arial', color: '#888888' }).setOrigin(1, 0);
+    this.history.hint = this.add.text(-12, panelHeight - 18, this._t('GAME_SCROLL_MORE', 'Scroll to view more'), { fontSize: 10, fontFamily: 'Orbitron, Arial', color: '#888888' }).setOrigin(1, 0);
     this.history.container.add([this.history.bg, this.history.title, this.history.text, this.history.hint]);
 
     const maskGraphics = this.make.graphics({}, false);
@@ -1650,7 +2062,7 @@ export default class LocalGameScene extends Phaser.Scene {
       const humanPlayersExist = this.players.some(p => !p.isAI);
       if (humanPlayersExist) {
         GlobalAchievements.addGame();
-        // don't call addRounds here — we increment per completed round during play
+        // don't call addRounds here - we increment per completed round during play
         // top human score (ignore bots)
         const humanScores = this.players.filter(p => !p.isAI).map(p => p.score || 0);
         const topHuman = humanScores.length ? Math.max(...humanScores) : 0;
@@ -1673,9 +2085,10 @@ export default class LocalGameScene extends Phaser.Scene {
         this.players.forEach((p, idx) => {
           if (!p || p.isAI) return;
           const hasMaxDice = (p.diceUnlocked >= 6);
-          const hasMaxEco = (typeof p.upgrades.getEconomyLevel === 'function') ? (p.upgrades.getEconomyLevel() >= 50) : false;
+          const ecoCap = (typeof p.upgrades.getEconomyCap === 'function') ? p.upgrades.getEconomyCap() : 50;
+          const hasMaxEco = (typeof p.upgrades.getEconomyLevel === 'function') ? (p.upgrades.getEconomyLevel() >= ecoCap) : false;
           const hasMaxLuck = (typeof p.upgrades.getLuckLevel === 'function') ? (p.upgrades.getLuckLevel() >= 25) : false;
-          const requiredBigs = ['clairvoyance','stockExchange','comboX','masterPredict','fixated'];
+          const requiredBigs = ['clairvoyance','stockExchange','comboX','masterPredict','fixated','highStonks','comboMasher','rollicane'];
           const hasAllBigs = requiredBigs.every(k => (p.upgrades.hasBigUpgrade ? p.upgrades.hasBigUpgrade(k) : false));
           if (hasMaxDice && hasMaxEco && hasMaxLuck && hasAllBigs) {
             GlobalAchievements.maybeUnlock('maximumPower');
@@ -1721,45 +2134,68 @@ export default class LocalGameScene extends Phaser.Scene {
       names: this.players.map(p => p.name),
       teamsEnabled: this.teamsEnabled ? true : false,
       teams: this.players.map(p => p.team),
-      challengeKey: this.challengeKey
+      challengeKey: this.challengeKey,
+      challengeDate: this.challengeDate,
+      challengeReward: this.challengeReward
     });
 
     this.scene.start('LocalPostGameScene');
   }
 
   addBackButton() {
-    const back = this.add.text(50, 50, '← BACK', { fontSize: 24, fontFamily: 'Orbitron, Arial', color: '#ff6666' }).setInteractive({ useHandCursor: true });
+    const back = this.add.text(50, 50, this._t('UI_BACK', '<- BACK'), { fontSize: 24, fontFamily: 'Orbitron, Arial', color: '#ff6666' }).setInteractive({ useHandCursor: true });
     back.on('pointerdown', () => {
       GlobalAudio.playButton(this);
       if (!this.exitLocked) {
         this.scene.start('MenuScene');
       } else {
-        this.showConfirmExit();
+        this.toggleExitModal();
       }
     });
   }
 
+  toggleExitModal() {
+    if (this.exitModal) {
+      this.closeExitModal();
+      return;
+    }
+    this.showConfirmExit();
+  }
+
   showConfirmExit() {
-    const bg = this.add.rectangle(600, 300, 500, 250, 0x000000, 0.8);
-    const msg = this.add.text(600, 260, "ARE YOU SURE YOU WANT\n TO RETURN TO THE MAIN MENU?", { fontSize: 26, fontFamily: 'Orbitron, Arial', align: 'center' }).setOrigin(0.5);
-    const yesBtn = this.add.text(550, 340, "YES", { fontSize: 28, fontFamily: 'Orbitron, Arial', color: '#66ff66' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-    const noBtn = this.add.text(650, 340, "NO", { fontSize: 28, fontFamily: 'Orbitron, Arial', color: '#ff6666' }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    if (this.exitModal) return;
+
+    const bg = this.add.rectangle(600, 300, 500, 250, 0x000000, 0.8).setDepth(2000);
+    const msg = this.add.text(600, 260, this._t('GAME_EXIT_CONFIRM', 'ARE YOU SURE YOU WANT\nTO RETURN TO THE MAIN MENU?'), { fontSize: 26, fontFamily: 'Orbitron, Arial', align: 'center' }).setOrigin(0.5).setDepth(2001);
+    const yesBtn = this.add.text(550, 340, this._t('UI_YES', 'YES'), { fontSize: 28, fontFamily: 'Orbitron, Arial', color: '#66ff66' }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(2001);
+    const noBtn = this.add.text(650, 340, this._t('UI_NO', 'NO'), { fontSize: 28, fontFamily: 'Orbitron, Arial', color: '#ff6666' }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(2001);
 
     yesBtn.on('pointerdown', () => {
       GlobalAudio.playButton(this);
+      this.closeExitModal();
       this.scene.start('MenuScene');
     });
 
     noBtn.on('pointerdown', () => {
       GlobalAudio.playButton(this);
-      bg.destroy();
-      msg.destroy();
-      yesBtn.destroy();
-      noBtn.destroy();
+      this.closeExitModal();
     });
+
+    this.exitModal = { bg, msg, yesBtn, noBtn };
+  }
+
+  closeExitModal() {
+    if (!this.exitModal) return;
+    const { bg, msg, yesBtn, noBtn } = this.exitModal;
+    try { bg.destroy(); } catch (e) {}
+    try { msg.destroy(); } catch (e) {}
+    try { yesBtn.destroy(); } catch (e) {}
+    try { noBtn.destroy(); } catch (e) {}
+    this.exitModal = null;
   }
 
   cleanupScene() {
+    try { this.closeExitModal(); } catch (e) {}
     try { if (this._scoreDisplayTimer) { this._scoreDisplayTimer.remove(false); this._scoreDisplayTimer = null; } } catch(e){}
     try {
       if (Array.isArray(this.playerBar)) {
@@ -1796,7 +2232,7 @@ export default class LocalGameScene extends Phaser.Scene {
         this.bigUpgradesToolbar = null;
       }
     } catch(e){}
-    const uiFields = ['rollBtn','buyDiceBtn','diceCostText','buyEcoBtn','ecoCostText','buyLuckBtn','luckCostText',
+    const uiFields = ['rollBtn','endTurnBtn','buyDiceBtn','diceCostText','buyEcoBtn','ecoCostText','buyLuckBtn','luckCostText',
       'headerText','roundText','lastRollText','turnText','scoreBreakdown'];
     uiFields.forEach(name => { try { if (this[name] && this[name].destroy) { this[name].destroy(); this[name] = null; } } catch(e){} });
     try { if (Array.isArray(this.diceSprites)) { this.diceSprites.forEach(d => { try { d?.destroy?.(); } catch(e){} }); this.diceSprites = []; } } catch(e){}
@@ -1805,3 +2241,6 @@ export default class LocalGameScene extends Phaser.Scene {
     this.exitLocked = false;
   }
 }
+
+
+

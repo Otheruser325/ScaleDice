@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<LocData>
+    <Language>
+	<IDS>
+            <T id="ACH_BADGE_COMPLETE" l="0">COMPLETED</T>
+            <T id="ACH_BADGE_LOCKED" l="0">LOCKED</T>
+            <T id="ACH_BOOM_DICEALAKA_DESC" l="0">Score over 10,000 points with one roll.</T>
+            <T id="ACH_BOOM_DICEALAKA_TITLE" l="0">Boom Dicealaka</T>
+            <T id="ACH_DAILY_10_DESC" l="0">Win 10 daily challenges.</T>
+            <T id="ACH_DAILY_10_TITLE" l="0">Problem Solver</T>
+            <T id="ACH_DAILY_1_DESC" l="0">Win a daily challenge.</T>
+            <T id="ACH_DAILY_1_TITLE" l="0">Challenger</T>
+            <T id="ACH_FIRSTPLAY_DESC" l="0">Play Scale Dice for the first time.</T>
+            <T id="ACH_FIRSTPLAY_TITLE" l="0">I&apos;m New to This</T>
+            <T id="ACH_FIVE_OF_A_KIND_DESC" l="0">Roll a Five-of-a-kind combo.</T>
+            <T id="ACH_FIVE_OF_A_KIND_TITLE" l="0">Perfection</T>
+            <T id="ACH_FOUR_OF_A_KIND_DESC" l="0">Roll a Four-of-a-kind combo.</T>
+            <T id="ACH_FOUR_OF_A_KIND_TITLE" l="0">Big Shot</T>
+            <T id="ACH_FUN_HOUSE_DESC" l="0">Roll 5 consecutive full/power house combos in a game.</T>
+            <T id="ACH_FUN_HOUSE_TITLE" l="0">Fun House</T>
+            <T id="ACH_MAX_POWER_DESC" l="0">Fully upgrade everything (dice, economy, luck, major) in a game.</T>
+            <T id="ACH_MAX_POWER_TITLE" l="0">Maximum Power</T>
+            <T id="ACH_ROUNDHOUSE_STRAIGHT_DESC" l="0">Roll 10 straights in total.</T>
+            <T id="ACH_ROUNDHOUSE_STRAIGHT_TITLE" l="0">Roundhouse Straight</T>
+            <T id="ACH_ROUNDS_100_DESC" l="0">Progress 100 rounds in total.</T>
+            <T id="ACH_ROUNDS_100_TITLE" l="0">Late Warrior</T>
+            <T id="ACH_ROUNDS_2500_DESC" l="0">Progress 2,500 rounds in total.</T>
+            <T id="ACH_ROUNDS_2500_TITLE" l="0">Forever Going</T>
+            <T id="ACH_ROUNDS_500_DESC" l="0">Progress 500 rounds in total.</T>
+            <T id="ACH_ROUNDS_500_TITLE" l="0">Late Nights</T>
+            <T id="ACH_SCORE_10000000_DESC" l="0">Score 10,000,000 points in a local/online game.</T>
+            <T id="ACH_SCORE_10000000_TITLE" l="0">Strike It Dice</T>
+            <T id="ACH_SCORE_1000000_DESC" l="0">Score 1,000,000 points in a local/online game.</T>
+            <T id="ACH_SCORE_1000000_TITLE" l="0">Millionaire</T>
+            <T id="ACH_SCORE_100000_DESC" l="0">Score 100,000 points in a local/online game.</T>
+            <T id="ACH_SCORE_100000_TITLE" l="0">Hard Labour</T>
+            <T id="ACH_SCORE_10000_DESC" l="0">Score 10,000 points in a local/online game.</T>
+            <T id="ACH_SCORE_10000_TITLE" l="0">Rackin&apos; Up!</T>
+            <T id="ACH_SCORE_1000_DESC" l="0">Score 1,000 points in a local/online game.</T>
+            <T id="ACH_SCORE_1000_TITLE" l="0">Pilin&apos; Up!</T>
+            <T id="ACH_SIX_OF_A_KIND_DESC" l="0">Roll a Six-of-a-kind combo.</T>
+            <T id="ACH_SIX_OF_A_KIND_TITLE" l="0">Diceomania</T>
+            <T id="ACH_STATS_LINE_GAME" l="0">GAMES: {0}     WINS: {1}    ROUNDS: {2}    BEST: {3}</T>
+            <T id="ACH_STATS_LINE_PLAY" l="0">PLAYTIME: {0}    STRAIGHTS: {1}</T>
+            <T id="ACH_STATS_UNLOCKED" l="0">UNLOCKED: {0} / {1}</T>
+            <T id="ACH_TIME_12H_DESC" l="0">Play Scale Dice for 12 hours total.</T>
+            <T id="ACH_TIME_12H_TITLE" l="0">Diceaholic</T>
+            <T id="ACH_TIME_1H_DESC" l="0">Play Scale Dice for 1 hour total.</T>
+            <T id="ACH_TIME_1H_TITLE" l="0">Addiction</T>
+            <T id="ACH_TIME_24H_DESC" l="0">Play Scale Dice for 24 hours total.</T>
+            <T id="ACH_TIME_24H_TITLE" l="0">Neverending Experience</T>
+            <T id="ACH_TIME_FORMAT" l="0">{0}h {1}m</T>
+            <T id="ACH_TITLE" l="0">ACHIEVEMENTS</T>
+            <T id="ACH_WINS_10_DESC" l="0">Win 10 matches.</T>
+            <T id="ACH_WINS_10_TITLE" l="0">Real Dicetician</T>
+            <T id="ACH_WINS_1_DESC" l="0">Win your first match.</T>
+            <T id="ACH_WINS_1_TITLE" l="0">Winner Winner</T>
+            <T id="ACH_WINS_50_DESC" l="0">Win 50 matches.</T>
+            <T id="ACH_WINS_50_TITLE" l="0">Veteran Player</T>
+            <T id="APP_TITLE" l="0">SCALE DICE</T>
+            <T id="CHALLENGES_TITLE" l="0">CHALLENGES</T>
+            <T id="CHALLENGE_AI_LABEL" l="0">AI {0}</T>
+            <T id="CHALLENGE_BIGS" l="0">Big Upgrades: {0}</T>
+            <T id="CHALLENGE_BROKER_BOT" l="0">Broker Bot</T>
+            <T id="CHALLENGE_COMING_SOON" l="0">Coming Soon...</T>
+            <T id="CHALLENGE_COMING_SOON_DESC" l="0">More challenges coming in future updates.</T>
+            <T id="CHALLENGE_COMPLETE" l="0">COMPLETE</T>
+            <T id="CHALLENGE_COST_MULT" l="0">Cost Multiplier: x{0}</T>
+            <T id="CHALLENGE_DAILY_LIST_DESC" l="0">Random daily PvC challenge against computer.</T>
+            <T id="CHALLENGE_DAILY_MENU_DESC" l="0">A random PvC challenge that changes daily.</T>
+            <T id="CHALLENGE_DAILY_TITLE" l="0">Daily Challenge</T>
+            <T id="CHALLENGE_DESC_FALLBACK" l="0">Challenge description</T>
+            <T id="CHALLENGE_DEUCIFER_LIST_DESC" l="0">50-round veteran challenge against Deucifer.</T>
+            <T id="CHALLENGE_DEUCIFER_MENU_DESC" l="0">50-round veteran challenge against Nightmare Deucifer.</T>
+            <T id="CHALLENGE_DEUCIFER_NAME" l="0">Deucifer</T>
+            <T id="CHALLENGE_DEUCIFER_TITLE" l="0">Deucifer&apos;s Pit</T>
+            <T id="CHALLENGE_FAILED" l="0">FAILED</T>
+            <T id="CHALLENGE_GENERIC" l="0">CHALLENGE</T>
+            <T id="CHALLENGE_HIGH_STAKES_DESC" l="0">Face two Medium bots in a high-risk economy sprint. Economy can scale to Lv 250.</T>
+            <T id="CHALLENGE_HIGH_STAKES_LIST_DESC" l="0">Dedicated challenge versus 2 Medium bots with extended economy scaling.</T>
+            <T id="CHALLENGE_HIGH_STAKES_TITLE" l="0">High Stakes</T>
+            <T id="CHALLENGE_HUMAN_LABEL" l="0">Human</T>
+            <T id="CHALLENGE_NOT_READY" l="0">NOT READY</T>
+            <T id="CHALLENGE_PLAYER" l="0">Player</T>
+            <T id="CHALLENGE_PLAYERS" l="0">Players: {0}</T>
+            <T id="CHALLENGE_PLAYERS_LABEL" l="0">Players:</T>
+            <T id="CHALLENGE_REWARD" l="0"> Reward: +{0} tokens.</T>
+            <T id="CHALLENGE_REWARD_LINE" l="0">Reward: +{0} Tokens</T>
+            <T id="CHALLENGE_RISK_BOT" l="0">Risk Bot</T>
+            <T id="CHALLENGE_START" l="0">START CHALLENGE</T>
+            <T id="CHALLENGE_TEAMS_ENABLED" l="0">Teams: Enabled</T>
+            <T id="CHALLENGE_WAVES" l="0">Rounds: {0}</T>
+            <T id="CHANGELOG_TITLE" l="0">CHANGELOG</T>
+            <T id="CONFIG_AI" l="0">COMPUTER</T>
+            <T id="CONFIG_BIG_UPGRADES" l="0">BIG UPGRADES: {0}</T>
+            <T id="CONFIG_COST_MULTIPLIER" l="0">UPGRADE COST MULTIPLIER: x{0}</T>
+            <T id="CONFIG_HUMAN" l="0">HUMAN</T>
+            <T id="CONFIG_PLAYERS_UPPER" l="0">PLAYERS</T>
+            <T id="CONFIG_PROMPT_PLAYER_NAME" l="0">Name for Player {0}</T>
+            <T id="CONFIG_ROUNDS" l="0">ROUNDS</T>
+            <T id="CONFIG_RULES_SCALING" l="0">RULES &amp; SCALING</T>
+            <T id="CONFIG_START_GAME" l="0">START GAME</T>
+            <T id="CONFIG_TEAMS" l="0">TEAMS: {0}</T>
+            <T id="DIFFICULTY_EASY" l="0">Easy</T>
+            <T id="DIFFICULTY_HARD" l="0">Hard</T>
+            <T id="DIFFICULTY_MEDIUM" l="0">Medium</T>
+            <T id="DIFFICULTY_NIGHTMARE" l="0">Nightmare</T>
+            <T id="ERROR_DETAILS" l="0">Show Details</T>
+            <T id="ERROR_GENERIC" l="0">Error</T>
+            <T id="ERROR_NO_DETAILS" l="0">No further details</T>
+            <T id="ERROR_RANGE" l="0">Range Error</T>
+            <T id="ERROR_RECOVER" l="0">Attempt Recover</T>
+            <T id="ERROR_REFERENCE" l="0">Reference Error</T>
+            <T id="ERROR_RELOAD" l="0">Reload Page</T>
+            <T id="ERROR_SYNTAX" l="0">Syntax Error</T>
+            <T id="ERROR_TYPE" l="0">Type Error</T>
+            <T id="GAME_BUY_DICE" l="0">BUY DICE</T>
+            <T id="GAME_ECO_MAX" l="0">Eco MAX</T>
+            <T id="GAME_ECO_UPGRADE" l="0">Eco Upgrade: {0} (Lv {1}/{2})</T>
+            <T id="GAME_END_TURN" l="0">END TURN</T>
+            <T id="GAME_EXIT_CONFIRM" l="0">ARE YOU SURE YOU WANT\nTO RETURN TO THE MAIN MENU?</T>
+            <T id="GAME_HISTORY_LOG" l="0">Activity Log</T>
+            <T id="GAME_LAST_ROLL" l="0">Last Roll: {0}</T>
+            <T id="GAME_LUCK_MAX" l="0">Luck MAX</T>
+            <T id="GAME_LUCK_UPGRADE" l="0">Luck Upgrade: {0} (Lv {1}/25)</T>
+            <T id="GAME_MAX_DICE" l="0">Max Dice</T>
+            <T id="GAME_NEXT_DICE" l="0">Next Dice: {0} ({1})</T>
+            <T id="GAME_RESULTS" l="0">RESULTS</T>
+            <T id="GAME_ROLLICANE_TICK" l="0">Rollicane +{0}</T>
+            <T id="GAME_ROLLING" l="0">Rolling...</T>
+            <T id="GAME_ROLL_DICE" l="0">ROLL DICE</T>
+            <T id="GAME_ROUND_LABEL" l="0">Round {0} / {1}</T>
+            <T id="GAME_SCROLL_MORE" l="0">Scroll to view more</T>
+            <T id="GAME_STAT_DICE" l="0">Dice {0}</T>
+            <T id="GAME_STAT_INCOME" l="0">Income +{0}/turn</T>
+            <T id="GAME_STAT_INCOME_SHORT" l="0">Income +0</T>
+            <T id="GAME_STAT_LUCK" l="0">Luck x{0}</T>
+            <T id="GAME_TEAM_SCORE" l="0">Scale Dice - Blue: {0}  Red: {1}</T>
+            <T id="GAME_TITLE" l="0">Scale Dice</T>
+            <T id="GAME_TURN_LINE" l="0">{0}&apos;s Turn  |  Score: {1}  |  Dice: {2}</T>
+            <T id="GAME_UPGRADE_ECONOMY" l="0">UPGRADE ECONOMY</T>
+            <T id="GAME_UPGRADE_LUCK" l="0">UPGRADE LUCK</T>
+            <T id="GAME_WAITING" l="0">Waiting...</T>
+            <T id="HELP_BODY_SCALE_DICE" l="0">Scale Dice is an incremental, turn-based strategy dice game. The objective is simple:\nscore as many points as possible over the match by rolling dice and exploiting combos and upgrades.\n\nEvery turn you roll your available dice. The sum of those faces becomes your base score for the turn.\nCertain face combinations (combos) multiply your base score - the rarer the combo, the bigger the multiplier.\n\nThere are three key upgrades available during a match:\n- Dice - increases how many dice you roll (more dice -&gt; higher raw base score potential).\n- Economy - increases passive income per turn so you can afford upgrades faster.\n- Luck - raises your chance of getting better faces / small rerolls (helps nudge combos).\n\nCombo upgrades unlock once you reach specific dice counts; each upgrade increases that combo&apos;s multiplier\nby ~10% per level (linear) and can be bought multiple times during the same match.\n\nSingle-player or teams: highest score wins. Have fun optimizing purchases vs rolling risk!</T>
+            <T id="HELP_SPECIAL_RULES" l="0">SPECIAL RULES</T>
+            <T id="HELP_SPECIAL_RULES_BODY" l="0">Teams:\nRed vs Blue style matches can be enabled in a lobby.\nEach team&apos;s score is the sum of all its players&apos; scores.\nThe team with the highest total score wins.\n\nCost Mult:\nAdjusts the price of upgrades globally during a match.\nLower values create faster, more chaotic games.\nHigher values slow progression and reward long-term strategy.</T>
+            <T id="HELP_SPECIAL_RULES_TITLE" l="0">Special Rules</T>
+            <T id="HELP_SUBTITLE_SCALE_DICE" l="0">HOW TO PLAY SCALE DICE</T>
+            <T id="HELP_TITLE" l="0">HELP</T>
+            <T id="LANG_ENGLISH" l="0">ENGLISH</T>
+            <T id="LANG_FRENCH" l="0">FRENCH</T>
+            <T id="LANG_ITALIAN" l="0">ITALIAN</T>
+            <T id="LANG_PORTUGUESE" l="0">PORTUGUESE</T>
+            <T id="LANG_SPANISH" l="0">SPANISH</T>
+            <T id="LANG_WELSH" l="0">WELSH</T>
+            <T id="LOCAL_SETUP_TITLE" l="0">LOCAL GAME - SETUP</T>
+            <T id="ONLINE_TITLE" l="0">ONLINE MENU</T>
+            <T id="POSTGAME_NO_COMBOS" l="0">No combos achieved</T>
+            <T id="POSTGAME_RETURN" l="0">RETURN TO MENU</T>
+            <T id="POSTGAME_SCORE_LINE" l="0">Score: {0}</T>
+            <T id="POSTGAME_TITLE" l="0">LOCAL GAME - RESULTS</T>
+            <T id="PRELOAD_LOADING" l="0">LOADING...</T>
+            <T id="SETTINGS_TITLE" l="0">SETTINGS</T>
+            <T id="SET_JUKEBOX" l="0">JUKEBOX</T>
+            <T id="SET_LANGUAGE" l="0">LANGUAGE: {0}</T>
+            <T id="SET_MUSIC_OFF" l="0">MUSIC: OFF</T>
+            <T id="SET_MUSIC_ON" l="0">MUSIC: ON</T>
+            <T id="SET_MUSIC_TRACKS" l="0">MUSIC TRACKS</T>
+            <T id="SET_OFF" l="0">OFF</T>
+            <T id="SET_ON" l="0">ON</T>
+            <T id="SET_SHUFFLE_OFF" l="0">SHUFFLE TRACK: OFF</T>
+            <T id="SET_SHUFFLE_ON" l="0">SHUFFLE TRACK: ON</T>
+            <T id="SET_SOUND_OFF" l="0">SOUND EFFECTS: OFF</T>
+            <T id="SET_SOUND_ON" l="0">SOUND EFFECTS: ON</T>
+            <T id="SET_VISUAL_OFF" l="0">VISUAL EFFECTS: OFF</T>
+            <T id="SET_VISUAL_ON" l="0">VISUAL EFFECTS: ON</T>
+            <T id="TEAM_BLUE" l="0">BLUE</T>
+            <T id="TEAM_BLUE_LABEL" l="0">BLUE TEAM</T>
+            <T id="TEAM_RED" l="0">RED</T>
+            <T id="TEAM_RED_LABEL" l="0">RED TEAM</T>
+            <T id="TRACK_BASILISK_THEME" l="0">Basilisk Theme</T>
+            <T id="TRACK_DICE_LEAGUE" l="0">Dice League</T>
+            <T id="TRACK_GRAVITOR_THEME" l="0">Gravitor Theme</T>
+            <T id="TRACK_SNAKE_THEME" l="0">Snake Theme</T>
+            <T id="UI_ACHIEVEMENTS" l="0">ACHIEVEMENTS</T>
+            <T id="UI_BACK" l="0">&lt;- BACK</T>
+            <T id="UI_CHANGELOG" l="0">CHANGELOG</T>
+            <T id="UI_CLOSE" l="0">CLOSE</T>
+            <T id="UI_HELP" l="0">HELP</T>
+            <T id="UI_LOCAL_PLAY" l="0">LOCAL PLAY</T>
+            <T id="UI_MUSIC_OFF" l="0">MUSIC: OFF</T>
+            <T id="UI_MUSIC_ON" l="0">MUSIC: ON</T>
+            <T id="UI_NO" l="0">NO</T>
+            <T id="UI_ONLINE_PLAY" l="0">ONLINE PLAY</T>
+            <T id="UI_PLAY" l="0">PLAY</T>
+            <T id="UI_SETTINGS" l="0">SETTINGS</T>
+            <T id="UI_YES" l="0">YES</T>
+        </IDS>
+   </Language>
+</LocData>

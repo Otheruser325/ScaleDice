@@ -1,5 +1,9 @@
+import GlobalAchievements from '../utils/AchievementsManager.js';
 import GlobalAudio from '../utils/AudioManager.js';
 import GlobalBackground from '../utils/BackgroundManager.js';
+import GlobalErrors from '../utils/ErrorManager.js';
+import GlobalLocalization from '../utils/LocalizationManager.js';
+import GlobalSettings from '../utils/SettingsManager.js';
 
 export default class HelpScene extends Phaser.Scene {
   constructor() {
@@ -7,42 +11,55 @@ export default class HelpScene extends Phaser.Scene {
   }
 
   create() {
-	GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
-	
+    try {
+      GlobalErrors.setScene(this);
+    } catch (e) {}
+    try {
+      GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
+    } catch (e) {}
+    try {
+      GlobalAchievements.registerScene(this);
+    } catch (e) {}
+    GlobalLocalization.init(this);
+    const settings = GlobalSettings.get(this);
+    GlobalLocalization.setLanguage(this, settings.language || 'English');
+    const t = (key, fallback) => GlobalLocalization.t(key, fallback);
+
     this.popupOpen = false;
     const centerX = this.cameras.main.centerX;
 
-    this.add.text(centerX, 70, 'HELP', {
+    this.add.text(centerX, 70, t('HELP_TITLE', 'HELP'), {
       fontSize: 60,
       fontFamily: 'Orbitron, Arial',
       color: '#ffffff'
     }).setOrigin(0.5);
 
-    this.add.text(centerX, 130, 'HOW TO PLAY SCALE DICE', {
+    this.add.text(centerX, 130, t('HELP_SUBTITLE_SCALE_DICE', 'HOW TO PLAY SCALE DICE'), {
       fontSize: 32,
       fontFamily: 'Orbitron, Arial',
       color: '#ffff66'
     }).setOrigin(0.5);
 
-    const helpLines = [
-      "Scale Dice is an incremental, turn-based strategy dice game. The objective is simple:",
-      "score as many points as possible over the match by rolling dice and exploiting combos and upgrades.",
-      "",
-      "Every turn you roll your available dice. The sum of those faces becomes your base score for the turn.",
-      "Certain face combinations (combos) multiply your base score — the rarer the combo, the bigger the multiplier.",
-      "",
-      "There are three key upgrades available during a match:",
-      "• Dice — increases how many dice you roll (more dice → higher raw base score potential).",
-      "• Economy — increases passive income per turn so you can afford upgrades faster.",
-      "• Luck — raises your chance of getting better faces / small rerolls (helps nudge combos).",
-      "",
-      "Combo upgrades unlock once you reach specific dice counts; each upgrade increases that combo's multiplier",
-      "by ~10% per level (linear) and can be bought multiple times during the same match.",
-      "",
-      "Single-player or teams: highest score wins. Have fun optimizing purchases vs rolling risk!"
-    ];
+    const helpBody = t(
+      'HELP_BODY_SCALE_DICE',
+      `Scale Dice is an incremental, turn-based strategy dice game. The objective is simple:
+score as many points as possible over the match by rolling dice and exploiting combos and upgrades.
 
-    this.add.text(centerX, 470, helpLines.join('\n'), {
+Every turn you roll your available dice. The sum of those faces becomes your base score for the turn.
+Certain face combinations (combos) multiply your base score - the rarer the combo, the bigger the multiplier.
+
+There are three key upgrades available during a match:
+- Dice - increases how many dice you roll (more dice -> higher raw base score potential).
+- Economy - increases passive income per turn so you can afford upgrades faster.
+- Luck - raises your chance of getting better faces / small rerolls (helps nudge combos).
+
+Combo upgrades unlock once you reach specific dice counts; each upgrade increases that combo's multiplier
+by ~10% per level (linear) and can be bought multiple times during the same match.
+
+Single-player or teams: highest score wins. Have fun optimizing purchases vs rolling risk!`
+    );
+
+    this.add.text(centerX, 470, helpBody, {
       fontSize: 20,
       fontFamily: 'Orbitron, Arial',
       color: '#ffffff',
@@ -50,7 +67,7 @@ export default class HelpScene extends Phaser.Scene {
       wordWrap: { width: 760 }
     }).setOrigin(0.5);
 
-    this.comboBtn = this.add.text(this.cameras.main.width - 40, 40, 'SPECIAL RULES', {
+    this.comboBtn = this.add.text(this.cameras.main.width - 40, 40, t('HELP_SPECIAL_RULES', 'SPECIAL RULES'), {
       fontSize: 20,
       fontFamily: 'Orbitron, Arial',
       color: '#ffdd66'
@@ -63,7 +80,7 @@ export default class HelpScene extends Phaser.Scene {
       this.showRulesPopup();
     });
 
-    this.backBtn = this.add.text(centerX, 820, '← BACK', {
+    this.backBtn = this.add.text(centerX, 820, t('UI_BACK', '<- BACK'), {
       fontSize: 28,
       fontFamily: 'Orbitron, Arial',
       color: '#ff6666'
@@ -98,38 +115,39 @@ export default class HelpScene extends Phaser.Scene {
 
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
-
     const popupW = 760;
     const popupH = 420;
+    const t = (key, fallback) => GlobalLocalization.t(key, fallback);
 
     const bg = this.add.rectangle(centerX, centerY, popupW, popupH, 0x0a0a0a, 0.95)
       .setStrokeStyle(3, 0xffffff)
       .setDepth(1000);
     this._popupEntities.push(bg);
 
-    const title = this.add.text(centerX, centerY - popupH / 2 + 36, 'Special Rules', {
+    const title = this.add.text(centerX, centerY - popupH / 2 + 36, t('HELP_SPECIAL_RULES_TITLE', 'Special Rules'), {
       fontSize: '32px',
       fontFamily: 'Orbitron, Arial',
       color: '#ffff66'
     }).setOrigin(0.5).setDepth(1001);
     this._popupEntities.push(title);
 
-    const rulesText = [
-      "Teams:",
-      "Red vs Blue style matches can be enabled in a lobby.",
-      "Each team's score is the sum of all its players' scores.",
-      "The team with the highest total score wins.",
-      "",
-      "Cost Mult:",
-      "Adjusts the price of upgrades globally during a match.",
-      "Lower values create faster, more chaotic games.",
-      "Higher values slow progression and reward long-term strategy."
-    ];
+    const rulesText = t(
+      'HELP_SPECIAL_RULES_BODY',
+      `Teams:
+Red vs Blue style matches can be enabled in a lobby.
+Each team's score is the sum of all its players' scores.
+The team with the highest total score wins.
+
+Cost Mult:
+Adjusts the price of upgrades globally during a match.
+Lower values create faster, more chaotic games.
+Higher values slow progression and reward long-term strategy.`
+    );
 
     const body = this.add.text(
       centerX,
       centerY,
-      rulesText.join('\n'),
+      rulesText,
       {
         fontSize: '20px',
         fontFamily: 'Orbitron, Arial',
@@ -144,7 +162,7 @@ export default class HelpScene extends Phaser.Scene {
     const closeBtn = this.add.text(
       centerX,
       centerY + popupH / 2 - 36,
-      'CLOSE',
+      t('UI_CLOSE', 'CLOSE'),
       {
         fontSize: '24px',
         fontFamily: 'Orbitron, Arial',
@@ -165,7 +183,7 @@ export default class HelpScene extends Phaser.Scene {
 
   _destroyPopup() {
     if (Array.isArray(this._popupEntities)) {
-      this._popupEntities.forEach(o => {
+      this._popupEntities.forEach((o) => {
         try { o.destroy(); } catch (e) {}
       });
     }
@@ -177,3 +195,4 @@ export default class HelpScene extends Phaser.Scene {
     try { if (this.comboBtn) this.comboBtn.setInteractive(); } catch (e) {}
   }
 }
+

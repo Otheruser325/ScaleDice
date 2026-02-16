@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<LocData>
+    <Language>
+	<IDS>
+            <T id="ACH_BADGE_COMPLETE" l="0">CWBLHAWYD</T>
+            <T id="ACH_BADGE_LOCKED" l="0">WEDI EI GLOI</T>
+            <T id="ACH_BOOM_DICEALAKA_DESC" l="0">Sgoriwch dros 10,000 o bwyntiau mewn un rholiad.</T>
+            <T id="ACH_BOOM_DICEALAKA_TITLE" l="0">Boom Dicealaka</T>
+            <T id="ACH_DAILY_10_DESC" l="0">Enillwch 10 her ddyddiol.</T>
+            <T id="ACH_DAILY_10_TITLE" l="0">Datryswr Problemau</T>
+            <T id="ACH_DAILY_1_DESC" l="0">Enillwch her ddyddiol.</T>
+            <T id="ACH_DAILY_1_TITLE" l="0">Herwr</T>
+            <T id="ACH_FIRSTPLAY_DESC" l="0">Chwarae Scale Dice am y tro cyntaf.</T>
+            <T id="ACH_FIRSTPLAY_TITLE" l="0">Rwy&apos;n newydd i hyn</T>
+            <T id="ACH_FIVE_OF_A_KIND_DESC" l="0">Rholiwch gombo pum o&apos;r un fath.</T>
+            <T id="ACH_FIVE_OF_A_KIND_TITLE" l="0">Perffeithrwydd</T>
+            <T id="ACH_FOUR_OF_A_KIND_DESC" l="0">Rholiwch gombo pedwar o&apos;r un fath.</T>
+            <T id="ACH_FOUR_OF_A_KIND_TITLE" l="0">Ergyd Fawr</T>
+            <T id="ACH_FUN_HOUSE_DESC" l="0">Rholiwch 5 combo tŷ llawn / tŷ pŵer yn olynol mewn gêm.</T>
+            <T id="ACH_FUN_HOUSE_TITLE" l="0">Tŷ Hwyl</T>
+            <T id="ACH_MAX_POWER_DESC" l="0">Uwchraddiwch bopeth yn llawn (dis, economi, lwc, mawr) mewn gêm.</T>
+            <T id="ACH_MAX_POWER_TITLE" l="0">Pŵer Uchaf</T>
+            <T id="ACH_ROUNDHOUSE_STRAIGHT_DESC" l="0">Rholiwch 10 syth yn gyfanswm.</T>
+            <T id="ACH_ROUNDHOUSE_STRAIGHT_TITLE" l="0">Syth Roundhouse</T>
+            <T id="ACH_ROUNDS_100_DESC" l="0">Symudwch ymlaen 100 rownd yn gyfanswm.</T>
+            <T id="ACH_ROUNDS_100_TITLE" l="0">Rhyfelwr Hwyr</T>
+            <T id="ACH_ROUNDS_2500_DESC" l="0">Symudwch ymlaen 2,500 rownd yn gyfanswm.</T>
+            <T id="ACH_ROUNDS_2500_TITLE" l="0">Parhau am Byth</T>
+            <T id="ACH_ROUNDS_500_DESC" l="0">Symudwch ymlaen 500 rownd yn gyfanswm.</T>
+            <T id="ACH_ROUNDS_500_TITLE" l="0">Nosweithiau Hwyr</T>
+            <T id="ACH_SCORE_10000000_DESC" l="0">Sgorwch 10,000,000 o bwyntiau mewn gêm leol/ar-lein.</T>
+            <T id="ACH_SCORE_10000000_TITLE" l="0">Taro&apos;r Dis</T>
+            <T id="ACH_SCORE_1000000_DESC" l="0">Sgorwch 1,000,000 o bwyntiau mewn gêm leol/ar-lein.</T>
+            <T id="ACH_SCORE_1000000_TITLE" l="0">Miliwnydd</T>
+            <T id="ACH_SCORE_100000_DESC" l="0">Sgorwch 100,000 o bwyntiau mewn gêm leol/ar-lein.</T>
+            <T id="ACH_SCORE_100000_TITLE" l="0">Llafur Caled</T>
+            <T id="ACH_SCORE_10000_DESC" l="0">Sgorwch 10,000 o bwyntiau mewn gêm leol/ar-lein.</T>
+            <T id="ACH_SCORE_10000_TITLE" l="0">Cronni!</T>
+            <T id="ACH_SCORE_1000_DESC" l="0">Sgorwch 1,000 o bwyntiau mewn gêm leol/ar-lein.</T>
+            <T id="ACH_SCORE_1000_TITLE" l="0">Pentyrru!</T>
+            <T id="ACH_SIX_OF_A_KIND_DESC" l="0">Rholiwch gombo chwech o&apos;r un fath.</T>
+            <T id="ACH_SIX_OF_A_KIND_TITLE" l="0">Diceomania</T>
+            <T id="ACH_STATS_LINE_GAME" l="0">GEMAU: {0}     BUDDUGOLIAETHAU: {1}    ROWNDAU: {2}    GORAU: {3}</T>
+            <T id="ACH_STATS_LINE_PLAY" l="0">AMSER CHWARAE: {0}    SYTHAU: {1}</T>
+            <T id="ACH_STATS_UNLOCKED" l="0">WEDI&apos;U DADGLOI: {0} / {1}</T>
+            <T id="ACH_TIME_12H_DESC" l="0">Chwarae Scale Dice am 12 awr yn gyfanswm.</T>
+            <T id="ACH_TIME_12H_TITLE" l="0">Diceaholic</T>
+            <T id="ACH_TIME_1H_DESC" l="0">Chwarae Scale Dice am 1 awr yn gyfanswm.</T>
+            <T id="ACH_TIME_1H_TITLE" l="0">Caethiwed</T>
+            <T id="ACH_TIME_24H_DESC" l="0">Chwarae Scale Dice am 24 awr yn gyfanswm.</T>
+            <T id="ACH_TIME_24H_TITLE" l="0">Profiad Di-ddiwedd</T>
+            <T id="ACH_TIME_FORMAT" l="0">{0}h {1}m</T>
+            <T id="ACH_TITLE" l="0">CYFLAWNIADAU</T>
+            <T id="ACH_WINS_10_DESC" l="0">Enillwch 10 gêm.</T>
+            <T id="ACH_WINS_10_TITLE" l="0">Strategwr Dis Go Iawn</T>
+            <T id="ACH_WINS_1_DESC" l="0">Enillwch eich gêm gyntaf.</T>
+            <T id="ACH_WINS_1_TITLE" l="0">Enillydd Enillydd</T>
+            <T id="ACH_WINS_50_DESC" l="0">Enillwch 50 gêm.</T>
+            <T id="ACH_WINS_50_TITLE" l="0">Chwaraewr Hynafol</T>
+            <T id="APP_TITLE" l="0">SCALE DICE</T>
+            <T id="CHALLENGES_TITLE" l="0">HERIAU</T>
+            <T id="CHALLENGE_AI_LABEL" l="0">AI {0}</T>
+            <T id="CHALLENGE_BIGS" l="0">Uwchraddiadau Mawr: {0}</T>
+            <T id="CHALLENGE_BROKER_BOT" l="0">Bot Brocer</T>
+            <T id="CHALLENGE_COMING_SOON" l="0">Yn dod yn fuan...</T>
+            <T id="CHALLENGE_COMING_SOON_DESC" l="0">Mwy o heriau yn dod mewn diweddariadau yn y dyfodol.</T>
+            <T id="CHALLENGE_COMPLETE" l="0">CWBLHAWYD</T>
+            <T id="CHALLENGE_COST_MULT" l="0">Lluosydd Cost: x{0}</T>
+            <T id="CHALLENGE_DAILY_LIST_DESC" l="0">Her PvC ddyddiol ar hap yn erbyn y cyfrifiadur.</T>
+            <T id="CHALLENGE_DAILY_MENU_DESC" l="0">Her PvC ar hap sy&apos;n newid bob dydd.</T>
+            <T id="CHALLENGE_DAILY_TITLE" l="0">Her Ddyddiol</T>
+            <T id="CHALLENGE_DESC_FALLBACK" l="0">Disgrifiad her</T>
+            <T id="CHALLENGE_DEUCIFER_LIST_DESC" l="0">Her 50 rownd i gyn-filwyr yn erbyn Deucifer.</T>
+            <T id="CHALLENGE_DEUCIFER_MENU_DESC" l="0">Her 50 rownd yn erbyn Deucifer Hunllef.</T>
+            <T id="CHALLENGE_DEUCIFER_NAME" l="0">Deucifer</T>
+            <T id="CHALLENGE_DEUCIFER_TITLE" l="0">Pwll Deucifer</T>
+            <T id="CHALLENGE_FAILED" l="0">METHWYD</T>
+            <T id="CHALLENGE_GENERIC" l="0">HER</T>
+            <T id="CHALLENGE_HIGH_STAKES_DESC" l="0">Wynebwch ddau bot Canolig mewn ras economi risg uchel. Gall yr economi raddio i Lefel 250.</T>
+            <T id="CHALLENGE_HIGH_STAKES_LIST_DESC" l="0">Her bwrpasol yn erbyn 2 bot Canolig gyda graddio economi estynedig.</T>
+            <T id="CHALLENGE_HIGH_STAKES_TITLE" l="0">Stêcs Uchel</T>
+            <T id="CHALLENGE_HUMAN_LABEL" l="0">Dynol</T>
+            <T id="CHALLENGE_NOT_READY" l="0">DIM YN BAROD</T>
+            <T id="CHALLENGE_PLAYER" l="0">Chwaraewr</T>
+            <T id="CHALLENGE_PLAYERS" l="0">Chwaraewyr: {0}</T>
+            <T id="CHALLENGE_PLAYERS_LABEL" l="0">Chwaraewyr:</T>
+            <T id="CHALLENGE_REWARD" l="0"> Gwobr: +{0} tocynnau.</T>
+            <T id="CHALLENGE_REWARD_LINE" l="0">Gwobr: +{0} Tocynnau</T>
+            <T id="CHALLENGE_RISK_BOT" l="0">Bot Risg</T>
+            <T id="CHALLENGE_START" l="0">DECHRAU HER</T>
+            <T id="CHALLENGE_TEAMS_ENABLED" l="0">Timau: Wedi&apos;u galluogi</T>
+            <T id="CHALLENGE_WAVES" l="0">Rowndiau: {0}</T>
+            <T id="CHANGELOG_TITLE" l="0">COFNOD NEWIDIADAU</T>
+            <T id="CONFIG_AI" l="0">CYFRIFIADUR</T>
+            <T id="CONFIG_BIG_UPGRADES" l="0">UWCHRADDIADAU MAWR: {0}</T>
+            <T id="CONFIG_COST_MULTIPLIER" l="0">LLUOSYDD COST UWCHRADDIO: x{0}</T>
+            <T id="CONFIG_HUMAN" l="0">DYNOL</T>
+            <T id="CONFIG_PLAYERS_UPPER" l="0">CHWARAEWYR</T>
+            <T id="CONFIG_PROMPT_PLAYER_NAME" l="0">Enw ar gyfer Chwaraewr {0}</T>
+            <T id="CONFIG_ROUNDS" l="0">ROWNDIAU</T>
+            <T id="CONFIG_RULES_SCALING" l="0">RHEOLAU A GRADDIO</T>
+            <T id="CONFIG_START_GAME" l="0">DECHRAU GÊM</T>
+            <T id="CONFIG_TEAMS" l="0">TIMAU: {0}</T>
+            <T id="DIFFICULTY_EASY" l="0">Hawdd</T>
+            <T id="DIFFICULTY_HARD" l="0">Anodd</T>
+            <T id="DIFFICULTY_MEDIUM" l="0">Canolig</T>
+            <T id="DIFFICULTY_NIGHTMARE" l="0">Hunllef</T>
+            <T id="ERROR_DETAILS" l="0">Dangos Manylion</T>
+            <T id="ERROR_GENERIC" l="0">Gwall</T>
+            <T id="ERROR_NO_DETAILS" l="0">Dim manylion pellach</T>
+            <T id="ERROR_RANGE" l="0">Gwall Ystod</T>
+            <T id="ERROR_RECOVER" l="0">Ceisio Adfer</T>
+            <T id="ERROR_REFERENCE" l="0">Gwall Cyfeiriad</T>
+            <T id="ERROR_RELOAD" l="0">Ail-lwytho&apos;r Dudalen</T>
+            <T id="ERROR_SYNTAX" l="0">Gwall Cystrawen</T>
+            <T id="ERROR_TYPE" l="0">Gwall Math</T>
+            <T id="GAME_BUY_DICE" l="0">PRYNU DIS</T>
+            <T id="GAME_ECO_MAX" l="0">ECO MAX</T>
+            <T id="GAME_ECO_UPGRADE" l="0">Uwchraddiad Eco: {0} (Lefel {1}/{2})</T>
+            <T id="GAME_END_TURN" l="0">DIWEDD TRO</T>
+            <T id="GAME_EXIT_CONFIRM" l="0">YDYCH CHI&apos;N SIŴR EICH BOD AM
+DDYCHWELYD I&apos;R PRIF DDEWISLEN?</T>
+            <T id="GAME_HISTORY_LOG" l="0">Cofnod Gweithgaredd</T>
+            <T id="GAME_LAST_ROLL" l="0">Rholiad Diwethaf: {0}</T>
+            <T id="GAME_LUCK_MAX" l="0">LWC MAX</T>
+            <T id="GAME_LUCK_UPGRADE" l="0">Uwchraddiad Lwc: {0} (Lefel {1}/25)</T>
+            <T id="GAME_MAX_DICE" l="0">Dis Uchaf</T>
+            <T id="GAME_NEXT_DICE" l="0">Dis Nesaf: {0} ({1})</T>
+            <T id="GAME_RESULTS" l="0">CANLYNIADAU</T>
+            <T id="GAME_ROLLICANE_TICK" l="0">Rollicane +{0}</T>
+            <T id="GAME_ROLLING" l="0">Rholio...</T>
+            <T id="GAME_ROLL_DICE" l="0">RHOLO DIS</T>
+            <T id="GAME_ROUND_LABEL" l="0">Rownd {0} / {1}</T>
+            <T id="GAME_SCROLL_MORE" l="0">Sgrolio i weld mwy</T>
+            <T id="GAME_STAT_DICE" l="0">Dis {0}</T>
+            <T id="GAME_STAT_INCOME" l="0">Incwm +{0}/tro</T>
+            <T id="GAME_STAT_INCOME_SHORT" l="0">Incwm +0</T>
+            <T id="GAME_STAT_LUCK" l="0">Lwc x{0}</T>
+            <T id="GAME_TEAM_SCORE" l="0">Scale Dice - Glas: {0}  Coch: {1}</T>
+            <T id="GAME_TITLE" l="0">Scale Dice</T>
+            <T id="GAME_TURN_LINE" l="0">Tro {0}  |  Sgôr: {1}  |  Dis: {2}</T>
+            <T id="GAME_UPGRADE_ECONOMY" l="0">UWCHRADDIO ECONOMI</T>
+            <T id="GAME_UPGRADE_LUCK" l="0">UWCHRADDIO LWC</T>
+            <T id="GAME_WAITING" l="0">Aros...</T>
+            <T id="HELP_BODY_SCALE_DICE" l="0">Scale Dice yn gêm ddis strategaeth droeonol sy&apos;n cynyddu. Mae&apos;r nod yn syml:
+sgorio cymaint o bwyntiau â phosibl dros y gêm trwy rolio dis a manteisio ar combos ac uwchraddiadau.
+
+Bob tro rydych yn rholio&apos;r dis sydd ar gael. Swm y wynebau hyn yw eich sgôr sylfaenol ar gyfer y tro.
+Mae cyfuniadau wynebau penodol (combos) yn lluosi eich sgôr sylfaenol - po brinnach y combo, y mwyaf yw&apos;r lluosydd.
+
+Mae tri uwchraddiad allweddol ar gael yn ystod gêm:
+- Dis - yn cynyddu nifer y dis rydych yn eu rholio (mwy o ddis -&gt; mwy o botensial sgôr sylfaenol).
+- Economi - yn cynyddu incwm pasif fesul tro fel y gallwch fforddio uwchraddiadau&apos;n gyflymach.
+- Lwc - yn codi eich siawns o gael wynebau gwell / ail-roliau bach (yn helpu i annog combos).
+
+Mae uwchraddiadau combo yn datgloi pan fyddwch yn cyrraedd cyfrifon dis penodol; mae pob uwchraddiad yn cynyddu lluosydd y combo hwnnw
+tua 10% fesul lefel (llinellol) a gellir ei brynu sawl gwaith yn ystod yr un gêm.
+
+Un-chwaraewr neu dimau: y sgôr uchaf sy&apos;n ennill. Mwynhewch optimeiddio pryniannau yn erbyn risg rholio!</T>
+            <T id="HELP_SPECIAL_RULES" l="0">RHEOLAU ARBENNIG</T>
+            <T id="HELP_SPECIAL_RULES_BODY" l="0">Timau:
+Gellir galluogi gemau arddull Coch yn erbyn Glas mewn lolbi.
+Sgôr pob tîm yw swm sgoriau ei chwaraewyr.
+Y tîm gyda&apos;r cyfanswm uchaf sy&apos;n ennill.
+
+Lluosydd Cost:
+Yn addasu pris uwchraddiadau&apos;n fyd-eang yn ystod gêm.
+Gwerthoedd is yn creu gemau cyflymach, mwy anhrefnus.
+Mae gwerthoedd uwch yn arafu cynnydd ac yn gwobrwyo strategaeth tymor hir.</T>
+            <T id="HELP_SPECIAL_RULES_TITLE" l="0">Rheolau Arbennig</T>
+            <T id="HELP_SUBTITLE_SCALE_DICE" l="0">SUT I CHWARAE SCALE DICE</T>
+            <T id="HELP_TITLE" l="0">CYMORTH</T>
+            <T id="LANG_ENGLISH" l="0">Saesneg</T>
+            <T id="LANG_FRENCH" l="0">Ffrangeg</T>
+            <T id="LANG_ITALIAN" l="0">Eidaleg</T>
+            <T id="LANG_PORTUGUESE" l="0">Portiwgaleg</T>
+            <T id="LANG_SPANISH" l="0">Sbaeneg</T>
+            <T id="LANG_WELSH" l="0">Cymraeg</T>
+            <T id="LOCAL_SETUP_TITLE" l="0">GÊM LEOL - GOSOD</T>
+            <T id="ONLINE_TITLE" l="0">MODD AR-LEIN</T>
+            <T id="POSTGAME_NO_COMBOS" l="0">Dim combos wedi&apos;u cyflawni</T>
+            <T id="POSTGAME_RETURN" l="0">DYCHWELYD I&apos;R DDEWISLEN</T>
+            <T id="POSTGAME_SCORE_LINE" l="0">Sgôr: {0}</T>
+            <T id="POSTGAME_TITLE" l="0">GÊM LEOL - CANLYNIADAU</T>
+            <T id="PRELOAD_LOADING" l="0">LLWYTHO...</T>
+            <T id="SETTINGS_TITLE" l="0">GOSODIADAU</T>
+            <T id="SET_JUKEBOX" l="0">JIWCBOX</T>
+            <T id="SET_LANGUAGE" l="0">IAITH: {0}</T>
+            <T id="SET_MUSIC_OFF" l="0">CERDDORIAETH: OFF</T>
+            <T id="SET_MUSIC_ON" l="0">CERDDORIAETH: ON</T>
+            <T id="SET_MUSIC_TRACKS" l="0">TRACIAU CERDDORIAETH</T>
+            <T id="SET_OFF" l="0">OFF</T>
+            <T id="SET_ON" l="0">ON</T>
+            <T id="SET_SHUFFLE_OFF" l="0">TRAC AR HAP: OFF</T>
+            <T id="SET_SHUFFLE_ON" l="0">TRAC AR HAP: ON</T>
+            <T id="SET_SOUND_OFF" l="0">EFFEITHIAU SAIN: OFF</T>
+            <T id="SET_SOUND_ON" l="0">EFFEITHIAU SAIN: ON</T>
+            <T id="SET_VISUAL_OFF" l="0">EFFEITHIAU GWELEDOL: OFF</T>
+            <T id="SET_VISUAL_ON" l="0">EFFEITHIAU GWELEDOL: ON</T>
+            <T id="TEAM_BLUE" l="0">GLAS</T>
+            <T id="TEAM_BLUE_LABEL" l="0">TÎM GLAS</T>
+            <T id="TEAM_RED" l="0">COCH</T>
+            <T id="TEAM_RED_LABEL" l="0">TÎM COCH</T>
+            <T id="TRACK_BASILISK_THEME" l="0">Thema Basilisk</T>
+            <T id="TRACK_DICE_LEAGUE" l="0">Cynghrair Dis</T>
+            <T id="TRACK_GRAVITOR_THEME" l="0">Thema Gravitor</T>
+            <T id="TRACK_SNAKE_THEME" l="0">Thema Neidr</T>
+            <T id="UI_ACHIEVEMENTS" l="0">CYFLAWNIADAU</T>
+            <T id="UI_BACK" l="0">&lt;- YN ÔL</T>
+            <T id="UI_CHANGELOG" l="0">COFNOD</T>
+            <T id="UI_CLOSE" l="0">CAU</T>
+            <T id="UI_HELP" l="0">CYMORTH</T>
+            <T id="UI_LOCAL_PLAY" l="0">CHWARAE LLEOL</T>
+            <T id="UI_MUSIC_OFF" l="0">CERDDORIAETH: OFF</T>
+            <T id="UI_MUSIC_ON" l="0">CERDDORIAETH: ON</T>
+            <T id="UI_NO" l="0">NA</T>
+            <T id="UI_ONLINE_PLAY" l="0">CHWARAE AR-LEIN</T>
+            <T id="UI_PLAY" l="0">CHWARAE</T>
+            <T id="UI_SETTINGS" l="0">GOSODIADAU</T>
+            <T id="UI_YES" l="0">IE</T>
+        </IDS>
+   </Language>
+</LocData>

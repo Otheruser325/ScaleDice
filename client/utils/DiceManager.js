@@ -1,4 +1,4 @@
-export default class Dice {
+export default class DiceManager {
   constructor(opts = {}) {
     this.faces = opts.faces ?? 6;
   }
@@ -90,6 +90,48 @@ export default class Dice {
   fiveOfAKind() {
     const a = this.roll();
     return [a, a, a, a, a];
+  }
+
+  sixOfAKind() {
+    const a = this.roll();
+    return [a, a, a, a, a, a];
+  }
+
+  // ----------------
+  // Six-die combos (currently unused, reserved for future challenges)
+  // ----------------
+
+  threePair() {
+    let a = this.roll();
+    let b = this.roll();
+    while (b === a) b = this.roll();
+    let c = this.roll();
+    while (c === a || c === b) c = this.roll();
+
+    const combo = [a, a, b, b, c, c];
+    return this.orient(combo);
+  }
+
+  tripleTrend() {
+    const a = this.roll();
+    let b = this.roll();
+    while (b === a) b = this.roll();
+
+    const combo = [a, a, a, b, b, b];
+    return this.orient(combo);
+  }
+
+  cleanStraight() {
+    const combo = [1, 2, 3, 4, 5, 6];
+    return this.orient(combo);
+  }
+
+  powerHouse() {
+    const quad = this.roll();
+    const pair = this.roll();
+
+    const combo = [quad, quad, quad, quad, pair, pair];
+    return this.orient(combo);
   }
 
   // ----------------
