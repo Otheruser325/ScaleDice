@@ -21,12 +21,6 @@ const config = {
     dom: {
         createContainer: true
     },
-    scale: {
-      mode: Phaser.Scale.FIT,
-      autoCenter: Phaser.Scale.CENTER_BOTH,
-      width: 1280,
-      height: 960
-    },
     scene: [
         PreloadScene,
         MenuScene,
