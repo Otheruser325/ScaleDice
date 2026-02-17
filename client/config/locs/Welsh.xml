@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+﻿<?xml version="1.0" encoding="UTF-8" ?>
 <LocData>
     <Language>
 	<IDS>
@@ -16,10 +16,10 @@
             <T id="ACH_FIVE_OF_A_KIND_TITLE" l="0">Perffeithrwydd</T>
             <T id="ACH_FOUR_OF_A_KIND_DESC" l="0">Rholiwch gombo pedwar o&apos;r un fath.</T>
             <T id="ACH_FOUR_OF_A_KIND_TITLE" l="0">Ergyd Fawr</T>
-            <T id="ACH_FUN_HOUSE_DESC" l="0">Rholiwch 5 combo tŷ llawn / tŷ pŵer yn olynol mewn gêm.</T>
-            <T id="ACH_FUN_HOUSE_TITLE" l="0">Tŷ Hwyl</T>
-            <T id="ACH_MAX_POWER_DESC" l="0">Uwchraddiwch bopeth yn llawn (dis, economi, lwc, mawr) mewn gêm.</T>
-            <T id="ACH_MAX_POWER_TITLE" l="0">Pŵer Uchaf</T>
+            <T id="ACH_FUN_HOUSE_DESC" l="0">Rholiwch 5 combo tÅ· llawn / tÅ· pÅµer yn olynol mewn gÃªm.</T>
+            <T id="ACH_FUN_HOUSE_TITLE" l="0">TÅ· Hwyl</T>
+            <T id="ACH_MAX_POWER_DESC" l="0">Uwchraddiwch bopeth yn llawn (dis, economi, lwc, mawr) mewn gÃªm.</T>
+            <T id="ACH_MAX_POWER_TITLE" l="0">PÅµer Uchaf</T>
             <T id="ACH_ROUNDHOUSE_STRAIGHT_DESC" l="0">Rholiwch 10 syth yn gyfanswm.</T>
             <T id="ACH_ROUNDHOUSE_STRAIGHT_TITLE" l="0">Syth Roundhouse</T>
             <T id="ACH_ROUNDS_100_DESC" l="0">Symudwch ymlaen 100 rownd yn gyfanswm.</T>
@@ -28,15 +28,15 @@
             <T id="ACH_ROUNDS_2500_TITLE" l="0">Parhau am Byth</T>
             <T id="ACH_ROUNDS_500_DESC" l="0">Symudwch ymlaen 500 rownd yn gyfanswm.</T>
             <T id="ACH_ROUNDS_500_TITLE" l="0">Nosweithiau Hwyr</T>
-            <T id="ACH_SCORE_10000000_DESC" l="0">Sgorwch 10,000,000 o bwyntiau mewn gêm leol/ar-lein.</T>
+            <T id="ACH_SCORE_10000000_DESC" l="0">Sgorwch 10,000,000 o bwyntiau mewn gÃªm leol/ar-lein.</T>
             <T id="ACH_SCORE_10000000_TITLE" l="0">Taro&apos;r Dis</T>
-            <T id="ACH_SCORE_1000000_DESC" l="0">Sgorwch 1,000,000 o bwyntiau mewn gêm leol/ar-lein.</T>
+            <T id="ACH_SCORE_1000000_DESC" l="0">Sgorwch 1,000,000 o bwyntiau mewn gÃªm leol/ar-lein.</T>
             <T id="ACH_SCORE_1000000_TITLE" l="0">Miliwnydd</T>
-            <T id="ACH_SCORE_100000_DESC" l="0">Sgorwch 100,000 o bwyntiau mewn gêm leol/ar-lein.</T>
+            <T id="ACH_SCORE_100000_DESC" l="0">Sgorwch 100,000 o bwyntiau mewn gÃªm leol/ar-lein.</T>
             <T id="ACH_SCORE_100000_TITLE" l="0">Llafur Caled</T>
-            <T id="ACH_SCORE_10000_DESC" l="0">Sgorwch 10,000 o bwyntiau mewn gêm leol/ar-lein.</T>
+            <T id="ACH_SCORE_10000_DESC" l="0">Sgorwch 10,000 o bwyntiau mewn gÃªm leol/ar-lein.</T>
             <T id="ACH_SCORE_10000_TITLE" l="0">Cronni!</T>
-            <T id="ACH_SCORE_1000_DESC" l="0">Sgorwch 1,000 o bwyntiau mewn gêm leol/ar-lein.</T>
+            <T id="ACH_SCORE_1000_DESC" l="0">Sgorwch 1,000 o bwyntiau mewn gÃªm leol/ar-lein.</T>
             <T id="ACH_SCORE_1000_TITLE" l="0">Pentyrru!</T>
             <T id="ACH_SIX_OF_A_KIND_DESC" l="0">Rholiwch gombo chwech o&apos;r un fath.</T>
             <T id="ACH_SIX_OF_A_KIND_TITLE" l="0">Diceomania</T>
@@ -51,11 +51,11 @@
             <T id="ACH_TIME_24H_TITLE" l="0">Profiad Di-ddiwedd</T>
             <T id="ACH_TIME_FORMAT" l="0">{0}h {1}m</T>
             <T id="ACH_TITLE" l="0">CYFLAWNIADAU</T>
-            <T id="ACH_WINS_10_DESC" l="0">Enillwch 10 gêm.</T>
+            <T id="ACH_WINS_10_DESC" l="0">Enillwch 10 gÃªm.</T>
             <T id="ACH_WINS_10_TITLE" l="0">Strategwr Dis Go Iawn</T>
-            <T id="ACH_WINS_1_DESC" l="0">Enillwch eich gêm gyntaf.</T>
+            <T id="ACH_WINS_1_DESC" l="0">Enillwch eich gÃªm gyntaf.</T>
             <T id="ACH_WINS_1_TITLE" l="0">Enillydd Enillydd</T>
-            <T id="ACH_WINS_50_DESC" l="0">Enillwch 50 gêm.</T>
+            <T id="ACH_WINS_50_DESC" l="0">Enillwch 50 gÃªm.</T>
             <T id="ACH_WINS_50_TITLE" l="0">Chwaraewr Hynafol</T>
             <T id="APP_TITLE" l="0">SCALE DICE</T>
             <T id="CHALLENGES_TITLE" l="0">HERIAU</T>
@@ -78,7 +78,7 @@
             <T id="CHALLENGE_GENERIC" l="0">HER</T>
             <T id="CHALLENGE_HIGH_STAKES_DESC" l="0">Wynebwch ddau bot Canolig mewn ras economi risg uchel. Gall yr economi raddio i Lefel 250.</T>
             <T id="CHALLENGE_HIGH_STAKES_LIST_DESC" l="0">Her bwrpasol yn erbyn 2 bot Canolig gyda graddio economi estynedig.</T>
-            <T id="CHALLENGE_HIGH_STAKES_TITLE" l="0">Stêcs Uchel</T>
+            <T id="CHALLENGE_HIGH_STAKES_TITLE" l="0">StÃªcs Uchel</T>
             <T id="CHALLENGE_HUMAN_LABEL" l="0">Dynol</T>
             <T id="CHALLENGE_NOT_READY" l="0">DIM YN BAROD</T>
             <T id="CHALLENGE_PLAYER" l="0">Chwaraewr</T>
@@ -99,7 +99,7 @@
             <T id="CONFIG_PROMPT_PLAYER_NAME" l="0">Enw ar gyfer Chwaraewr {0}</T>
             <T id="CONFIG_ROUNDS" l="0">ROWNDIAU</T>
             <T id="CONFIG_RULES_SCALING" l="0">RHEOLAU A GRADDIO</T>
-            <T id="CONFIG_START_GAME" l="0">DECHRAU GÊM</T>
+            <T id="CONFIG_START_GAME" l="0">DECHRAU GÃŠM</T>
             <T id="CONFIG_TEAMS" l="0">TIMAU: {0}</T>
             <T id="DIFFICULTY_EASY" l="0">Hawdd</T>
             <T id="DIFFICULTY_HARD" l="0">Anodd</T>
@@ -118,7 +118,7 @@
             <T id="GAME_ECO_MAX" l="0">ECO MAX</T>
             <T id="GAME_ECO_UPGRADE" l="0">Uwchraddiad Eco: {0} (Lefel {1}/{2})</T>
             <T id="GAME_END_TURN" l="0">DIWEDD TRO</T>
-            <T id="GAME_EXIT_CONFIRM" l="0">YDYCH CHI&apos;N SIŴR EICH BOD AM
+            <T id="GAME_EXIT_CONFIRM" l="0">YDYCH CHI&apos;N SIÅ´R EICH BOD AM
 DDYCHWELYD I&apos;R PRIF DDEWISLEN?</T>
             <T id="GAME_HISTORY_LOG" l="0">Cofnod Gweithgaredd</T>
             <T id="GAME_LAST_ROLL" l="0">Rholiad Diwethaf: {0}</T>
@@ -138,33 +138,33 @@ DDYCHWELYD I&apos;R PRIF DDEWISLEN?</T>
             <T id="GAME_STAT_LUCK" l="0">Lwc x{0}</T>
             <T id="GAME_TEAM_SCORE" l="0">Scale Dice - Glas: {0}  Coch: {1}</T>
             <T id="GAME_TITLE" l="0">Scale Dice</T>
-            <T id="GAME_TURN_LINE" l="0">Tro {0}  |  Sgôr: {1}  |  Dis: {2}</T>
+            <T id="GAME_TURN_LINE" l="0">Tro {0}  |  SgÃ´r: {1}  |  Dis: {2}</T>
             <T id="GAME_UPGRADE_ECONOMY" l="0">UWCHRADDIO ECONOMI</T>
             <T id="GAME_UPGRADE_LUCK" l="0">UWCHRADDIO LWC</T>
             <T id="GAME_WAITING" l="0">Aros...</T>
-            <T id="HELP_BODY_SCALE_DICE" l="0">Scale Dice yn gêm ddis strategaeth droeonol sy&apos;n cynyddu. Mae&apos;r nod yn syml:
-sgorio cymaint o bwyntiau â phosibl dros y gêm trwy rolio dis a manteisio ar combos ac uwchraddiadau.
+            <T id="HELP_BODY_SCALE_DICE" l="0">Scale Dice yn gÃªm ddis strategaeth droeonol sy&apos;n cynyddu. Mae&apos;r nod yn syml:
+sgorio cymaint o bwyntiau Ã¢ phosibl dros y gÃªm trwy rolio dis a manteisio ar combos ac uwchraddiadau.
 
-Bob tro rydych yn rholio&apos;r dis sydd ar gael. Swm y wynebau hyn yw eich sgôr sylfaenol ar gyfer y tro.
-Mae cyfuniadau wynebau penodol (combos) yn lluosi eich sgôr sylfaenol - po brinnach y combo, y mwyaf yw&apos;r lluosydd.
+Bob tro rydych yn rholio&apos;r dis sydd ar gael. Swm y wynebau hyn yw eich sgÃ´r sylfaenol ar gyfer y tro.
+Mae cyfuniadau wynebau penodol (combos) yn lluosi eich sgÃ´r sylfaenol - po brinnach y combo, y mwyaf yw&apos;r lluosydd.
 
-Mae tri uwchraddiad allweddol ar gael yn ystod gêm:
-- Dis - yn cynyddu nifer y dis rydych yn eu rholio (mwy o ddis -&gt; mwy o botensial sgôr sylfaenol).
+Mae tri uwchraddiad allweddol ar gael yn ystod gÃªm:
+- Dis - yn cynyddu nifer y dis rydych yn eu rholio (mwy o ddis -&gt; mwy o botensial sgÃ´r sylfaenol).
 - Economi - yn cynyddu incwm pasif fesul tro fel y gallwch fforddio uwchraddiadau&apos;n gyflymach.
 - Lwc - yn codi eich siawns o gael wynebau gwell / ail-roliau bach (yn helpu i annog combos).
 
 Mae uwchraddiadau combo yn datgloi pan fyddwch yn cyrraedd cyfrifon dis penodol; mae pob uwchraddiad yn cynyddu lluosydd y combo hwnnw
-tua 10% fesul lefel (llinellol) a gellir ei brynu sawl gwaith yn ystod yr un gêm.
+tua 10% fesul lefel (llinellol) a gellir ei brynu sawl gwaith yn ystod yr un gÃªm.
 
-Un-chwaraewr neu dimau: y sgôr uchaf sy&apos;n ennill. Mwynhewch optimeiddio pryniannau yn erbyn risg rholio!</T>
+Un-chwaraewr neu dimau: y sgÃ´r uchaf sy&apos;n ennill. Mwynhewch optimeiddio pryniannau yn erbyn risg rholio!</T>
             <T id="HELP_SPECIAL_RULES" l="0">RHEOLAU ARBENNIG</T>
             <T id="HELP_SPECIAL_RULES_BODY" l="0">Timau:
 Gellir galluogi gemau arddull Coch yn erbyn Glas mewn lolbi.
-Sgôr pob tîm yw swm sgoriau ei chwaraewyr.
-Y tîm gyda&apos;r cyfanswm uchaf sy&apos;n ennill.
+SgÃ´r pob tÃ®m yw swm sgoriau ei chwaraewyr.
+Y tÃ®m gyda&apos;r cyfanswm uchaf sy&apos;n ennill.
 
 Lluosydd Cost:
-Yn addasu pris uwchraddiadau&apos;n fyd-eang yn ystod gêm.
+Yn addasu pris uwchraddiadau&apos;n fyd-eang yn ystod gÃªm.
 Gwerthoedd is yn creu gemau cyflymach, mwy anhrefnus.
 Mae gwerthoedd uwch yn arafu cynnydd ac yn gwobrwyo strategaeth tymor hir.</T>
             <T id="HELP_SPECIAL_RULES_TITLE" l="0">Rheolau Arbennig</T>
@@ -176,12 +176,12 @@ Mae gwerthoedd uwch yn arafu cynnydd ac yn gwobrwyo strategaeth tymor hir.</T>
             <T id="LANG_PORTUGUESE" l="0">Portiwgaleg</T>
             <T id="LANG_SPANISH" l="0">Sbaeneg</T>
             <T id="LANG_WELSH" l="0">Cymraeg</T>
-            <T id="LOCAL_SETUP_TITLE" l="0">GÊM LEOL - GOSOD</T>
+            <T id="LOCAL_SETUP_TITLE" l="0">GÃŠM LEOL - GOSOD</T>
             <T id="ONLINE_TITLE" l="0">MODD AR-LEIN</T>
             <T id="POSTGAME_NO_COMBOS" l="0">Dim combos wedi&apos;u cyflawni</T>
             <T id="POSTGAME_RETURN" l="0">DYCHWELYD I&apos;R DDEWISLEN</T>
-            <T id="POSTGAME_SCORE_LINE" l="0">Sgôr: {0}</T>
-            <T id="POSTGAME_TITLE" l="0">GÊM LEOL - CANLYNIADAU</T>
+            <T id="POSTGAME_SCORE_LINE" l="0">SgÃ´r: {0}</T>
+            <T id="POSTGAME_TITLE" l="0">GÃŠM LEOL - CANLYNIADAU</T>
             <T id="PRELOAD_LOADING" l="0">LLWYTHO...</T>
             <T id="SETTINGS_TITLE" l="0">GOSODIADAU</T>
             <T id="SET_JUKEBOX" l="0">JIWCBOX</T>
@@ -198,15 +198,15 @@ Mae gwerthoedd uwch yn arafu cynnydd ac yn gwobrwyo strategaeth tymor hir.</T>
             <T id="SET_VISUAL_OFF" l="0">EFFEITHIAU GWELEDOL: OFF</T>
             <T id="SET_VISUAL_ON" l="0">EFFEITHIAU GWELEDOL: ON</T>
             <T id="TEAM_BLUE" l="0">GLAS</T>
-            <T id="TEAM_BLUE_LABEL" l="0">TÎM GLAS</T>
+            <T id="TEAM_BLUE_LABEL" l="0">TÃŽM GLAS</T>
             <T id="TEAM_RED" l="0">COCH</T>
-            <T id="TEAM_RED_LABEL" l="0">TÎM COCH</T>
+            <T id="TEAM_RED_LABEL" l="0">TÃŽM COCH</T>
             <T id="TRACK_BASILISK_THEME" l="0">Thema Basilisk</T>
             <T id="TRACK_DICE_LEAGUE" l="0">Cynghrair Dis</T>
             <T id="TRACK_GRAVITOR_THEME" l="0">Thema Gravitor</T>
             <T id="TRACK_SNAKE_THEME" l="0">Thema Neidr</T>
             <T id="UI_ACHIEVEMENTS" l="0">CYFLAWNIADAU</T>
-            <T id="UI_BACK" l="0">&lt;- YN ÔL</T>
+            <T id="UI_BACK" l="0">&lt;- YN Ã”L</T>
             <T id="UI_CHANGELOG" l="0">COFNOD</T>
             <T id="UI_CLOSE" l="0">CAU</T>
             <T id="UI_HELP" l="0">CYMORTH</T>
@@ -218,6 +218,70 @@ Mae gwerthoedd uwch yn arafu cynnydd ac yn gwobrwyo strategaeth tymor hir.</T>
             <T id="UI_PLAY" l="0">CHWARAE</T>
             <T id="UI_SETTINGS" l="0">GOSODIADAU</T>
             <T id="UI_YES" l="0">IE</T>
+            <T id="UI_CONFIRM" l="0">CADARNHAU</T>
+            <T id="CONFIG_CUSTOMIZE" l="0">ADDASU</T>
+            <T id="CONFIG_CUSTOMIZE_TITLE" l="0">ADDASU UWCHRADDIAU MAWR</T>
+            <T id="CONFIG_ADD_UPGRADE" l="0">+ YCHWANEGU UWCHRADDIO PERSONOL</T>
+            <T id="CONFIG_SORT_ASC" l="0">TREFNU YN ÔL COST CYNDRIF</T>
+            <T id="CONFIG_RESTORE_DEFAULTS" l="0">ADFER I'R RHAGOSODIADAU</T>
+            <T id="CONFIG_SORT_CONFIRM" l="0">Trefnu'r uwchraddiadau mawr yn ôl cost cynyddol?</T>
+            <T id="CONFIG_RESTORE_CONFIRM" l="0">Adfer pob uwchraddiad mawr i'r rhagosodiadau? Bydd hyn yn dileu pob uwchraddiad personol.</T>
+            <T id="CONFIG_MAX_BIG_UPGRADES" l="0">Wedi cyrraedd uchafswm o 60 uwchraddiad mawr.</T>
+            <T id="CONFIG_UPGRADE_NAME_REQUIRED" l="0">Rhowch enw ar gyfer yr uwchraddiad.</T>
+            <T id="CONFIG_EFFECT_VALUE_MIN" l="0">Rhaid i werthoedd yr effaith fod yn 0 neu uwch.</T>
+            <T id="CONFIG_EFFECT_VALUE_INVALID" l="0">Mae gwerth yr effaith yn annilys.</T>
+            <T id="CONFIG_UPGRADE_NAME" l="0">Enw:</T>
+            <T id="CONFIG_UPGRADE_COST" l="0">Cost sylfaenol:</T>
+            <T id="CONFIG_UPGRADE_EFFECT" l="0">Effaith:</T>
+            <T id="CONFIG_UPGRADE_VALUE" l="0">Gwerth:</T>
+            <T id="CONFIG_UPGRADE_CAP_DELTA" l="0">Delta terfyn:</T>
+            <T id="CONFIG_UPGRADE_CHANCE" l="0">Siawns:</T>
+            <T id="CONFIG_UPGRADE_MIN_SEC" l="0">Eilad min:</T>
+            <T id="CONFIG_UPGRADE_MAX_SEC" l="0">Eilad max:</T>
+            <T id="CONFIG_UPGRADE_PER_STREAK" l="0">Fesul cyfres %:</T>
+            <T id="CONFIG_UPGRADE_MULTIPLICATIVE" l="0">Lluosol:</T>
+            <T id="CONFIG_UPGRADE_SAVE" l="0">CADW</T>
+            <T id="CONFIG_UPGRADE_CANCEL" l="0">DIDDYMU</T>
+            <T id="BIG_DESC_PREDICT" l="0">{0} o siawns i ragfynegi'r tafliad nesaf.</T>
+            <T id="BIG_DESC_ECO_MULT" l="0">Incwm economi x{0}.</T>
+            <T id="BIG_DESC_COMBO_MULT" l="0">Lluosyddion combo x{0}.</T>
+            <T id="BIG_DESC_ROLL_MULT" l="0">Sgoriau a enillir o'r dis x{0}.</T>
+            <T id="BIG_DESC_ECO_ROUND" l="0">Economi +{0} fesul rownd wedi'i gwblhau.</T>
+            <T id="BIG_DESC_ECO_CAP" l="0">Terfyn economi {0}.</T>
+            <T id="BIG_DESC_COMBO_COST" l="0">Cost uwchraddiadau combo x{0}.</T>
+            <T id="BIG_DESC_COMBO_STREAK" l="0">+{0} combo am bob combo o'r un math yn olynol{1}.</T>
+            <T id="BIG_DESC_COMBO_STREAK_MULT" l="0"> (lluosol)</T>
+            <T id="BIG_DESC_SPIN" l="0">{0} y dis i droelli {1}-{2}s a chael pwyntiau bob eiliad.</T>
+            <T id="BIG_DESC_INTEREST" l="0">Ennill {0} o'r sgôr bresennol bob tro.</T>
+            <T id="BIG_DESC_GENERIC" l="0">Effaith uwchraddiad mawr.</T>
+            <T id="BIG_DESC_CLAIRVOYANCE" l="0">25% o siawns i ragfynegi'r tafliad nesaf.</T>
+            <T id="BIG_DESC_STOCK_EXCHANGE" l="0">Economi +50% incwm.</T>
+            <T id="BIG_DESC_COMBOX" l="0">Lluosyddion combo +50%.</T>
+            <T id="BIG_DESC_MASTER_PREDICT" l="0">Clairvoyance 50% (angen Clairvoyance).</T>
+            <T id="BIG_DESC_FIXATED" l="0">Sgoriau a enillir o'r dis x2.</T>
+            <T id="BIG_DESC_HIGH_STONKS" l="0">Economi +5% fesul rownd wedi'i gwblhau.</T>
+            <T id="BIG_DESC_COMBO_MASHER" l="0">+20% combo am bob combo o'r un math yn olynol.</T>
+            <T id="BIG_DESC_ROLLICANE" l="0">25% y dis i droelli 2-10s a chael pwyntiau bob eiliad.</T>
+            <T id="BIG_DESC_ULTRA_STONKS" l="0">Incwm economi wedi'i gynyddu'n fawr.</T>
+            <T id="BIG_DESC_SCORE_INVESTOR" l="0">Ennill incwm bonws bob tro o'r sgôr bresennol.</T>
+            <T id="BIG_DESC_COMBO_OVERCLOCK" l="0">Mae lluosyddion combo wedi'u gor-glocio.</T>
+            <T id="CONFIG_EDIT_UPGRADE_TITLE" l="0">GOLYGU UWCHRADDIO - {0}</T>
+            <T id="CONFIG_CREATE_UPGRADE_TITLE" l="0">CREU UWCHRADDIO</T>
+            <T id="CONFIG_DEFAULT_EFFECT" l="0">Diofyn: {0}</T>
+            <T id="CONFIG_EFFECT_ROLL_MULT" l="0">Lluosydd tafliad</T>
+            <T id="CONFIG_EFFECT_COMBO_MULT" l="0">Lluosydd cyfuniad</T>
+            <T id="CONFIG_EFFECT_ECO_MULT" l="0">Lluosydd economi</T>
+            <T id="CONFIG_EFFECT_ECO_CAP" l="0">Terfyn economi</T>
+            <T id="CONFIG_EFFECT_ECO_ROUND" l="0">Lluosydd economi fesul rownd</T>
+            <T id="CONFIG_EFFECT_PREDICT" l="0">Siawns rhagfynegi</T>
+            <T id="CONFIG_EFFECT_COMBO_COST" l="0">Lluosydd cost cyfuniad</T>
+            <T id="CONFIG_EFFECT_INTEREST" l="0">Cyfradd llog</T>
+            <T id="CONFIG_EFFECT_COMBO_STREAK" l="0">Cyfres combo</T>
+            <T id="CONFIG_EFFECT_SPIN" l="0">Effaith troelli</T>
         </IDS>
    </Language>
 </LocData>
+
+
+
+

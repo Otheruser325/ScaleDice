@@ -2,6 +2,19 @@
   "title": "SCALE DICE — CHANGELOG",
   "entries": [
     {
+      "version": "1.2.1",
+      "date": "17/02/2026",
+      "tags": ["Updates", "Features", "Bug Fixes"],
+      "changes": [
+        "Scale Dice is now available on Itch.io! Check it out here: https://otheruser325.itch.io/scale-dice",
+        "Big upgrade customiser updates: added the option to restore to default or sort by ascending.\n• added a maximum big upgrade cap of 60.",
+        "Added a new big upgrade effect: Economy Cap (sets max economy upgrade level).",
+        "Minor Changes: \n• added higher number formatting and the scoring display header now uses full number names (e.g. 1,000,000 as in Million).\n• roll scoring multiplier is applied more consistently rather than Fixated.",
+        "Gameplay Changes: AI now buys upgrades faster, depending on their difficulty factor (Deucifer will go wild with this!).",
+        "Bug Fixes: \n• fixed an issue that caused the big upgrade toolbar to go out of bounds when interacting with the combo toolbar\n• localisation translation fixes and improvements."
+      ]
+    },
+    {
       "version": "1.2.0",
       "date": "15/02/2026",
       "tags": ["Updates", "Features", "Bug Fixes"],

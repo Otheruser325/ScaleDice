@@ -16,6 +16,7 @@ class BigUpgradeCustomizer {
     { key: 'rollMultiplier', name: 'Roll Multiplier', desc: 'Dice-earned scores multiplier' },
     { key: 'comboMultiplier', name: 'Combo Multiplier', desc: 'Combo multipliers boost' },
     { key: 'ecoMultiplier', name: 'Eco Multiplier', desc: 'Economy income multiplier' },
+    { key: 'economyCap', name: 'Economy Cap', desc: 'Adjust max economy upgrade cap' },
     { key: 'ecoRoundMultiplier', name: 'Eco Round Multiplier', desc: 'Economy scale per round %' },
     { key: 'predictChance', name: 'Predict Chance', desc: 'Roll prediction chance' },
     { key: 'comboCostMultiplier', name: 'Combo Cost Multiplier', desc: 'Discount for combo upgrades' },
@@ -63,6 +64,11 @@ class BigUpgradeCustomizer {
     } else {
       this.customUpgrades.push(upgrade);
     }
+    this.saveCustomUpgrades();
+  }
+
+  resetToDefaults() {
+    this.customUpgrades = [];
     this.saveCustomUpgrades();
   }
 

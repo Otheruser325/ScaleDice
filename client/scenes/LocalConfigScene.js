@@ -47,6 +47,8 @@ export default class LocalConfigScene extends Phaser.Scene {
         this.bigUpgradeCustomizer = new BigUpgradeCustomizer();
         this.customizeModalOpen = false;
         this.customizeModalContainer = null;
+        this.bigUpgradeSortAsc = false;
+        this.customizeConfirmModal = null;
     }
 
     create() {
@@ -271,6 +273,7 @@ export default class LocalConfigScene extends Phaser.Scene {
                     teams: this.playerTeams.slice(0, this.selectedPlayers),
                     bigUpgradesEnabled: this.bigUpgradesEnabled,
                     customBigUpgrades: this.bigUpgradeCustomizer.getActiveUpgrades(),
+                    bigUpgradeSortAsc: this.bigUpgradeSortAsc,
                     costMult: this.costMultipliers[this.costMultIndex]
                 });
             });
@@ -290,6 +293,11 @@ export default class LocalConfigScene extends Phaser.Scene {
             });
 
         this.input.keyboard.on('keydown-ESC', () => {
+            if (this.customizeConfirmModal) {
+                GlobalAudio.playButton(this);
+                this.closeCustomizeConfirm();
+                return;
+            }
             if (this.customizeModalOpen) {
                 GlobalAudio.playButton(this);
                 this.closeBigUpgradesCustomizeModal();
@@ -297,6 +305,12 @@ export default class LocalConfigScene extends Phaser.Scene {
             }
             GlobalAudio.playButton(this);
             this.scene.start('PlayModeScene');
+        });
+
+        this._syncDomContainerToCanvas();
+        this.scale.on('resize', this._syncDomContainerToCanvas, this);
+        this.events.once('shutdown', () => {
+            try { this.scale.off('resize', this._syncDomContainerToCanvas, this); } catch (e) {}
         });
     }
 
@@ -366,14 +380,18 @@ export default class LocalConfigScene extends Phaser.Scene {
         this.customizeModalContainer = this.add.container(cx, cy).setDepth(5001);
 
         // Title
-        this.customizeModalContainer.add(this.add.text(0, -350, t('CONFIG_CUSTOMIZE', 'CUSTOMIZE BIG UPGRADES'), {
+        this.customizeModalContainer.add(this.add.text(0, -350, t('CONFIG_CUSTOMIZE_TITLE', 'CUSTOMIZE BIG UPGRADES'), {
             fontSize: 32,
             fontFamily: 'Orbitron, Arial',
             color: '#ffff66'
         }).setOrigin(0.5));
 
         // Upgrades list (simple list view first)
-        const activeUpgrades = this.bigUpgradeCustomizer.getActiveUpgrades();
+        const maxBigUpgrades = 60;
+        const activeUpgradesRaw = this.bigUpgradeCustomizer.getActiveUpgrades();
+        const activeUpgrades = this.bigUpgradeSortAsc
+            ? activeUpgradesRaw.slice().sort((a, b) => (a?.baseCost ?? Infinity) - (b?.baseCost ?? Infinity))
+            : activeUpgradesRaw;
         const upgradesPerColumn = 12;
         const maxColumns = 5;
         const upgradesToShow = activeUpgrades.slice(0, upgradesPerColumn * maxColumns);
@@ -460,12 +478,55 @@ export default class LocalConfigScene extends Phaser.Scene {
             padding: { x: 10, y: 5 }
         }).setOrigin(0.5).setInteractive({ useHandCursor: true })
             .on('pointerdown', () => {
+                if (activeUpgradesRaw.length >= maxBigUpgrades) {
+                    GlobalAlerts.show(this, t('CONFIG_MAX_BIG_UPGRADES', 'Maximum of 60 big upgrades reached.'), 'checking');
+                    return;
+                }
                 this.editBigUpgradeInModal(null);
             });
         this.customizeModalContainer.add(addBtn);
 
+        const sortBtn = this.add.text(-160, listBottomY + 80, t('CONFIG_SORT_ASC', 'SORT ASCENDING'), {
+            fontSize: 16,
+            fontFamily: 'Orbitron, Arial',
+            color: '#ffff66',
+            backgroundColor: '#222222',
+            padding: { x: 10, y: 5 }
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true })
+            .on('pointerdown', () => {
+                this.showCustomizeConfirm(
+                    t('CONFIG_SORT_CONFIRM', 'Sort all big upgrades by ascending cost?'),
+                    () => {
+                        this.bigUpgradeSortAsc = true;
+                        this.closeBigUpgradesCustomizeModal();
+                        this.openBigUpgradesCustomizeModal();
+                    }
+                );
+            });
+        this.customizeModalContainer.add(sortBtn);
+
+        const restoreBtn = this.add.text(160, listBottomY + 80, t('CONFIG_RESTORE_DEFAULTS', 'RESTORE DEFAULTS'), {
+            fontSize: 16,
+            fontFamily: 'Orbitron, Arial',
+            color: '#ff6666',
+            backgroundColor: '#222222',
+            padding: { x: 10, y: 5 }
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true })
+            .on('pointerdown', () => {
+                this.showCustomizeConfirm(
+                    t('CONFIG_RESTORE_CONFIRM', 'Restore all big upgrades to defaults? This will remove all custom upgrades.'),
+                    () => {
+                        this.bigUpgradeCustomizer.resetToDefaults();
+                        this.bigUpgradeSortAsc = false;
+                        this.closeBigUpgradesCustomizeModal();
+                        this.openBigUpgradesCustomizeModal();
+                    }
+                );
+            });
+        this.customizeModalContainer.add(restoreBtn);
+
         // Done button
-        const doneBtn = this.add.text(0, listBottomY + 90, t('UI_DONE', 'DONE'), {
+        const doneBtn = this.add.text(0, listBottomY + 130, t('UI_DONE', 'DONE'), {
             fontSize: 22,
             fontFamily: 'Orbitron, Arial',
             color: '#66ff66',
@@ -481,6 +542,7 @@ export default class LocalConfigScene extends Phaser.Scene {
 
     closeBigUpgradesCustomizeModal() {
         this.customizeModalOpen = false;
+        this.closeCustomizeConfirm();
         if (this.customizeModalContainer) {
             this.customizeModalContainer.destroy(true);
             this.customizeModalContainer = null;
@@ -499,12 +561,99 @@ export default class LocalConfigScene extends Phaser.Scene {
         this._setCustomizeDomPointerEvents(false);
     }
 
+    showCustomizeConfirm(message, onConfirm) {
+        if (this.customizeConfirmModal) {
+            this.closeCustomizeConfirm();
+        }
+
+        const t = (key, fallback) => GlobalLocalization.t(key, fallback);
+        const cx = this.cameras.main.centerX;
+        const cy = this.cameras.main.centerY;
+        const viewW = this.cameras.main.width;
+        const viewH = this.cameras.main.height;
+
+        const width = 560;
+        const height = 220;
+
+        const overlay = this.add.rectangle(cx, cy, viewW, viewH, 0x000000, 0.6).setDepth(6000).setInteractive();
+        const panel = this.add.rectangle(cx, cy, width, height, 0x1e1e1e).setStrokeStyle(2, 0xffff66).setDepth(6001);
+        const title = this.add.text(cx, cy - height / 2 + 26, t('UI_CONFIRM', 'CONFIRM'), {
+            fontSize: 24,
+            fontFamily: 'Orbitron, Arial',
+            color: '#ffff66'
+        }).setOrigin(0.5).setDepth(6002);
+        const body = this.add.text(cx, cy, message, {
+            fontSize: 18,
+            fontFamily: 'Orbitron, Arial',
+            color: '#ffffff',
+            align: 'center',
+            wordWrap: { width: width - 48 }
+        }).setOrigin(0.5).setDepth(6002);
+
+        const yesBtn = this.add.text(cx - 90, cy + height / 2 - 40, t('UI_YES', 'YES'), {
+            fontSize: 20,
+            fontFamily: 'Orbitron, Arial',
+            color: '#66ff66'
+        }).setOrigin(0.5).setDepth(6002).setInteractive({ useHandCursor: true });
+        const noBtn = this.add.text(cx + 90, cy + height / 2 - 40, t('UI_NO', 'NO'), {
+            fontSize: 20,
+            fontFamily: 'Orbitron, Arial',
+            color: '#ff6666'
+        }).setOrigin(0.5).setDepth(6002).setInteractive({ useHandCursor: true });
+
+        yesBtn.on('pointerdown', () => {
+            GlobalAudio.playButton(this);
+            this.closeCustomizeConfirm();
+            if (typeof onConfirm === 'function') {
+                onConfirm();
+            }
+        });
+        noBtn.on('pointerdown', () => {
+            GlobalAudio.playButton(this);
+            this.closeCustomizeConfirm();
+        });
+
+        this.customizeConfirmModal = { overlay, panel, title, body, yesBtn, noBtn };
+        this._setCustomizeDomPointerEvents(false);
+    }
+
+    closeCustomizeConfirm() {
+        if (!this.customizeConfirmModal) return;
+        const { overlay, panel, title, body, yesBtn, noBtn } = this.customizeConfirmModal;
+        try { overlay?.destroy?.(); } catch (e) {}
+        try { panel?.destroy?.(); } catch (e) {}
+        try { title?.destroy?.(); } catch (e) {}
+        try { body?.destroy?.(); } catch (e) {}
+        try { yesBtn?.destroy?.(); } catch (e) {}
+        try { noBtn?.destroy?.(); } catch (e) {}
+        this.customizeConfirmModal = null;
+        const hasDom = Array.isArray(this.customizeModalDom) && this.customizeModalDom.length > 0;
+        this._setCustomizeDomPointerEvents(hasDom);
+    }
+
     _setCustomizeDomPointerEvents(enabled) {
         try {
             const domContainer = this.game?.domContainer;
             if (domContainer) {
                 domContainer.style.pointerEvents = enabled ? 'auto' : 'none';
             }
+        } catch (e) {}
+    }
+
+    _syncDomContainerToCanvas() {
+        try {
+            const domContainer = this.game?.domContainer;
+            const canvas = this.game?.canvas;
+            const parent = canvas?.parentElement;
+            if (!domContainer || !canvas || !parent) return;
+            const canvasRect = canvas.getBoundingClientRect();
+            const parentRect = parent.getBoundingClientRect();
+            const left = canvasRect.left - parentRect.left;
+            const top = canvasRect.top - parentRect.top;
+            domContainer.style.left = `${left}px`;
+            domContainer.style.top = `${top}px`;
+            domContainer.style.width = `${canvasRect.width}px`;
+            domContainer.style.height = `${canvasRect.height}px`;
         } catch (e) {}
     }
 
@@ -523,10 +672,12 @@ export default class LocalConfigScene extends Phaser.Scene {
         }
 
         const t = (key, fallback) => GlobalLocalization.t(key, fallback);
+        const fmt = (key, ...args) => GlobalLocalization.format(key, ...args);
         const cx = this.cameras.main.centerX;
         const cy = this.cameras.main.centerY;
         const viewW = this.cameras.main.width;
         const viewH = this.cameras.main.height;
+        const maxBigUpgrades = 60;
         const isDefault = upgrade && BigUpgradeCustomizer.DEFAULT_UPGRADES.some(d => d.key === upgrade.key);
         const defaultDef = isDefault ? BigUpgradeCustomizer.DEFAULT_UPGRADES.find(d => d.key === upgrade.key) : null;
         const baseUpgrade = (isDefault && defaultDef) ? { ...defaultDef, ...upgrade } : (upgrade || {});
@@ -539,6 +690,7 @@ export default class LocalConfigScene extends Phaser.Scene {
         const currentValues = baseUpgrade?.values || {};
 
         // Edit form overlay
+        this._syncDomContainerToCanvas();
         const overlay = this.add.rectangle(cx, cy, viewW, viewH, 0x000000, 0.85).setOrigin(0.5).setDepth(5000);
         overlay.setInteractive();
         this._setCustomizeDomPointerEvents(true);
@@ -546,8 +698,24 @@ export default class LocalConfigScene extends Phaser.Scene {
         this.customizeModalContainer = this.add.container(cx, cy).setDepth(5001);
         this.customizeModalOpen = true;
 
+        const effectLabelByKey = {
+            rollMultiplier: t('CONFIG_EFFECT_ROLL_MULT', 'Roll Multiplier'),
+            comboMultiplier: t('CONFIG_EFFECT_COMBO_MULT', 'Combo Multiplier'),
+            ecoMultiplier: t('CONFIG_EFFECT_ECO_MULT', 'Eco Multiplier'),
+            economyCap: t('CONFIG_EFFECT_ECO_CAP', 'Economy Cap'),
+            ecoRoundMultiplier: t('CONFIG_EFFECT_ECO_ROUND', 'Eco Round Multiplier'),
+            predictChance: t('CONFIG_EFFECT_PREDICT', 'Predict Chance'),
+            comboCostMultiplier: t('CONFIG_EFFECT_COMBO_COST', 'Combo Cost Multiplier'),
+            interestRate: t('CONFIG_EFFECT_INTEREST', 'Interest Rate'),
+            comboStreak: t('CONFIG_EFFECT_COMBO_STREAK', 'Combo Streak'),
+            spinEffect: t('CONFIG_EFFECT_SPIN', 'Spin Effect')
+        };
+        const getEffectLabel = (key, fallback) => effectLabelByKey[key] || fallback || key;
+
         // Title
-        const titleText = upgrade ? `EDIT UPGRADE - ${currentTitle}` : 'CREATE UPGRADE';
+        const titleText = upgrade
+            ? fmt('CONFIG_EDIT_UPGRADE_TITLE', 'EDIT UPGRADE - {0}', currentTitle)
+            : t('CONFIG_CREATE_UPGRADE_TITLE', 'CREATE UPGRADE');
         this.customizeModalContainer.add(this.add.text(0, -360, titleText, {
             fontSize: 28,
             fontFamily: 'Orbitron, Arial',
@@ -557,7 +725,8 @@ export default class LocalConfigScene extends Phaser.Scene {
         // Show default effect info if editing a default
         if (isDefault && defaultDef) {
             const effectType = BigUpgradeCustomizer.EFFECT_TYPES.find(e => e.key === defaultDef.effect);
-            const defaultEffectText = `Default: ${effectType?.name || defaultDef.effect}`;
+            const defaultEffectName = getEffectLabel(effectType?.key || defaultDef.effect, effectType?.name || defaultDef.effect);
+            const defaultEffectText = fmt('CONFIG_DEFAULT_EFFECT', 'Default: {0}', defaultEffectName);
             this.customizeModalContainer.add(this.add.text(0, -320, defaultEffectText, {
                 fontSize: 12,
                 fontFamily: 'Orbitron, Arial',
@@ -581,25 +750,38 @@ export default class LocalConfigScene extends Phaser.Scene {
         const smallInputStyle = 'flex:1; padding:4px 6px; font-family: monospace; background:#1a1a1a; color:#ffff66; border:1px solid #555555; border-radius:2px; font-size:12px;';
         const formWidth = 720;
         const formHeight = 440;
+        const labelName = t('CONFIG_UPGRADE_NAME', 'Name:');
+        const labelCost = t('CONFIG_UPGRADE_COST', 'Base Cost:');
+        const labelEffect = t('CONFIG_UPGRADE_EFFECT', 'Effect:');
+        const labelValue = t('CONFIG_UPGRADE_VALUE', 'Value:');
+        const labelCapDelta = t('CONFIG_UPGRADE_CAP_DELTA', 'Cap Delta:');
+        const labelChance = t('CONFIG_UPGRADE_CHANCE', 'Chance:');
+        const labelMinSec = t('CONFIG_UPGRADE_MIN_SEC', 'Min Sec:');
+        const labelMaxSec = t('CONFIG_UPGRADE_MAX_SEC', 'Max Sec:');
+        const labelPerStreak = t('CONFIG_UPGRADE_PER_STREAK', 'Per Streak %:');
+        const labelMultiplicative = t('CONFIG_UPGRADE_MULTIPLICATIVE', 'Multiplicative:');
+        const labelSave = t('CONFIG_UPGRADE_SAVE', 'SAVE');
+        const labelCancel = t('CONFIG_UPGRADE_CANCEL', 'CANCEL');
+        const effectOptionsHtml = BigUpgradeCustomizer.EFFECT_TYPES.map(e => `<option value="${e.key}">${getEffectLabel(e.key, e.name)}</option>`).join('');
         const formHtml = `
             <div style="width:${formWidth}px; height:${formHeight}px; display:flex; justify-content:center; align-items:center; font-family: Orbitron, Arial; color:#cccccc; pointer-events:auto;">
                 <div style="width:520px; display:flex; flex-direction:column; gap:12px;">
                     <div style="${rowStyle}">
-                        <div style="${labelStyle}">Name:</div>
+                        <div style="${labelStyle}">${labelName}</div>
                         <input id="bu-name" type="text" style="${inputStyle}">
                     </div>
                     <div style="${rowStyle}">
-                        <div style="${labelStyle}">Base Cost:</div>
+                        <div style="${labelStyle}">${labelCost}</div>
                         <input id="bu-cost" type="number" min="10" style="${inputStyle}">
                     </div>
                     <div style="${rowStyle}">
-                        <div style="${labelStyle}">Effect:</div>
-                        <select id="bu-effect" style="${inputStyle}">${BigUpgradeCustomizer.EFFECT_TYPES.map(e => `<option value="${e.key}">${e.name}</option>`).join('')}</select>
+                        <div style="${labelStyle}">${labelEffect}</div>
+                        <select id="bu-effect" style="${inputStyle}">${effectOptionsHtml}</select>
                     </div>
                     <div id="bu-values" style="display:flex; flex-direction:column; gap:8px;"></div>
                     <div style="display:flex; justify-content:center; gap:24px; margin-top:6px;">
-                        <button id="bu-save" style="padding:6px 14px; font-family: Orbitron, Arial; background:#223322; color:#66ff66; border:1px solid #335533; border-radius:2px; cursor:pointer;">SAVE</button>
-                        <button id="bu-cancel" style="padding:6px 14px; font-family: Orbitron, Arial; background:#332222; color:#ff6666; border:1px solid #553333; border-radius:2px; cursor:pointer;">CANCEL</button>
+                        <button id="bu-save" style="padding:6px 14px; font-family: Orbitron, Arial; background:#223322; color:#66ff66; border:1px solid #335533; border-radius:2px; cursor:pointer;">${labelSave}</button>
+                        <button id="bu-cancel" style="padding:6px 14px; font-family: Orbitron, Arial; background:#332222; color:#ff6666; border:1px solid #553333; border-radius:2px; cursor:pointer;">${labelCancel}</button>
                     </div>
                 </div>
             </div>
@@ -639,15 +821,15 @@ export default class LocalConfigScene extends Phaser.Scene {
             if (effectKey === 'spinEffect') {
                 valuesWrap.innerHTML = `
                     <div style="${rowStyle} font-size:12px;">
-                        <div style="${labelStyle}">Chance:</div>
+                        <div style="${labelStyle}">${labelChance}</div>
                         <input id="bu-chance" type="number" min="0" max="1" step="0.01" style="${smallInputStyle}">
                     </div>
                     <div style="${rowStyle} font-size:12px;">
-                        <div style="${labelStyle}">Min Sec:</div>
+                        <div style="${labelStyle}">${labelMinSec}</div>
                         <input id="bu-minsec" type="number" min="0.1" step="0.1" style="${smallInputStyle}">
                     </div>
                     <div style="${rowStyle} font-size:12px;">
-                        <div style="${labelStyle}">Max Sec:</div>
+                        <div style="${labelStyle}">${labelMaxSec}</div>
                         <input id="bu-maxsec" type="number" min="0.1" step="0.1" style="${smallInputStyle}">
                     </div>
                 `;
@@ -660,11 +842,11 @@ export default class LocalConfigScene extends Phaser.Scene {
             } else if (effectKey === 'comboStreak') {
                 valuesWrap.innerHTML = `
                     <div style="${rowStyle} font-size:12px;">
-                        <div style="${labelStyle}">Per Streak %:</div>
+                        <div style="${labelStyle}">${labelPerStreak}</div>
                         <input id="bu-percentage" type="number" min="0" max="1" step="0.01" style="${smallInputStyle}">
                     </div>
                     <div style="${rowStyle} font-size:12px;">
-                        <div style="${labelStyle}">Multiplicative:</div>
+                        <div style="${labelStyle}">${labelMultiplicative}</div>
                         <input id="bu-multiplicative" type="checkbox" style="transform: scale(1.1);">
                     </div>
                 `;
@@ -672,10 +854,19 @@ export default class LocalConfigScene extends Phaser.Scene {
                 const multiplicativeCheckbox = valuesWrap.querySelector('#bu-multiplicative');
                 if (percentageInput) percentageInput.value = useCurrent && currentValues.percentage !== undefined ? currentValues.percentage : 0.2;
                 if (multiplicativeCheckbox) multiplicativeCheckbox.checked = useCurrent ? (currentValues.isMultiplicative || false) : false;
+            } else if (effectKey === 'economyCap') {
+                valuesWrap.innerHTML = `
+                    <div style="${rowStyle} font-size:12px;">
+                        <div style="${labelStyle}">${labelCapDelta}</div>
+                        <input id="bu-value" type="number" step="1" style="${smallInputStyle}">
+                    </div>
+                `;
+                const valueInput = valuesWrap.querySelector('#bu-value');
+                if (valueInput) valueInput.value = useCurrent ? currentValue : 0;
             } else {
                 valuesWrap.innerHTML = `
                     <div style="${rowStyle} font-size:12px;">
-                        <div style="${labelStyle}">Value:</div>
+                        <div style="${labelStyle}">${labelValue}</div>
                         <input id="bu-value" type="number" min="0" step="0.01" style="${smallInputStyle}">
                     </div>
                 `;
@@ -692,7 +883,12 @@ export default class LocalConfigScene extends Phaser.Scene {
         const onSave = () => {
             const nameVal = (nameInput?.value || '').trim();
             if (!nameVal) {
-                GlobalAlerts.show(this, 'Please enter a name for the upgrade.', 'warning');
+                GlobalAlerts.show(this, t('CONFIG_UPGRADE_NAME_REQUIRED', 'Please enter a name for the upgrade.'), 'warning');
+                return;
+            }
+            const isNew = !(upgrade && upgrade.key);
+            if (isNew && this.bigUpgradeCustomizer.getActiveUpgrades().length >= maxBigUpgrades) {
+                GlobalAlerts.show(this, t('CONFIG_MAX_BIG_UPGRADES', 'Maximum of 60 big upgrades reached.'), 'checking');
                 return;
             }
             const costVal = Number(costInput?.value) || 100;
@@ -705,7 +901,7 @@ export default class LocalConfigScene extends Phaser.Scene {
                 effect: effectVal
             };
 
-            const invalidNumber = (val) => !Number.isFinite(val) || val < 0;
+            const invalidNumber = (val, allowNegative = false) => !Number.isFinite(val) || (!allowNegative && val < 0);
 
             // Set values based on effect type
             if (effectVal === 'spinEffect') {
@@ -716,7 +912,7 @@ export default class LocalConfigScene extends Phaser.Scene {
                 const minSecVal = Number(minSecInput?.value);
                 const maxSecVal = Number(maxSecInput?.value);
                 if (invalidNumber(chanceVal) || invalidNumber(minSecVal) || invalidNumber(maxSecVal)) {
-                    GlobalAlerts.show(this, 'Effect values must be 0 or higher.', 'warning');
+                    GlobalAlerts.show(this, t('CONFIG_EFFECT_VALUE_MIN', 'Effect values must be 0 or higher.'), 'warning');
                     return;
                 }
                 newUpgrade.values = {
@@ -729,18 +925,26 @@ export default class LocalConfigScene extends Phaser.Scene {
                 const multiplicativeCheckbox = valuesWrap?.querySelector?.('#bu-multiplicative');
                 const percentageVal = Number(percentageInput?.value);
                 if (invalidNumber(percentageVal)) {
-                    GlobalAlerts.show(this, 'Effect values must be 0 or higher.', 'warning');
+                    GlobalAlerts.show(this, t('CONFIG_EFFECT_VALUE_MIN', 'Effect values must be 0 or higher.'), 'warning');
                     return;
                 }
                 newUpgrade.values = {
                     percentage: percentageVal,
                     isMultiplicative: multiplicativeCheckbox?.checked || false
                 };
+            } else if (effectVal === 'economyCap') {
+                const valueInput = valuesWrap?.querySelector?.('#bu-value');
+                const valueVal = Number(valueInput?.value);
+                if (invalidNumber(valueVal, true)) {
+                    GlobalAlerts.show(this, t('CONFIG_EFFECT_VALUE_INVALID', 'Effect value is invalid.'), 'warning');
+                    return;
+                }
+                newUpgrade.value = valueVal;
             } else {
                 const valueInput = valuesWrap?.querySelector?.('#bu-value');
                 const valueVal = Number(valueInput?.value);
                 if (invalidNumber(valueVal)) {
-                    GlobalAlerts.show(this, 'Effect values must be 0 or higher.', 'warning');
+                    GlobalAlerts.show(this, t('CONFIG_EFFECT_VALUE_MIN', 'Effect values must be 0 or higher.'), 'warning');
                     return;
                 }
                 newUpgrade.value = valueVal;

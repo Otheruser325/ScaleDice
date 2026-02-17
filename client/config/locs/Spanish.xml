@@ -1,25 +1,25 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+﻿<?xml version="1.0" encoding="UTF-8" ?>
 <LocData>
     <Language>
 	<IDS>
             <T id="ACH_BADGE_COMPLETE" l="0">COMPLETADO</T>
             <T id="ACH_BADGE_LOCKED" l="0">BLOQUEADO</T>
-            <T id="ACH_BOOM_DICEALAKA_DESC" l="0">Obtén más de 10.000 puntos en una sola tirada.</T>
+            <T id="ACH_BOOM_DICEALAKA_DESC" l="0">ObtÃ©n mÃ¡s de 10.000 puntos en una sola tirada.</T>
             <T id="ACH_BOOM_DICEALAKA_TITLE" l="0">Boom Dicealaka</T>
-            <T id="ACH_DAILY_10_DESC" l="0">Gana 10 desafíos diarios.</T>
+            <T id="ACH_DAILY_10_DESC" l="0">Gana 10 desafÃ­os diarios.</T>
             <T id="ACH_DAILY_10_TITLE" l="0">Solucionador</T>
-            <T id="ACH_DAILY_1_DESC" l="0">Gana un desafío diario.</T>
+            <T id="ACH_DAILY_1_DESC" l="0">Gana un desafÃ­o diario.</T>
             <T id="ACH_DAILY_1_TITLE" l="0">Retador</T>
             <T id="ACH_FIRSTPLAY_DESC" l="0">Juega a Scale Dice por primera vez.</T>
             <T id="ACH_FIRSTPLAY_TITLE" l="0">Soy nuevo en esto</T>
-            <T id="ACH_FIVE_OF_A_KIND_DESC" l="0">Saca una combinación de cinco iguales.</T>
-            <T id="ACH_FIVE_OF_A_KIND_TITLE" l="0">Perfección</T>
-            <T id="ACH_FOUR_OF_A_KIND_DESC" l="0">Saca una combinación de cuatro iguales.</T>
+            <T id="ACH_FIVE_OF_A_KIND_DESC" l="0">Saca una combinaciÃ³n de cinco iguales.</T>
+            <T id="ACH_FIVE_OF_A_KIND_TITLE" l="0">PerfecciÃ³n</T>
+            <T id="ACH_FOUR_OF_A_KIND_DESC" l="0">Saca una combinaciÃ³n de cuatro iguales.</T>
             <T id="ACH_FOUR_OF_A_KIND_TITLE" l="0">Gran golpe</T>
             <T id="ACH_FUN_HOUSE_DESC" l="0">Saca 5 full/power house consecutivos en una partida.</T>
-            <T id="ACH_FUN_HOUSE_TITLE" l="0">Casa de la diversión</T>
-            <T id="ACH_MAX_POWER_DESC" l="0">Mejora todo al máximo (dados, economía, suerte, mayor) en una partida.</T>
-            <T id="ACH_MAX_POWER_TITLE" l="0">Poder máximo</T>
+            <T id="ACH_FUN_HOUSE_TITLE" l="0">Casa de la diversiÃ³n</T>
+            <T id="ACH_MAX_POWER_DESC" l="0">Mejora todo al mÃ¡ximo (dados, economÃ­a, suerte, mayor) en una partida.</T>
+            <T id="ACH_MAX_POWER_TITLE" l="0">Poder mÃ¡ximo</T>
             <T id="ACH_ROUNDHOUSE_STRAIGHT_DESC" l="0">Consigue 10 escaleras en total.</T>
             <T id="ACH_ROUNDHOUSE_STRAIGHT_TITLE" l="0">Escalera giratoria</T>
             <T id="ACH_ROUNDS_100_DESC" l="0">Avanza 100 rondas en total.</T>
@@ -28,56 +28,56 @@
             <T id="ACH_ROUNDS_2500_TITLE" l="0">Sin fin</T>
             <T id="ACH_ROUNDS_500_DESC" l="0">Avanza 500 rondas en total.</T>
             <T id="ACH_ROUNDS_500_TITLE" l="0">Noches largas</T>
-            <T id="ACH_SCORE_10000000_DESC" l="0">Consigue 10.000.000 puntos en una partida local/en línea.</T>
+            <T id="ACH_SCORE_10000000_DESC" l="0">Consigue 10.000.000 puntos en una partida local/en lÃ­nea.</T>
             <T id="ACH_SCORE_10000000_TITLE" l="0">Golpe de dados</T>
-            <T id="ACH_SCORE_1000000_DESC" l="0">Consigue 1.000.000 puntos en una partida local/en línea.</T>
+            <T id="ACH_SCORE_1000000_DESC" l="0">Consigue 1.000.000 puntos en una partida local/en lÃ­nea.</T>
             <T id="ACH_SCORE_1000000_TITLE" l="0">Millonario</T>
-            <T id="ACH_SCORE_100000_DESC" l="0">Consigue 100.000 puntos en una partida local/en línea.</T>
+            <T id="ACH_SCORE_100000_DESC" l="0">Consigue 100.000 puntos en una partida local/en lÃ­nea.</T>
             <T id="ACH_SCORE_100000_TITLE" l="0">Trabajo duro</T>
-            <T id="ACH_SCORE_10000_DESC" l="0">Consigue 10.000 puntos en una partida local/en línea.</T>
+            <T id="ACH_SCORE_10000_DESC" l="0">Consigue 10.000 puntos en una partida local/en lÃ­nea.</T>
             <T id="ACH_SCORE_10000_TITLE" l="0">Sumando</T>
-            <T id="ACH_SCORE_1000_DESC" l="0">Consigue 1.000 puntos en una partida local/en línea.</T>
+            <T id="ACH_SCORE_1000_DESC" l="0">Consigue 1.000 puntos en una partida local/en lÃ­nea.</T>
             <T id="ACH_SCORE_1000_TITLE" l="0">Acumulando</T>
-            <T id="ACH_SIX_OF_A_KIND_DESC" l="0">Saca una combinación de seis iguales.</T>
-            <T id="ACH_SIX_OF_A_KIND_TITLE" l="0">Diceomanía</T>
+            <T id="ACH_SIX_OF_A_KIND_DESC" l="0">Saca una combinaciÃ³n de seis iguales.</T>
+            <T id="ACH_SIX_OF_A_KIND_TITLE" l="0">DiceomanÃ­a</T>
             <T id="ACH_STATS_LINE_GAME" l="0">PARTIDAS: {0}     VICTORIAS: {1}    RONDAS: {2}    MEJOR: {3}</T>
             <T id="ACH_STATS_LINE_PLAY" l="0">TIEMPO DE JUEGO: {0}    ESCALERAS: {1}</T>
             <T id="ACH_STATS_UNLOCKED" l="0">DESBLOQUEADOS: {0} / {1}</T>
             <T id="ACH_TIME_12H_DESC" l="0">Juega a Scale Dice durante 12 horas en total.</T>
-            <T id="ACH_TIME_12H_TITLE" l="0">Diceahólico</T>
+            <T id="ACH_TIME_12H_TITLE" l="0">DiceahÃ³lico</T>
             <T id="ACH_TIME_1H_DESC" l="0">Juega a Scale Dice durante 1 hora en total.</T>
-            <T id="ACH_TIME_1H_TITLE" l="0">Adicción</T>
+            <T id="ACH_TIME_1H_TITLE" l="0">AdicciÃ³n</T>
             <T id="ACH_TIME_24H_DESC" l="0">Juega a Scale Dice durante 24 horas en total.</T>
             <T id="ACH_TIME_24H_TITLE" l="0">Experiencia interminable</T>
             <T id="ACH_TIME_FORMAT" l="0">{0}h {1}m</T>
             <T id="ACH_TITLE" l="0">LOGROS</T>
             <T id="ACH_WINS_10_DESC" l="0">Gana 10 partidas.</T>
-            <T id="ACH_WINS_10_TITLE" l="0">Dicetáctico</T>
+            <T id="ACH_WINS_10_TITLE" l="0">DicetÃ¡ctico</T>
             <T id="ACH_WINS_1_DESC" l="0">Gana tu primera partida.</T>
             <T id="ACH_WINS_1_TITLE" l="0">Ganador ganador</T>
             <T id="ACH_WINS_50_DESC" l="0">Gana 50 partidas.</T>
             <T id="ACH_WINS_50_TITLE" l="0">Jugador veterano</T>
             <T id="APP_TITLE" l="0">SCALE DICE</T>
-            <T id="CHALLENGES_TITLE" l="0">DESAFÍOS</T>
+            <T id="CHALLENGES_TITLE" l="0">DESAFÃOS</T>
             <T id="CHALLENGE_AI_LABEL" l="0">IA {0}</T>
             <T id="CHALLENGE_BIGS" l="0">Grandes mejoras: {0}</T>
             <T id="CHALLENGE_BROKER_BOT" l="0">Bot Corredor</T>
-            <T id="CHALLENGE_COMING_SOON" l="0">Próximamente...</T>
-            <T id="CHALLENGE_COMING_SOON_DESC" l="0">Más desafíos en futuras actualizaciones.</T>
+            <T id="CHALLENGE_COMING_SOON" l="0">PrÃ³ximamente...</T>
+            <T id="CHALLENGE_COMING_SOON_DESC" l="0">MÃ¡s desafÃ­os en futuras actualizaciones.</T>
             <T id="CHALLENGE_COMPLETE" l="0">COMPLETADO</T>
             <T id="CHALLENGE_COST_MULT" l="0">Multiplicador de coste: x{0}</T>
-            <T id="CHALLENGE_DAILY_LIST_DESC" l="0">Desafío diario PvC aleatorio contra la computadora.</T>
-            <T id="CHALLENGE_DAILY_MENU_DESC" l="0">Un desafío PvC aleatorio que cambia a diario.</T>
-            <T id="CHALLENGE_DAILY_TITLE" l="0">Desafío diario</T>
-            <T id="CHALLENGE_DESC_FALLBACK" l="0">Descripción del desafío</T>
-            <T id="CHALLENGE_DEUCIFER_LIST_DESC" l="0">Desafío veterano de 50 rondas contra Deucifer.</T>
-            <T id="CHALLENGE_DEUCIFER_MENU_DESC" l="0">Desafío veterano de 50 rondas contra Deucifer Pesadilla.</T>
+            <T id="CHALLENGE_DAILY_LIST_DESC" l="0">DesafÃ­o diario PvC aleatorio contra la computadora.</T>
+            <T id="CHALLENGE_DAILY_MENU_DESC" l="0">Un desafÃ­o PvC aleatorio que cambia a diario.</T>
+            <T id="CHALLENGE_DAILY_TITLE" l="0">DesafÃ­o diario</T>
+            <T id="CHALLENGE_DESC_FALLBACK" l="0">DescripciÃ³n del desafÃ­o</T>
+            <T id="CHALLENGE_DEUCIFER_LIST_DESC" l="0">DesafÃ­o veterano de 50 rondas contra Deucifer.</T>
+            <T id="CHALLENGE_DEUCIFER_MENU_DESC" l="0">DesafÃ­o veterano de 50 rondas contra Deucifer Pesadilla.</T>
             <T id="CHALLENGE_DEUCIFER_NAME" l="0">Deucifer</T>
             <T id="CHALLENGE_DEUCIFER_TITLE" l="0">Foso de Deucifer</T>
             <T id="CHALLENGE_FAILED" l="0">FALLIDO</T>
-            <T id="CHALLENGE_GENERIC" l="0">DESAFÍO</T>
-            <T id="CHALLENGE_HIGH_STAKES_DESC" l="0">Enfréntate a dos bots Medios en una carrera económica de alto riesgo. La economía puede llegar al nivel 250.</T>
-            <T id="CHALLENGE_HIGH_STAKES_LIST_DESC" l="0">Desafío dedicado contra 2 bots Medios con escalado económico extendido.</T>
+            <T id="CHALLENGE_GENERIC" l="0">DESAFÃO</T>
+            <T id="CHALLENGE_HIGH_STAKES_DESC" l="0">EnfrÃ©ntate a dos bots Medios en una carrera econÃ³mica de alto riesgo. La economÃ­a puede llegar al nivel 250.</T>
+            <T id="CHALLENGE_HIGH_STAKES_LIST_DESC" l="0">DesafÃ­o dedicado contra 2 bots Medios con escalado econÃ³mico extendido.</T>
             <T id="CHALLENGE_HIGH_STAKES_TITLE" l="0">Altas apuestas</T>
             <T id="CHALLENGE_HUMAN_LABEL" l="0">Humano</T>
             <T id="CHALLENGE_NOT_READY" l="0">NO DISPONIBLE</T>
@@ -87,7 +87,7 @@
             <T id="CHALLENGE_REWARD" l="0"> Recompensa: +{0} fichas.</T>
             <T id="CHALLENGE_REWARD_LINE" l="0">Recompensa: +{0} fichas</T>
             <T id="CHALLENGE_RISK_BOT" l="0">Bot Riesgo</T>
-            <T id="CHALLENGE_START" l="0">INICIAR DESAFÍO</T>
+            <T id="CHALLENGE_START" l="0">INICIAR DESAFÃO</T>
             <T id="CHALLENGE_TEAMS_ENABLED" l="0">Equipos: activados</T>
             <T id="CHALLENGE_WAVES" l="0">Rondas: {0}</T>
             <T id="CHANGELOG_TITLE" l="0">CAMBIOS</T>
@@ -101,98 +101,98 @@
             <T id="CONFIG_RULES_SCALING" l="0">REGLAS Y ESCALADO</T>
             <T id="CONFIG_START_GAME" l="0">INICIAR PARTIDA</T>
             <T id="CONFIG_TEAMS" l="0">EQUIPOS: {0}</T>
-            <T id="DIFFICULTY_EASY" l="0">Fácil</T>
-            <T id="DIFFICULTY_HARD" l="0">Difícil</T>
+            <T id="DIFFICULTY_EASY" l="0">FÃ¡cil</T>
+            <T id="DIFFICULTY_HARD" l="0">DifÃ­cil</T>
             <T id="DIFFICULTY_MEDIUM" l="0">Medio</T>
             <T id="DIFFICULTY_NIGHTMARE" l="0">Pesadilla</T>
             <T id="ERROR_DETAILS" l="0">Ver detalles</T>
             <T id="ERROR_GENERIC" l="0">Error</T>
-            <T id="ERROR_NO_DETAILS" l="0">Sin más detalles</T>
+            <T id="ERROR_NO_DETAILS" l="0">Sin mÃ¡s detalles</T>
             <T id="ERROR_RANGE" l="0">Error de rango</T>
             <T id="ERROR_RECOVER" l="0">Intentar recuperar</T>
             <T id="ERROR_REFERENCE" l="0">Error de referencia</T>
-            <T id="ERROR_RELOAD" l="0">Recargar página</T>
+            <T id="ERROR_RELOAD" l="0">Recargar pÃ¡gina</T>
             <T id="ERROR_SYNTAX" l="0">Error de sintaxis</T>
             <T id="ERROR_TYPE" l="0">Error de tipo</T>
             <T id="GAME_BUY_DICE" l="0">COMPRAR DADOS</T>
-            <T id="GAME_ECO_MAX" l="0">ECO MÁX</T>
+            <T id="GAME_ECO_MAX" l="0">ECO MÃX</T>
             <T id="GAME_ECO_UPGRADE" l="0">Mejora de eco: {0} (Nv {1}/{2})</T>
             <T id="GAME_END_TURN" l="0">TERMINAR TURNO</T>
-            <T id="GAME_EXIT_CONFIRM" l="0">¿SEGURO QUE QUIERES
-VOLVER AL MENÚ PRINCIPAL?</T>
+            <T id="GAME_EXIT_CONFIRM" l="0">Â¿SEGURO QUE QUIERES
+VOLVER AL MENÃš PRINCIPAL?</T>
             <T id="GAME_HISTORY_LOG" l="0">Registro de actividad</T>
-            <T id="GAME_LAST_ROLL" l="0">Última tirada: {0}</T>
-            <T id="GAME_LUCK_MAX" l="0">SUERTE MÁX</T>
+            <T id="GAME_LAST_ROLL" l="0">Ãšltima tirada: {0}</T>
+            <T id="GAME_LUCK_MAX" l="0">SUERTE MÃX</T>
             <T id="GAME_LUCK_UPGRADE" l="0">Mejora de suerte: {0} (Nv {1}/25)</T>
-            <T id="GAME_MAX_DICE" l="0">Máx dados</T>
+            <T id="GAME_MAX_DICE" l="0">MÃ¡x dados</T>
             <T id="GAME_NEXT_DICE" l="0">Siguiente dado: {0} ({1})</T>
             <T id="GAME_RESULTS" l="0">RESULTADOS</T>
             <T id="GAME_ROLLICANE_TICK" l="0">Rollicane +{0}</T>
             <T id="GAME_ROLLING" l="0">Tirando...</T>
             <T id="GAME_ROLL_DICE" l="0">TIRAR DADOS</T>
             <T id="GAME_ROUND_LABEL" l="0">Ronda {0} / {1}</T>
-            <T id="GAME_SCROLL_MORE" l="0">Desplázate para ver más</T>
+            <T id="GAME_SCROLL_MORE" l="0">DesplÃ¡zate para ver mÃ¡s</T>
             <T id="GAME_STAT_DICE" l="0">Dados {0}</T>
             <T id="GAME_STAT_INCOME" l="0">Ingresos +{0}/turno</T>
             <T id="GAME_STAT_INCOME_SHORT" l="0">Ingresos +0</T>
             <T id="GAME_STAT_LUCK" l="0">Suerte x{0}</T>
             <T id="GAME_TEAM_SCORE" l="0">Scale Dice - Azul: {0}  Rojo: {1}</T>
             <T id="GAME_TITLE" l="0">Scale Dice</T>
-            <T id="GAME_TURN_LINE" l="0">Turno de {0}  |  Puntuación: {1}  |  Dados: {2}</T>
-            <T id="GAME_UPGRADE_ECONOMY" l="0">MEJORAR ECONOMÍA</T>
+            <T id="GAME_TURN_LINE" l="0">Turno de {0}  |  PuntuaciÃ³n: {1}  |  Dados: {2}</T>
+            <T id="GAME_UPGRADE_ECONOMY" l="0">MEJORAR ECONOMÃA</T>
             <T id="GAME_UPGRADE_LUCK" l="0">MEJORAR SUERTE</T>
             <T id="GAME_WAITING" l="0">Esperando...</T>
-            <T id="HELP_BODY_SCALE_DICE" l="0">Scale Dice es un juego de dados estratégico incremental por turnos. El objetivo es sencillo:
+            <T id="HELP_BODY_SCALE_DICE" l="0">Scale Dice es un juego de dados estratÃ©gico incremental por turnos. El objetivo es sencillo:
 consigue la mayor cantidad de puntos posible durante la partida lanzando dados y aprovechando combos y mejoras.
 
-En cada turno lanzas tus dados disponibles. La suma de sus caras se convierte en tu puntuación base del turno.
-Ciertas combinaciones de caras (combos) multiplican tu puntuación base: cuanto más rara sea la combinación, mayor será el multiplicador.
+En cada turno lanzas tus dados disponibles. La suma de sus caras se convierte en tu puntuaciÃ³n base del turno.
+Ciertas combinaciones de caras (combos) multiplican tu puntuaciÃ³n base: cuanto mÃ¡s rara sea la combinaciÃ³n, mayor serÃ¡ el multiplicador.
 
 Hay tres mejoras clave disponibles durante una partida:
-- Dados: aumenta la cantidad de dados que lanzas (más dados -&gt; mayor potencial de puntuación base).
-- Economía: aumenta el ingreso pasivo por turno para que puedas comprar mejoras más rápido.
-- Suerte: aumenta la probabilidad de obtener mejores caras / pequeñas repeticiones (ayuda a conseguir combos).
+- Dados: aumenta la cantidad de dados que lanzas (mÃ¡s dados -&gt; mayor potencial de puntuaciÃ³n base).
+- EconomÃ­a: aumenta el ingreso pasivo por turno para que puedas comprar mejoras mÃ¡s rÃ¡pido.
+- Suerte: aumenta la probabilidad de obtener mejores caras / pequeÃ±as repeticiones (ayuda a conseguir combos).
 
-Las mejoras de combos se desbloquean al alcanzar una cantidad específica de dados; cada mejora aumenta el multiplicador de ese combo
+Las mejoras de combos se desbloquean al alcanzar una cantidad especÃ­fica de dados; cada mejora aumenta el multiplicador de ese combo
 en ~10% por nivel (lineal) y puede comprarse varias veces durante la misma partida.
 
-En solitario o en equipos: gana la puntuación más alta. ¡Diviértete optimizando compras vs. riesgo al lanzar!</T>
+En solitario o en equipos: gana la puntuaciÃ³n mÃ¡s alta. Â¡DiviÃ©rtete optimizando compras vs. riesgo al lanzar!</T>
             <T id="HELP_SPECIAL_RULES" l="0">REGLAS ESPECIALES</T>
             <T id="HELP_SPECIAL_RULES_BODY" l="0">Equipos:
 Las partidas Rojo vs Azul pueden habilitarse en un lobby.
-La puntuación de cada equipo es la suma de las puntuaciones de todos sus jugadores.
-El equipo con la puntuación total más alta gana.
+La puntuaciÃ³n de cada equipo es la suma de las puntuaciones de todos sus jugadores.
+El equipo con la puntuaciÃ³n total mÃ¡s alta gana.
 
 Mult. de coste:
 Ajusta el precio de las mejoras globalmente durante una partida.
-Los valores más bajos crean partidas más rápidas y caóticas.
-Los valores más altos ralentizan la progresión y premian la estrategia a largo plazo.</T>
+Los valores mÃ¡s bajos crean partidas mÃ¡s rÃ¡pidas y caÃ³ticas.
+Los valores mÃ¡s altos ralentizan la progresiÃ³n y premian la estrategia a largo plazo.</T>
             <T id="HELP_SPECIAL_RULES_TITLE" l="0">Reglas especiales</T>
-            <T id="HELP_SUBTITLE_SCALE_DICE" l="0">CÓMO JUGAR A SCALE DICE</T>
+            <T id="HELP_SUBTITLE_SCALE_DICE" l="0">CÃ“MO JUGAR A SCALE DICE</T>
             <T id="HELP_TITLE" l="0">AYUDA</T>
-            <T id="LANG_ENGLISH" l="0">Inglés</T>
-            <T id="LANG_FRENCH" l="0">Francés</T>
+            <T id="LANG_ENGLISH" l="0">InglÃ©s</T>
+            <T id="LANG_FRENCH" l="0">FrancÃ©s</T>
             <T id="LANG_ITALIAN" l="0">Italiano</T>
-            <T id="LANG_PORTUGUESE" l="0">Portugués</T>
-            <T id="LANG_SPANISH" l="0">Español</T>
-            <T id="LANG_WELSH" l="0">Galés</T>
-            <T id="LOCAL_SETUP_TITLE" l="0">PARTIDA LOCAL - CONFIGURACIÓN</T>
-            <T id="ONLINE_TITLE" l="0">MODO EN LÍNEA</T>
+            <T id="LANG_PORTUGUESE" l="0">PortuguÃ©s</T>
+            <T id="LANG_SPANISH" l="0">EspaÃ±ol</T>
+            <T id="LANG_WELSH" l="0">GalÃ©s</T>
+            <T id="LOCAL_SETUP_TITLE" l="0">PARTIDA LOCAL - CONFIGURACIÃ“N</T>
+            <T id="ONLINE_TITLE" l="0">MODO EN LÃNEA</T>
             <T id="POSTGAME_NO_COMBOS" l="0">No se lograron combos</T>
-            <T id="POSTGAME_RETURN" l="0">VOLVER AL MENÚ</T>
-            <T id="POSTGAME_SCORE_LINE" l="0">Puntuación: {0}</T>
+            <T id="POSTGAME_RETURN" l="0">VOLVER AL MENÃš</T>
+            <T id="POSTGAME_SCORE_LINE" l="0">PuntuaciÃ³n: {0}</T>
             <T id="POSTGAME_TITLE" l="0">PARTIDA LOCAL - RESULTADOS</T>
             <T id="PRELOAD_LOADING" l="0">CARGANDO...</T>
             <T id="SETTINGS_TITLE" l="0">AJUSTES</T>
             <T id="SET_JUKEBOX" l="0">JUKEBOX</T>
             <T id="SET_LANGUAGE" l="0">IDIOMA: {0}</T>
-            <T id="SET_MUSIC_OFF" l="0">MÚSICA: OFF</T>
-            <T id="SET_MUSIC_ON" l="0">MÚSICA: ON</T>
+            <T id="SET_MUSIC_OFF" l="0">MÃšSICA: OFF</T>
+            <T id="SET_MUSIC_ON" l="0">MÃšSICA: ON</T>
             <T id="SET_MUSIC_TRACKS" l="0">PISTAS MUSICALES</T>
             <T id="SET_OFF" l="0">OFF</T>
             <T id="SET_ON" l="0">ON</T>
-            <T id="SET_SHUFFLE_OFF" l="0">REPRODUCCIÓN ALEATORIA: OFF</T>
-            <T id="SET_SHUFFLE_ON" l="0">REPRODUCCIÓN ALEATORIA: ON</T>
+            <T id="SET_SHUFFLE_OFF" l="0">REPRODUCCIÃ“N ALEATORIA: OFF</T>
+            <T id="SET_SHUFFLE_ON" l="0">REPRODUCCIÃ“N ALEATORIA: ON</T>
             <T id="SET_SOUND_OFF" l="0">EFECTOS DE SONIDO: OFF</T>
             <T id="SET_SOUND_ON" l="0">EFECTOS DE SONIDO: ON</T>
             <T id="SET_VISUAL_OFF" l="0">EFECTOS VISUALES: OFF</T>
@@ -206,18 +206,82 @@ Los valores más altos ralentizan la progresión y premian la estrategia a largo
             <T id="TRACK_GRAVITOR_THEME" l="0">Tema Gravitor</T>
             <T id="TRACK_SNAKE_THEME" l="0">Tema Serpiente</T>
             <T id="UI_ACHIEVEMENTS" l="0">LOGROS</T>
-            <T id="UI_BACK" l="0">&lt;- ATRÁS</T>
+            <T id="UI_BACK" l="0">&lt;- ATRÃS</T>
             <T id="UI_CHANGELOG" l="0">CAMBIOS</T>
             <T id="UI_CLOSE" l="0">CERRAR</T>
             <T id="UI_HELP" l="0">AYUDA</T>
             <T id="UI_LOCAL_PLAY" l="0">JUEGO LOCAL</T>
-            <T id="UI_MUSIC_OFF" l="0">MÚSICA: OFF</T>
-            <T id="UI_MUSIC_ON" l="0">MÚSICA: ON</T>
+            <T id="UI_MUSIC_OFF" l="0">MÃšSICA: OFF</T>
+            <T id="UI_MUSIC_ON" l="0">MÃšSICA: ON</T>
             <T id="UI_NO" l="0">NO</T>
-            <T id="UI_ONLINE_PLAY" l="0">JUEGO EN LÍNEA</T>
+            <T id="UI_ONLINE_PLAY" l="0">JUEGO EN LÃNEA</T>
             <T id="UI_PLAY" l="0">JUGAR</T>
             <T id="UI_SETTINGS" l="0">AJUSTES</T>
-            <T id="UI_YES" l="0">SÍ</T>
+            <T id="UI_YES" l="0">SÃ</T>
+            <T id="UI_CONFIRM" l="0">CONFIRMAR</T>
+            <T id="CONFIG_CUSTOMIZE" l="0">PERSONALIZAR</T>
+            <T id="CONFIG_CUSTOMIZE_TITLE" l="0">PERSONALIZAR GRANDES MEJORAS</T>
+            <T id="CONFIG_ADD_UPGRADE" l="0">+ AÑADIR MEJORA PERSONALIZADA</T>
+            <T id="CONFIG_SORT_ASC" l="0">ORDENAR POR COSTO ASCENDENTE</T>
+            <T id="CONFIG_RESTORE_DEFAULTS" l="0">RESTABLECER VALORES POR DEFECTO</T>
+            <T id="CONFIG_SORT_CONFIRM" l="0">¿Ordenar todas las grandes mejoras por costo ascendente?</T>
+            <T id="CONFIG_RESTORE_CONFIRM" l="0">¿Restablecer todas las grandes mejoras a los valores por defecto? Esto eliminará todas las mejoras personalizadas.</T>
+            <T id="CONFIG_MAX_BIG_UPGRADES" l="0">Se alcanzó el máximo de 60 grandes mejoras.</T>
+            <T id="CONFIG_UPGRADE_NAME_REQUIRED" l="0">Introduce un nombre para la mejora.</T>
+            <T id="CONFIG_EFFECT_VALUE_MIN" l="0">Los valores del efecto deben ser 0 o mayores.</T>
+            <T id="CONFIG_EFFECT_VALUE_INVALID" l="0">El valor del efecto no es válido.</T>
+            <T id="CONFIG_UPGRADE_NAME" l="0">Nombre:</T>
+            <T id="CONFIG_UPGRADE_COST" l="0">Costo base:</T>
+            <T id="CONFIG_UPGRADE_EFFECT" l="0">Efecto:</T>
+            <T id="CONFIG_UPGRADE_VALUE" l="0">Valor:</T>
+            <T id="CONFIG_UPGRADE_CAP_DELTA" l="0">Delta de límite:</T>
+            <T id="CONFIG_UPGRADE_CHANCE" l="0">Probabilidad:</T>
+            <T id="CONFIG_UPGRADE_MIN_SEC" l="0">Seg mín:</T>
+            <T id="CONFIG_UPGRADE_MAX_SEC" l="0">Seg máx:</T>
+            <T id="CONFIG_UPGRADE_PER_STREAK" l="0">Por racha %:</T>
+            <T id="CONFIG_UPGRADE_MULTIPLICATIVE" l="0">Multiplicativo:</T>
+            <T id="CONFIG_UPGRADE_SAVE" l="0">GUARDAR</T>
+            <T id="CONFIG_UPGRADE_CANCEL" l="0">CANCELAR</T>
+            <T id="BIG_DESC_PREDICT" l="0">{0} de probabilidad de predecir tu próxima tirada.</T>
+            <T id="BIG_DESC_ECO_MULT" l="0">Ingreso de economía x{0}.</T>
+            <T id="BIG_DESC_COMBO_MULT" l="0">Multiplicadores de combo x{0}.</T>
+            <T id="BIG_DESC_ROLL_MULT" l="0">Puntuaciones obtenidas con dados x{0}.</T>
+            <T id="BIG_DESC_ECO_ROUND" l="0">Economía +{0} por ronda completada.</T>
+            <T id="BIG_DESC_ECO_CAP" l="0">Límite de economía {0}.</T>
+            <T id="BIG_DESC_COMBO_COST" l="0">Coste de mejoras de combo x{0}.</T>
+            <T id="BIG_DESC_COMBO_STREAK" l="0">+{0} combo por combo del mismo tipo consecutivo{1}.</T>
+            <T id="BIG_DESC_COMBO_STREAK_MULT" l="0"> (multiplicativo)</T>
+            <T id="BIG_DESC_SPIN" l="0">{0} por dado para girar {1}-{2}s y ganar puntos cada segundo.</T>
+            <T id="BIG_DESC_INTEREST" l="0">Gana {0} del puntaje actual en cada turno.</T>
+            <T id="BIG_DESC_GENERIC" l="0">Efecto de gran mejora.</T>
+            <T id="BIG_DESC_CLAIRVOYANCE" l="0">25% de probabilidad de predecir tu próxima tirada.</T>
+            <T id="BIG_DESC_STOCK_EXCHANGE" l="0">Economía +50% de ingresos.</T>
+            <T id="BIG_DESC_COMBOX" l="0">Multiplicadores de combo +50%.</T>
+            <T id="BIG_DESC_MASTER_PREDICT" l="0">Clairvoyance al 50% (requiere Clairvoyance).</T>
+            <T id="BIG_DESC_FIXATED" l="0">Puntuaciones obtenidas con dados x2.</T>
+            <T id="BIG_DESC_HIGH_STONKS" l="0">Economía +5% por ronda completada.</T>
+            <T id="BIG_DESC_COMBO_MASHER" l="0">+20% combo por combo del mismo tipo consecutivo.</T>
+            <T id="BIG_DESC_ROLLICANE" l="0">25% por dado para girar 2-10s y ganar puntos cada segundo.</T>
+            <T id="BIG_DESC_ULTRA_STONKS" l="0">El ingreso de economía aumenta enormemente.</T>
+            <T id="BIG_DESC_SCORE_INVESTOR" l="0">Gana ingresos extra cada turno según el puntaje actual.</T>
+            <T id="BIG_DESC_COMBO_OVERCLOCK" l="0">Los multiplicadores de combo están sobreacelerados.</T>
+            <T id="CONFIG_EDIT_UPGRADE_TITLE" l="0">EDITAR MEJORA - {0}</T>
+            <T id="CONFIG_CREATE_UPGRADE_TITLE" l="0">CREAR MEJORA</T>
+            <T id="CONFIG_DEFAULT_EFFECT" l="0">Predeterminado: {0}</T>
+            <T id="CONFIG_EFFECT_ROLL_MULT" l="0">Multiplicador de tirada</T>
+            <T id="CONFIG_EFFECT_COMBO_MULT" l="0">Multiplicador de combo</T>
+            <T id="CONFIG_EFFECT_ECO_MULT" l="0">Multiplicador de economía</T>
+            <T id="CONFIG_EFFECT_ECO_CAP" l="0">Límite de economía</T>
+            <T id="CONFIG_EFFECT_ECO_ROUND" l="0">Multiplicador de economía por ronda</T>
+            <T id="CONFIG_EFFECT_PREDICT" l="0">Probabilidad de predicción</T>
+            <T id="CONFIG_EFFECT_COMBO_COST" l="0">Multiplicador del costo de combos</T>
+            <T id="CONFIG_EFFECT_INTEREST" l="0">Tasa de interés</T>
+            <T id="CONFIG_EFFECT_COMBO_STREAK" l="0">Racha de combos</T>
+            <T id="CONFIG_EFFECT_SPIN" l="0">Efecto de giro</T>
         </IDS>
    </Language>
 </LocData>
+
+
+
+

@@ -6,7 +6,7 @@ import GlobalBackground from '../utils/BackgroundManager.js';
 import GlobalDebug from '../utils/DebugManager.js';
 import DiceManager from '../utils/DiceManager.js';
 import GlobalErrors from '../utils/ErrorManager.js';
-import { formatCompact } from '../utils/FormatManager.js';
+import { formatCompact, formatCompactFull } from '../utils/FormatManager.js';
 import GlobalLocalization from '../utils/LocalizationManager.js';
 import GlobalSettings from '../utils/SettingsManager.js';
 import UpgradeManager from '../utils/UpgradeManager.js';
@@ -23,6 +23,7 @@ export default class LocalGameScene extends Phaser.Scene {
     this.teamsEnabled = data.teamsEnabled ?? false;
     this.teams = data.teams ?? Array.from({ length: this.playerCount }, (_, i) => 'blue');
     this.bigUpgradesEnabled = data.bigUpgradesEnabled ?? true;
+    this.bigUpgradeSortAsc = !!data.bigUpgradeSortAsc;
     this.challengeKey = data.challengeKey || null;
     this.challengeDate = data.challengeDate || null;
     this.challengeReward = data.challengeReward || 0;
@@ -155,6 +156,19 @@ export default class LocalGameScene extends Phaser.Scene {
         .map(def => normalizer.getBigUpgradeDef(def?.key) || def)
         .filter(Boolean);
     } catch (e) {}
+
+    if (this.bigUpgradeSortAsc) {
+      this._bigUpgradeDefs = this._bigUpgradeDefs
+        .slice()
+        .sort((a, b) => {
+          const ca = Number.isFinite(a?.baseCost) ? a.baseCost : Infinity;
+          const cb = Number.isFinite(b?.baseCost) ? b.baseCost : Infinity;
+          if (ca !== cb) return ca - cb;
+          const ta = (a?.title || a?.key || '').toString();
+          const tb = (b?.title || b?.key || '').toString();
+          return ta.localeCompare(tb);
+        });
+    }
 
     this.players.forEach(p => {
       if (p?.upgrades?.setBigUpgradeDefs) {
@@ -423,7 +437,7 @@ export default class LocalGameScene extends Phaser.Scene {
       const globalMult = player.upgrades.getComboGlobalMultiplier ? player.upgrades.getComboGlobalMultiplier() : 1;
       const totalMult = baseMult * upgradeMult * globalMult;
 
-      entry.ui.lvlText.setText(`Lv ${lvl} (x${totalMult.toFixed(1)})`);
+      entry.ui.lvlText.setText(`Lv ${lvl} (x${this._formatMultiplier(totalMult, 1)})`);
 
       const cost = Math.floor((player.upgrades.getComboCost && player.upgrades.getComboCost(key) || 0) * this.costMult);
       entry.ui.btn.setText(cost ? `UPGRADE (${formatCompact(cost)})` : 'UPGRADE');
@@ -465,26 +479,23 @@ export default class LocalGameScene extends Phaser.Scene {
     const leftPad = Math.max(16, Math.floor(this.scale.width * 0.02));
     const comboWidth = 260;
     const gap = 12;
-    const panelWidth = 320;
-    const startX = leftPad + comboWidth + gap;
+    const baseStartX = leftPad + comboWidth + gap;
     const startY = 120;
 
-    this.bigUpgradesToolbarContainer = this.add.container(startX, 0).setDepth(1002);
-    this.bigUpgradesToolbarContainer.x = startX - 40;
-    this.bigUpgradesToolbarContainer.setVisible(false);
-
+    const t = this._t;
+    const fmt = this._fmt;
     const descriptions = {
-      clairvoyance: '25% chance to predict your next roll.',
-      stockExchange: 'Economy +50% income.',
-      comboX: 'Combo multipliers +50%.',
-      masterPredict: 'Make clairvoyance 50% (requires Clairvoyance).',
-      fixated: 'Dice-earned scores x2.',
-      highStonks: 'Economy +5% per completed round.',
-      comboMasher: '+20% combo per consecutive same-type combo.',
-      rollicane: '25% per die to spin 2-10s and gain points each second.',
-      ultraStonks: 'Economy income is massively boosted.',
-      scoreInvestor: 'Gain bonus income each turn from current score.',
-      comboOverclock: 'Combo multipliers are overclocked.'
+      clairvoyance: t('BIG_DESC_CLAIRVOYANCE', '25% chance to predict your next roll.'),
+      stockExchange: t('BIG_DESC_STOCK_EXCHANGE', 'Economy +50% income.'),
+      comboX: t('BIG_DESC_COMBOX', 'Combo multipliers +50%.'),
+      masterPredict: t('BIG_DESC_MASTER_PREDICT', 'Make clairvoyance 50% (requires Clairvoyance).'),
+      fixated: t('BIG_DESC_FIXATED', 'Dice-earned scores x2.'),
+      highStonks: t('BIG_DESC_HIGH_STONKS', 'Economy +5% per completed round.'),
+      comboMasher: t('BIG_DESC_COMBO_MASHER', '+20% combo per consecutive same-type combo.'),
+      rollicane: t('BIG_DESC_ROLLICANE', '25% per die to spin 2-10s and gain points each second.'),
+      ultraStonks: t('BIG_DESC_ULTRA_STONKS', 'Economy income is massively boosted.'),
+      scoreInvestor: t('BIG_DESC_SCORE_INVESTOR', 'Gain bonus income each turn from current score.'),
+      comboOverclock: t('BIG_DESC_COMBO_OVERCLOCK', 'Combo multipliers are overclocked.')
     };
     const toNumber = (value, fallback = null) => {
       const n = Number(value);
@@ -494,7 +505,7 @@ export default class LocalGameScene extends Phaser.Scene {
 
     const describeUpgrade = (def) => {
       if (!def) return '';
-      if (!def.effect) return descriptions[def.key] || '';
+      if (!def.effect) return descriptions[def.key] || t('BIG_DESC_GENERIC', 'Big upgrade effect.');
 
       const effect = def.effect;
       const value = def.value;
@@ -502,41 +513,56 @@ export default class LocalGameScene extends Phaser.Scene {
 
       switch (effect) {
         case 'predictChance':
-          return `${toPercent(value)} chance to predict your next roll.`;
+          return fmt('BIG_DESC_PREDICT', '{0} chance to predict your next roll.', toPercent(value));
         case 'ecoMultiplier':
-          return `Economy income x${toNumber(value, 1)}.`;
+          return fmt('BIG_DESC_ECO_MULT', 'Economy income x{0}.', toNumber(value, 1));
         case 'comboMultiplier':
-          return `Combo multipliers x${toNumber(value, 1)}.`;
+          return fmt('BIG_DESC_COMBO_MULT', 'Combo multipliers x{0}.', toNumber(value, 1));
         case 'rollMultiplier':
-          return `Dice-earned scores x${toNumber(value, 1)}.`;
+          return fmt('BIG_DESC_ROLL_MULT', 'Dice-earned scores x{0}.', toNumber(value, 1));
         case 'ecoRoundMultiplier':
-          return `Economy +${toPercent(value)} per completed round.`;
+          return fmt('BIG_DESC_ECO_ROUND', 'Economy +{0} per completed round.', toPercent(value));
+        case 'economyCap': {
+          const delta = Math.trunc(toNumber(value, 0) || 0);
+          const deltaText = delta >= 0 ? `+${delta}` : `${delta}`;
+          return fmt('BIG_DESC_ECO_CAP', 'Economy cap {0}.', deltaText);
+        }
         case 'comboCostMultiplier':
-          return `Combo upgrade costs x${toNumber(value, 1)}.`;
+          return fmt('BIG_DESC_COMBO_COST', 'Combo upgrade costs x{0}.', toNumber(value, 1));
         case 'comboStreak': {
           const pct = toPercent(values.percentage ?? value);
-          const multNote = values.isMultiplicative ? ' (multiplicative)' : '';
-          return `+${pct} combo per consecutive same-type combo${multNote}.`;
+          const multNote = values.isMultiplicative ? t('BIG_DESC_COMBO_STREAK_MULT', ' (multiplicative)') : '';
+          return fmt('BIG_DESC_COMBO_STREAK', '+{0} combo per consecutive same-type combo{1}.', pct, multNote);
         }
         case 'spinEffect': {
           const chance = toPercent(values.chance ?? value);
           const minSec = toNumber(values.minSec, 2);
           const maxSec = toNumber(values.maxSec, 10);
-          return `${chance} per die to spin ${minSec}-${maxSec}s and gain points each second.`;
+          return fmt('BIG_DESC_SPIN', '{0} per die to spin {1}-{2}s and gain points each second.', chance, minSec, maxSec);
         }
         case 'interestRate':
-          return `Gain ${toPercent(value)} of current score each turn.`;
+          return fmt('BIG_DESC_INTEREST', 'Gain {0} of current score each turn.', toPercent(value));
         default:
-          return descriptions[def.key] || '';
+          return descriptions[def.key] || t('BIG_DESC_GENERIC', 'Big upgrade effect.');
       }
     };
 
-    const items = this._bigUpgradeDefs.map(def => ({
+    const itemsRaw = this._bigUpgradeDefs.map(def => ({
       key: def.key,
       title: def.title || def.key,
       desc: describeUpgrade(def),
       baseCost: def.baseCost
     }));
+    const items = this.bigUpgradeSortAsc
+      ? itemsRaw.slice().sort((a, b) => {
+          const ca = Number.isFinite(a?.baseCost) ? a.baseCost : Infinity;
+          const cb = Number.isFinite(b?.baseCost) ? b.baseCost : Infinity;
+          if (ca !== cb) return ca - cb;
+          const ta = (a?.title || a?.key || '').toString();
+          const tb = (b?.title || b?.key || '').toString();
+          return ta.localeCompare(tb);
+        })
+      : itemsRaw;
 
     this.bigUpgradesToolbar = [];
 
@@ -546,6 +572,23 @@ export default class LocalGameScene extends Phaser.Scene {
     const rowHeight = 64;
     const itemsToShow = items.slice(0, upgradesPerColumn * maxColumns);
     const columns = Math.max(1, Math.min(maxColumns, Math.ceil(itemsToShow.length / upgradesPerColumn)));
+    const minPanelWidth = 180;
+    const maxPanelWidth = 320;
+    const totalGap = columnGap * Math.max(0, columns - 1);
+    const availableWidth = Math.max(240, this.scale.width - baseStartX - 20);
+    let panelWidth = Math.floor((availableWidth - totalGap) / columns);
+    panelWidth = Math.max(minPanelWidth, Math.min(maxPanelWidth, panelWidth));
+    const totalWidth = panelWidth * columns + totalGap;
+    let startX = baseStartX;
+    if (startX + totalWidth > this.scale.width - 10) {
+      startX = Math.max(leftPad, this.scale.width - totalWidth - 10);
+    }
+
+    this.bigUpgradesToolbarOpenX = startX;
+    this.bigUpgradesToolbarClosedX = startX - 40;
+    this.bigUpgradesToolbarContainer = this.add.container(startX, 0).setDepth(1002);
+    this.bigUpgradesToolbarContainer.x = this.bigUpgradesToolbarClosedX;
+    this.bigUpgradesToolbarContainer.setVisible(false);
 
     itemsToShow.forEach((it, index) => {
       const col = Math.floor(index / upgradesPerColumn);
@@ -578,15 +621,23 @@ export default class LocalGameScene extends Phaser.Scene {
   toggleBigUpgrades() {
     if (!this.bigUpgradesEnabled) return;
     if (this.comboPanelOpen) this.closeComboToolbarInstant();
+    if (!this.bigUpgradesToolbarContainer) return;
 
     this.bigUpgradesOpen = !this.bigUpgradesOpen;
 
     try {
       this.bigUpgradesToolbarContainer.setVisible(this.bigUpgradesOpen);
       this.tweens.killTweensOf(this.bigUpgradesToolbarContainer);
+      const openX = Number.isFinite(this.bigUpgradesToolbarOpenX)
+        ? this.bigUpgradesToolbarOpenX
+        : this.bigUpgradesToolbarContainer.x + 40;
+      const closedX = Number.isFinite(this.bigUpgradesToolbarClosedX)
+        ? this.bigUpgradesToolbarClosedX
+        : this.bigUpgradesToolbarContainer.x - 40;
+      const targetX = this.bigUpgradesOpen ? openX : closedX;
       this.tweens.add({
         targets: this.bigUpgradesToolbarContainer,
-        x: this.bigUpgradesOpen ? this.bigUpgradesToolbarContainer.x + 40 : this.bigUpgradesToolbarContainer.x - 40,
+        x: targetX,
         duration: 260,
         ease: 'Cubic.easeOut'
       });
@@ -597,6 +648,9 @@ export default class LocalGameScene extends Phaser.Scene {
 
   closeBigUpgradesInstant() {
     try {
+      if (Number.isFinite(this.bigUpgradesToolbarClosedX) && this.bigUpgradesToolbarContainer) {
+        this.bigUpgradesToolbarContainer.x = this.bigUpgradesToolbarClosedX;
+      }
       this.bigUpgradesToolbarContainer.setVisible(false);
       this.bigToggleBtn.setText('>');
     } catch (e) {}
@@ -704,7 +758,7 @@ export default class LocalGameScene extends Phaser.Scene {
       ui.score?.setText(formatCompact(p.score));
       ui.dice?.setText(`🎲 ${p.diceUnlocked}`);
       const effective = Math.min(p.luck + p.upgrades.getLuckBonus(), 6);
-      ui.luck?.setText(`🍀 x${effective.toFixed(1)}`);
+      ui.luck?.setText(`🍀 x${this._formatMultiplier(effective, 1)}`);
       const incomeVal = Math.floor(
         p.upgrades.getEconomyIncome() *
         (p.upgrades.getEconomyMultiplier ? p.upgrades.getEconomyMultiplier() : 1) *
@@ -832,6 +886,25 @@ export default class LocalGameScene extends Phaser.Scene {
     return map[difficulty] ?? 1;
   }
 
+  _formatMultiplier(value, decimals = 1) {
+    if (!Number.isFinite(value)) return '0';
+    const abs = Math.abs(value);
+    if (abs >= 1000) return formatCompact(value);
+    return value.toFixed(decimals);
+  }
+
+  getBotActionDelayMs(player) {
+    const diff = player?.difficulty || 'Medium';
+    const map = {
+      Baby: 500,
+      Easy: 333,
+      Medium: 250,
+      Hard: 200,
+      Nightmare: 100
+    };
+    return map[diff] ?? 500;
+  }
+
   _shouldBotSkipCombo(player, key) {
     const dice = player.diceUnlocked;
     const isNightmare = player.difficulty === 'Nightmare';
@@ -893,6 +966,8 @@ export default class LocalGameScene extends Phaser.Scene {
       if (!targets) return false;
       const target = targets[key];
       if (!Number.isFinite(target)) return false;
+      const req = this.comboRequirements[key] ?? 2;
+      if (isNightmare && req >= 6) return false;
       const lvl = player.upgrades.getComboLevel?.(key) || 0;
       return lvl >= target;
     };
@@ -903,7 +978,10 @@ export default class LocalGameScene extends Phaser.Scene {
       if (isNightmare) {
         const req = this.comboRequirements[key] ?? 2;
         const lvl = player.upgrades.getComboLevel?.(key) || 0;
-        if (req >= 6 && lvl >= 30 && player.score < cost * 2) return false;
+        if (req >= 6) {
+          const multiplier = lvl > 60 ? 10 : 5;
+          if (player.score < cost * multiplier) return false;
+        }
       }
       return true;
     };
@@ -982,7 +1060,8 @@ export default class LocalGameScene extends Phaser.Scene {
       for (let key of keys) {
         const target = targets[key] ?? 0;
         const lvl = player.upgrades.getComboLevel?.(key) || 0;
-        if (lvl >= target) continue;
+        const req = this.comboRequirements[key] ?? 2;
+        if (!(isNightmare && req >= 6) && lvl >= target) continue;
         if (tryBuyComboNow(key)) return true;
       }
 
@@ -1081,15 +1160,9 @@ export default class LocalGameScene extends Phaser.Scene {
         if (tryBuyBigNow(def)) return;
       }
 
-      if (isNightmare) {
-        if (tryBuyEconomyNow()) return;
-        if (tryBuyLuckNow()) return;
-        if (tryBuyComboTargets(comboTargets)) return;
-      } else {
-        if (tryBuyComboTargets(comboTargets)) return;
-        if (tryBuyEconomyNow()) return;
-        if (tryBuyLuckNow()) return;
-      }
+      if (tryBuyEconomyNow()) return;
+      if (tryBuyLuckNow()) return;
+      if (tryBuyComboTargets(comboTargets)) return;
 
       const comboCap = comboTargets ? 999 : 60;
       if (totalComboLevels < comboCap) {
@@ -1119,7 +1192,7 @@ export default class LocalGameScene extends Phaser.Scene {
 
       if (tryBuyEconomyNow()) return;
 
-      if (Math.random() < 0.25) {
+      if (Math.random() < 0.375) {
         if (tryBuyLuckNow()) return;
       }
 
@@ -1597,7 +1670,8 @@ export default class LocalGameScene extends Phaser.Scene {
       player.score -= cost;
       player.upgrades.upgradeLuck();
       GlobalAudio.playButton(this);
-      this._logActivity(`${player.name} upgraded Luck -> Lv ${player.upgrades.getLuckLevel()} (x${(Math.min(player.luck + player.upgrades.getLuckBonus(),6)).toFixed(1)})`);
+    const luckMult = Math.min(player.luck + player.upgrades.getLuckBonus(), 6);
+    this._logActivity(`${player.name} upgraded Luck -> Lv ${player.upgrades.getLuckLevel()} (x${this._formatMultiplier(luckMult, 1)})`);
       this.updateTurnUI();
       return true;
     }
@@ -1695,7 +1769,7 @@ export default class LocalGameScene extends Phaser.Scene {
         if (pl.team === 'red') red += pl.score;
         else blue += pl.score;
       });
-      this.headerText.setText(this._fmt('GAME_TEAM_SCORE', 'Scale Dice - Blue: {0}  Red: {1}', formatCompact(blue), formatCompact(red)));
+      this.headerText.setText(this._fmt('GAME_TEAM_SCORE', 'Scale Dice - Blue: {0}  Red: {1}', formatCompactFull(blue), formatCompactFull(red)));
     } else {
       this.headerText.setText(this._t('GAME_TITLE', 'Scale Dice'));
     }
@@ -1725,7 +1799,15 @@ export default class LocalGameScene extends Phaser.Scene {
         this.rollBtn.disableInteractive();
         this.rollBtn.setStyle({ color: '#888888' });
         if (!this.isRolling && !this.waitingForResult) {
-          this.time.delayedCall(700, () => this.runBotTurn(p));
+          const delayMs = this.getBotActionDelayMs(p);
+          if (this._botActionTimer) {
+            try { this._botActionTimer.remove(false); } catch (e) {}
+            this._botActionTimer = null;
+          }
+          this._botActionTimer = this.time.delayedCall(Math.max(0, delayMs), () => {
+            this._botActionTimer = null;
+            this.runBotTurn(p);
+          });
         }
       } else if (!this.isRolling) {
         this.rollBtn.setText(this._t('GAME_ROLL_DICE', 'ROLL DICE'));
@@ -1777,16 +1859,14 @@ export default class LocalGameScene extends Phaser.Scene {
       this.buyLuckBtn.setStyle({ color: '#555555' });
     }
 
-    this.turnText.setText(this._fmt('GAME_TURN_LINE', "{0}'s Turn  |  Score: {1}  |  Dice: {2}", p.name, formatCompact(p.score), p.diceUnlocked));
+    this.turnText.setText(this._fmt('GAME_TURN_LINE', "{0}'s Turn  |  Score: {1}  |  Dice: {2}", p.name, formatCompactFull(p.score), p.diceUnlocked));
 
+    const hasLastRoll = Array.isArray(p.lastRoll) && p.lastRoll.length > 0;
     this.diceSprites.forEach((d, i) => {
       if (i < p.diceUnlocked) {
         d.setVisible(true);
-        if (p.lastRoll && (this.waitingForResult || this.isRolling)) {
-          d.setTexture(`dice${p.lastRoll[i] ?? Math.min(i + 1, 6)}`);
-        } else {
-          d.setTexture(`dice${Math.min(i + 1, 6)}`);
-        }
+        const face = hasLastRoll ? (p.lastRoll[i] ?? Math.min(i + 1, 6)) : Math.min(i + 1, 6);
+        d.setTexture(`dice${face}`);
       } else {
         d.setVisible(false);
       }
@@ -1836,16 +1916,16 @@ export default class LocalGameScene extends Phaser.Scene {
 
   updateDiceScoreDisplay(dice, scored, combo = null, player = null) {
   const base = dice.reduce((a, b) => a + b, 0);
-  const hasFixated = player?.upgrades?.hasBigUpgrade?.('fixated');
+  const diceMultiplier = player?.upgrades?.getDiceScoreMultiplier?.() || 1;
 
   let lines = [];
   lines.push(`Rolled: ${dice.join(', ')}`);
   lines.push(`Base Score: ${base}`);
 
-  let workingBase = base * (player?.upgrades?.getDiceScoreMultiplier?.() || 1);
+  let workingBase = base * diceMultiplier;
 
-  if (hasFixated) {
-    lines.push(`Base x 2 (Fixated) = ${workingBase}`);
+  if (diceMultiplier !== 1) {
+    lines.push(`Roll Multiplier: x${this._formatMultiplier(diceMultiplier, 2)} = ${formatCompact(Math.floor(workingBase))}`);
   }
 
   if (combo && player) {
@@ -1869,17 +1949,17 @@ export default class LocalGameScene extends Phaser.Scene {
     const streakMult = player.upgrades.getComboStreakMultiplier ? player.upgrades.getComboStreakMultiplier(streak) : 1;
     const totalComboMult = comboBaseMult * comboUpgradeMult * comboGlobal * streakMult;
 
-    lines.push(`Combo: ${comboName} (Level ${comboLevel}: x${(comboUpgradeMult * comboGlobal).toFixed(2)})`);
-    lines.push(`Base Multiplier: x${comboBaseMult.toFixed(2)}`);
+    lines.push(`Combo: ${comboName} (Level ${comboLevel}: x${this._formatMultiplier(comboUpgradeMult * comboGlobal, 2)})`);
+    lines.push(`Base Multiplier: x${this._formatMultiplier(comboBaseMult, 2)}`);
 
     if (streakMult !== 1) {
       const streakLabel = player.upgrades.getComboStreakLabel?.() || 'Combo Streak';
       const bonusPct = (streakMult * 100 - 100).toFixed(0);
       lines.push(`- ${streakLabel}: ${streak} (${bonusPct}%)`);
-      lines.push(`  -> Streak Multiplier: x${streakMult.toFixed(2)}`);
+      lines.push(`  -> Streak Multiplier: x${this._formatMultiplier(streakMult, 2)}`);
     }
 
-    lines.push(`Total Combo Multiplier: x${totalComboMult.toFixed(2)}`);
+    lines.push(`Total Combo Multiplier: x${this._formatMultiplier(totalComboMult, 2)}`);
     const finalScore = Math.floor(workingBase * totalComboMult);
     lines.push(`Final Score: ${formatCompact(finalScore)}`);
   } else {
@@ -2197,6 +2277,7 @@ export default class LocalGameScene extends Phaser.Scene {
   cleanupScene() {
     try { this.closeExitModal(); } catch (e) {}
     try { if (this._scoreDisplayTimer) { this._scoreDisplayTimer.remove(false); this._scoreDisplayTimer = null; } } catch(e){}
+    try { if (this._botActionTimer) { this._botActionTimer.remove(false); this._botActionTimer = null; } } catch(e){}
     try {
       if (Array.isArray(this.playerBar)) {
         this.playerBar.forEach(p => Object.values(p).forEach(o => { try { o?.destroy?.(); } catch(e){} }));

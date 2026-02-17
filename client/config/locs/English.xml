@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+﻿<?xml version="1.0" encoding="UTF-8" ?>
 <LocData>
     <Language>
 	<IDS>
@@ -195,6 +195,68 @@
             <T id="UI_PLAY" l="0">PLAY</T>
             <T id="UI_SETTINGS" l="0">SETTINGS</T>
             <T id="UI_YES" l="0">YES</T>
+            <T id="UI_CONFIRM" l="0">CONFIRM</T>
+            <T id="CONFIG_CUSTOMIZE" l="0">CUSTOMIZE</T>
+            <T id="CONFIG_CUSTOMIZE_TITLE" l="0">CUSTOMIZE BIG UPGRADES</T>
+            <T id="CONFIG_ADD_UPGRADE" l="0">+ ADD CUSTOM UPGRADE</T>
+            <T id="CONFIG_SORT_ASC" l="0">SORT ASCENDING</T>
+            <T id="CONFIG_RESTORE_DEFAULTS" l="0">RESTORE DEFAULTS</T>
+            <T id="CONFIG_SORT_CONFIRM" l="0">Sort all big upgrades by ascending cost?</T>
+            <T id="CONFIG_RESTORE_CONFIRM" l="0">Restore all big upgrades to defaults? This will remove all custom upgrades.</T>
+            <T id="CONFIG_MAX_BIG_UPGRADES" l="0">Maximum of 60 big upgrades reached.</T>
+            <T id="CONFIG_UPGRADE_NAME_REQUIRED" l="0">Please enter a name for the upgrade.</T>
+            <T id="CONFIG_EFFECT_VALUE_MIN" l="0">Effect values must be 0 or higher.</T>
+            <T id="CONFIG_EFFECT_VALUE_INVALID" l="0">Effect value is invalid.</T>
+            <T id="CONFIG_UPGRADE_NAME" l="0">Name:</T>
+            <T id="CONFIG_UPGRADE_COST" l="0">Base Cost:</T>
+            <T id="CONFIG_UPGRADE_EFFECT" l="0">Effect:</T>
+            <T id="CONFIG_UPGRADE_VALUE" l="0">Value:</T>
+            <T id="CONFIG_UPGRADE_CAP_DELTA" l="0">Cap Delta:</T>
+            <T id="CONFIG_UPGRADE_CHANCE" l="0">Chance:</T>
+            <T id="CONFIG_UPGRADE_MIN_SEC" l="0">Min Sec:</T>
+            <T id="CONFIG_UPGRADE_MAX_SEC" l="0">Max Sec:</T>
+            <T id="CONFIG_UPGRADE_PER_STREAK" l="0">Per Streak %:</T>
+            <T id="CONFIG_UPGRADE_MULTIPLICATIVE" l="0">Multiplicative:</T>
+            <T id="CONFIG_UPGRADE_SAVE" l="0">SAVE</T>
+            <T id="CONFIG_UPGRADE_CANCEL" l="0">CANCEL</T>
+            <T id="BIG_DESC_PREDICT" l="0">{0} chance to predict your next roll.</T>
+            <T id="BIG_DESC_ECO_MULT" l="0">Economy income x{0}.</T>
+            <T id="BIG_DESC_COMBO_MULT" l="0">Combo multipliers x{0}.</T>
+            <T id="BIG_DESC_ROLL_MULT" l="0">Dice-earned scores x{0}.</T>
+            <T id="BIG_DESC_ECO_ROUND" l="0">Economy +{0} per completed round.</T>
+            <T id="BIG_DESC_ECO_CAP" l="0">Economy cap {0}.</T>
+            <T id="BIG_DESC_COMBO_COST" l="0">Combo upgrade costs x{0}.</T>
+            <T id="BIG_DESC_COMBO_STREAK" l="0">+{0} combo per consecutive same-type combo{1}.</T>
+            <T id="BIG_DESC_COMBO_STREAK_MULT" l="0"> (multiplicative)</T>
+            <T id="BIG_DESC_SPIN" l="0">{0} per die to spin {1}-{2}s and gain points each second.</T>
+            <T id="BIG_DESC_INTEREST" l="0">Gain {0} of current score each turn.</T>
+            <T id="BIG_DESC_GENERIC" l="0">Big upgrade effect.</T>
+            <T id="BIG_DESC_CLAIRVOYANCE" l="0">25% chance to predict your next roll.</T>
+            <T id="BIG_DESC_STOCK_EXCHANGE" l="0">Economy +50% income.</T>
+            <T id="BIG_DESC_COMBOX" l="0">Combo multipliers +50%.</T>
+            <T id="BIG_DESC_MASTER_PREDICT" l="0">Make clairvoyance 50% (requires Clairvoyance).</T>
+            <T id="BIG_DESC_FIXATED" l="0">Dice-earned scores x2.</T>
+            <T id="BIG_DESC_HIGH_STONKS" l="0">Economy +5% per completed round.</T>
+            <T id="BIG_DESC_COMBO_MASHER" l="0">+20% combo per consecutive same-type combo.</T>
+            <T id="BIG_DESC_ROLLICANE" l="0">25% per die to spin 2-10s and gain points each second.</T>
+            <T id="BIG_DESC_ULTRA_STONKS" l="0">Economy income is massively boosted.</T>
+            <T id="BIG_DESC_SCORE_INVESTOR" l="0">Gain bonus income each turn from current score.</T>
+            <T id="BIG_DESC_COMBO_OVERCLOCK" l="0">Combo multipliers are overclocked.</T>
+                    <T id="CONFIG_EDIT_UPGRADE_TITLE" l="0">EDIT UPGRADE - {0}</T>
+                    <T id="CONFIG_CREATE_UPGRADE_TITLE" l="0">CREATE UPGRADE</T>
+                    <T id="CONFIG_DEFAULT_EFFECT" l="0">Default: {0}</T>
+                    <T id="CONFIG_EFFECT_ROLL_MULT" l="0">Roll Multiplier</T>
+                    <T id="CONFIG_EFFECT_COMBO_MULT" l="0">Combo Multiplier</T>
+                    <T id="CONFIG_EFFECT_ECO_MULT" l="0">Eco Multiplier</T>
+                    <T id="CONFIG_EFFECT_ECO_CAP" l="0">Economy Cap</T>
+                    <T id="CONFIG_EFFECT_ECO_ROUND" l="0">Eco Round Multiplier</T>
+                    <T id="CONFIG_EFFECT_PREDICT" l="0">Predict Chance</T>
+                    <T id="CONFIG_EFFECT_COMBO_COST" l="0">Combo Cost Multiplier</T>
+                    <T id="CONFIG_EFFECT_INTEREST" l="0">Interest Rate</T>
+                    <T id="CONFIG_EFFECT_COMBO_STREAK" l="0">Combo Streak</T>
+                    <T id="CONFIG_EFFECT_SPIN" l="0">Spin Effect</T>
         </IDS>
    </Language>
 </LocData>
+
+

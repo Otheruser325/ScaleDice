@@ -298,6 +298,19 @@ class UpgradeManager {
         this.economyMultiplier = stackMultiplierMul(this.economyMultiplier, mult, 0.05);
         return true;
       }
+      case 'economyCap': {
+        const delta = Math.trunc(toNumber(def.value, 0) || 0);
+        if (!Number.isFinite(delta) || delta === 0) return false;
+        const currentCap = typeof this.getEconomyCap === 'function' ? this.getEconomyCap() : this.economyCap;
+        const baseCap = Number.isFinite(currentCap) ? currentCap : (this.economyCap || 50);
+        const nextCap = Math.max(1, baseCap + delta);
+        if (typeof this.setEconomyCap === 'function') {
+          this.setEconomyCap(nextCap);
+        } else {
+          this.economyCap = nextCap;
+        }
+        return true;
+      }
       case 'comboMultiplier': {
         const mult = toNumber(def.value, 1);
         if (mult == null) return false;

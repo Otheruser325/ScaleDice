@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+﻿<?xml version="1.0" encoding="UTF-8" ?>
 <LocData>
     <Language>
 	<IDS>
@@ -76,7 +76,7 @@
             <T id="CHALLENGE_DEUCIFER_TITLE" l="0">Fossa di Deucifer</T>
             <T id="CHALLENGE_FAILED" l="0">FALLITA</T>
             <T id="CHALLENGE_GENERIC" l="0">SFIDA</T>
-            <T id="CHALLENGE_HIGH_STAKES_DESC" l="0">Affronta due bot Medi in una corsa economica ad alto rischio. L&apos;economia può salire al livello 250.</T>
+            <T id="CHALLENGE_HIGH_STAKES_DESC" l="0">Affronta due bot Medi in una corsa economica ad alto rischio. L&apos;economia puÃ² salire al livello 250.</T>
             <T id="CHALLENGE_HIGH_STAKES_LIST_DESC" l="0">Sfida dedicata contro 2 bot Medi con scalatura economica estesa.</T>
             <T id="CHALLENGE_HIGH_STAKES_TITLE" l="0">Alte puntate</T>
             <T id="CHALLENGE_HUMAN_LABEL" l="0">Umano</T>
@@ -120,7 +120,7 @@
             <T id="GAME_END_TURN" l="0">FINE TURNO</T>
             <T id="GAME_EXIT_CONFIRM" l="0">SEI SICURO DI VOLER
 TORNARE AL MENU PRINCIPALE?</T>
-            <T id="GAME_HISTORY_LOG" l="0">Registro attività</T>
+            <T id="GAME_HISTORY_LOG" l="0">Registro attivitÃ </T>
             <T id="GAME_LAST_ROLL" l="0">Ultimo lancio: {0}</T>
             <T id="GAME_LUCK_MAX" l="0">FORTUNA MAX</T>
             <T id="GAME_LUCK_UPGRADE" l="0">Upgrade fortuna: {0} (Liv {1}/25)</T>
@@ -142,31 +142,31 @@ TORNARE AL MENU PRINCIPALE?</T>
             <T id="GAME_UPGRADE_ECONOMY" l="0">MIGLIORA ECONOMIA</T>
             <T id="GAME_UPGRADE_LUCK" l="0">MIGLIORA FORTUNA</T>
             <T id="GAME_WAITING" l="0">In attesa...</T>
-            <T id="HELP_BODY_SCALE_DICE" l="0">Scale Dice è un gioco di dadi strategico incrementale a turni. L&apos;obiettivo è semplice:
-segnare più punti possibili durante la partita lanciando i dadi e sfruttando combo e upgrade.
+            <T id="HELP_BODY_SCALE_DICE" l="0">Scale Dice Ã¨ un gioco di dadi strategico incrementale a turni. L&apos;obiettivo Ã¨ semplice:
+segnare piÃ¹ punti possibili durante la partita lanciando i dadi e sfruttando combo e upgrade.
 
 Ad ogni turno lanci i dadi disponibili. La somma delle facce diventa il tuo punteggio base del turno.
-Alcune combinazioni di facce (combo) moltiplicano il punteggio base: più rara è la combo, più alto è il moltiplicatore.
+Alcune combinazioni di facce (combo) moltiplicano il punteggio base: piÃ¹ rara Ã¨ la combo, piÃ¹ alto Ã¨ il moltiplicatore.
 
 Ci sono tre upgrade principali disponibili durante una partita:
-- Dadi: aumenta quanti dadi lanci (più dadi -&gt; maggiore potenziale di punteggio base).
-- Economia: aumenta il reddito passivo per turno così puoi comprare upgrade più velocemente.
-- Fortuna: aumenta le possibilità di ottenere facce migliori / piccoli rilanci (aiuta a ottenere combo).
+- Dadi: aumenta quanti dadi lanci (piÃ¹ dadi -&gt; maggiore potenziale di punteggio base).
+- Economia: aumenta il reddito passivo per turno cosÃ¬ puoi comprare upgrade piÃ¹ velocemente.
+- Fortuna: aumenta le possibilitÃ  di ottenere facce migliori / piccoli rilanci (aiuta a ottenere combo).
 
 Gli upgrade delle combo si sbloccano quando raggiungi un certo numero di dadi; ogni upgrade aumenta il moltiplicatore della combo
-di circa il 10% per livello (lineare) e può essere acquistato più volte nella stessa partita.
+di circa il 10% per livello (lineare) e puÃ² essere acquistato piÃ¹ volte nella stessa partita.
 
-In singolo o a squadre: vince il punteggio più alto. Divertiti a ottimizzare acquisti e rischio di lancio!</T>
+In singolo o a squadre: vince il punteggio piÃ¹ alto. Divertiti a ottimizzare acquisti e rischio di lancio!</T>
             <T id="HELP_SPECIAL_RULES" l="0">REGOLE SPECIALI</T>
             <T id="HELP_SPECIAL_RULES_BODY" l="0">Squadre:
 Le partite Rosso vs Blu possono essere abilitate in una lobby.
-Il punteggio di ogni squadra è la somma dei punteggi di tutti i suoi giocatori.
-La squadra con il punteggio totale più alto vince.
+Il punteggio di ogni squadra Ã¨ la somma dei punteggi di tutti i suoi giocatori.
+La squadra con il punteggio totale piÃ¹ alto vince.
 
 Moltiplicatore costo:
 Regola il prezzo degli upgrade globalmente durante una partita.
-Valori più bassi creano partite più veloci e caotiche.
-Valori più alti rallentano la progressione e premiano la strategia a lungo termine.</T>
+Valori piÃ¹ bassi creano partite piÃ¹ veloci e caotiche.
+Valori piÃ¹ alti rallentano la progressione e premiano la strategia a lungo termine.</T>
             <T id="HELP_SPECIAL_RULES_TITLE" l="0">Regole speciali</T>
             <T id="HELP_SUBTITLE_SCALE_DICE" l="0">COME GIOCARE A SCALE DICE</T>
             <T id="HELP_TITLE" l="0">AIUTO</T>
@@ -177,7 +177,7 @@ Valori più alti rallentano la progressione e premiano la strategia a lungo term
             <T id="LANG_SPANISH" l="0">Spagnolo</T>
             <T id="LANG_WELSH" l="0">Gallese</T>
             <T id="LOCAL_SETUP_TITLE" l="0">PARTITA LOCALE - CONFIGURAZIONE</T>
-            <T id="ONLINE_TITLE" l="0">MODALITÀ ONLINE</T>
+            <T id="ONLINE_TITLE" l="0">MODALITÃ€ ONLINE</T>
             <T id="POSTGAME_NO_COMBOS" l="0">Nessuna combo ottenuta</T>
             <T id="POSTGAME_RETURN" l="0">TORNA AL MENU</T>
             <T id="POSTGAME_SCORE_LINE" l="0">Punteggio: {0}</T>
@@ -217,7 +217,71 @@ Valori più alti rallentano la progressione e premiano la strategia a lungo term
             <T id="UI_ONLINE_PLAY" l="0">GIOCO ONLINE</T>
             <T id="UI_PLAY" l="0">GIOCA</T>
             <T id="UI_SETTINGS" l="0">IMPOSTAZIONI</T>
-            <T id="UI_YES" l="0">Sì</T>
+            <T id="UI_YES" l="0">SÃ¬</T>
+            <T id="UI_CONFIRM" l="0">CONFERMA</T>
+            <T id="CONFIG_CUSTOMIZE" l="0">PERSONALIZZA</T>
+            <T id="CONFIG_CUSTOMIZE_TITLE" l="0">PERSONALIZZA GRANDI POTENZIAMENTI</T>
+            <T id="CONFIG_ADD_UPGRADE" l="0">+ AGGIUNGI POTENZIAMENTO PERSONALIZZATO</T>
+            <T id="CONFIG_SORT_ASC" l="0">ORDINA PER COSTO CRESCENTE</T>
+            <T id="CONFIG_RESTORE_DEFAULTS" l="0">RIPRISTINA PREDEFINITI</T>
+            <T id="CONFIG_SORT_CONFIRM" l="0">Ordinare tutti i grandi potenziamenti per costo crescente?</T>
+            <T id="CONFIG_RESTORE_CONFIRM" l="0">Ripristinare tutti i grandi potenziamenti ai valori predefiniti? Questo rimuoverà tutti i potenziamenti personalizzati.</T>
+            <T id="CONFIG_MAX_BIG_UPGRADES" l="0">Raggiunto il massimo di 60 grandi potenziamenti.</T>
+            <T id="CONFIG_UPGRADE_NAME_REQUIRED" l="0">Inserisci un nome per il potenziamento.</T>
+            <T id="CONFIG_EFFECT_VALUE_MIN" l="0">I valori dell'effetto devono essere 0 o superiori.</T>
+            <T id="CONFIG_EFFECT_VALUE_INVALID" l="0">Il valore dell'effetto non è valido.</T>
+            <T id="CONFIG_UPGRADE_NAME" l="0">Nome:</T>
+            <T id="CONFIG_UPGRADE_COST" l="0">Costo base:</T>
+            <T id="CONFIG_UPGRADE_EFFECT" l="0">Effetto:</T>
+            <T id="CONFIG_UPGRADE_VALUE" l="0">Valore:</T>
+            <T id="CONFIG_UPGRADE_CAP_DELTA" l="0">Delta limite:</T>
+            <T id="CONFIG_UPGRADE_CHANCE" l="0">Probabilità:</T>
+            <T id="CONFIG_UPGRADE_MIN_SEC" l="0">Sec min:</T>
+            <T id="CONFIG_UPGRADE_MAX_SEC" l="0">Sec max:</T>
+            <T id="CONFIG_UPGRADE_PER_STREAK" l="0">Per serie %:</T>
+            <T id="CONFIG_UPGRADE_MULTIPLICATIVE" l="0">Moltiplicativo:</T>
+            <T id="CONFIG_UPGRADE_SAVE" l="0">SALVA</T>
+            <T id="CONFIG_UPGRADE_CANCEL" l="0">ANNULLA</T>
+            <T id="BIG_DESC_PREDICT" l="0">{0} di probabilità di prevedere il prossimo lancio.</T>
+            <T id="BIG_DESC_ECO_MULT" l="0">Reddito economia x{0}.</T>
+            <T id="BIG_DESC_COMBO_MULT" l="0">Moltiplicatori combo x{0}.</T>
+            <T id="BIG_DESC_ROLL_MULT" l="0">Punteggi ottenuti dai dadi x{0}.</T>
+            <T id="BIG_DESC_ECO_ROUND" l="0">Economia +{0} per round completato.</T>
+            <T id="BIG_DESC_ECO_CAP" l="0">Limite economia {0}.</T>
+            <T id="BIG_DESC_COMBO_COST" l="0">Costo potenziamenti combo x{0}.</T>
+            <T id="BIG_DESC_COMBO_STREAK" l="0">+{0} combo per combo dello stesso tipo consecutivo{1}.</T>
+            <T id="BIG_DESC_COMBO_STREAK_MULT" l="0"> (moltiplicativo)</T>
+            <T id="BIG_DESC_SPIN" l="0">{0} per dado per girare {1}-{2}s e guadagnare punti ogni secondo.</T>
+            <T id="BIG_DESC_INTEREST" l="0">Ottieni {0} del punteggio attuale a ogni turno.</T>
+            <T id="BIG_DESC_GENERIC" l="0">Effetto di grande potenziamento.</T>
+            <T id="BIG_DESC_CLAIRVOYANCE" l="0">25% di probabilità di prevedere il prossimo lancio.</T>
+            <T id="BIG_DESC_STOCK_EXCHANGE" l="0">Economia +50% reddito.</T>
+            <T id="BIG_DESC_COMBOX" l="0">Moltiplicatori combo +50%.</T>
+            <T id="BIG_DESC_MASTER_PREDICT" l="0">Clairvoyance al 50% (richiede Clairvoyance).</T>
+            <T id="BIG_DESC_FIXATED" l="0">Punteggi ottenuti dai dadi x2.</T>
+            <T id="BIG_DESC_HIGH_STONKS" l="0">Economia +5% per round completato.</T>
+            <T id="BIG_DESC_COMBO_MASHER" l="0">+20% combo per combo dello stesso tipo consecutivo.</T>
+            <T id="BIG_DESC_ROLLICANE" l="0">25% per dado per girare 2-10s e guadagnare punti ogni secondo.</T>
+            <T id="BIG_DESC_ULTRA_STONKS" l="0">Il reddito dell'economia è enormemente aumentato.</T>
+            <T id="BIG_DESC_SCORE_INVESTOR" l="0">Ottieni reddito bonus ogni turno dal punteggio attuale.</T>
+            <T id="BIG_DESC_COMBO_OVERCLOCK" l="0">I moltiplicatori combo sono overclockati.</T>
+            <T id="CONFIG_EDIT_UPGRADE_TITLE" l="0">MODIFICA POTENZIAMENTO - {0}</T>
+            <T id="CONFIG_CREATE_UPGRADE_TITLE" l="0">CREA POTENZIAMENTO</T>
+            <T id="CONFIG_DEFAULT_EFFECT" l="0">Predefinito: {0}</T>
+            <T id="CONFIG_EFFECT_ROLL_MULT" l="0">Moltiplicatore di lancio</T>
+            <T id="CONFIG_EFFECT_COMBO_MULT" l="0">Moltiplicatore combo</T>
+            <T id="CONFIG_EFFECT_ECO_MULT" l="0">Moltiplicatore economia</T>
+            <T id="CONFIG_EFFECT_ECO_CAP" l="0">Limite economia</T>
+            <T id="CONFIG_EFFECT_ECO_ROUND" l="0">Moltiplicatore economia per round</T>
+            <T id="CONFIG_EFFECT_PREDICT" l="0">Probabilità di previsione</T>
+            <T id="CONFIG_EFFECT_COMBO_COST" l="0">Moltiplicatore costo combo</T>
+            <T id="CONFIG_EFFECT_INTEREST" l="0">Tasso di interesse</T>
+            <T id="CONFIG_EFFECT_COMBO_STREAK" l="0">Serie combo</T>
+            <T id="CONFIG_EFFECT_SPIN" l="0">Effetto di rotazione</T>
         </IDS>
    </Language>
 </LocData>
+
+
+
+
