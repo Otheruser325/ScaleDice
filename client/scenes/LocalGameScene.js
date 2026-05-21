@@ -276,6 +276,18 @@ export default class LocalGameScene extends Phaser.Scene {
       this.toggleBigUpgrades();
     });
 
+    this.input.keyboard.on('keydown-LEFT', () => {
+      if (this.isRolling || this.waitingForResult || !this.bigUpgradesEnabled) return;
+      if (!this.bigUpgradesOpen) return;
+      this.goToPreviousBigUpgradePage();
+    });
+
+    this.input.keyboard.on('keydown-RIGHT', () => {
+      if (this.isRolling || this.waitingForResult || !this.bigUpgradesEnabled) return;
+      if (!this.bigUpgradesOpen) return;
+      this.goToNextBigUpgradePage();
+    });
+
     this.input.keyboard.on('keydown-ESC', (e) => {
       GlobalAudio.playButton(this);
       if (!this.exitLocked) {
@@ -622,24 +634,39 @@ export default class LocalGameScene extends Phaser.Scene {
     if (this.bigPagePrevBtn) try { this.bigPagePrevBtn.destroy(); } catch (e) {}
     if (this.bigPageNextBtn) try { this.bigPageNextBtn.destroy(); } catch (e) {}
     if (this.bigPageText) try { this.bigPageText.destroy(); } catch (e) {}
+    const canGoPrevPage = this.bigUpgradePage > 0;
+    const canGoNextPage = this.bigUpgradePage < totalPages - 1;
     if (totalPages > 1) {
-      this.bigPagePrevBtn = this.add.text(startX + 18, startY - 24, '◀', { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ffffff' })
-        .setDepth(1003).setInteractive({ useHandCursor: true }).on('pointerdown', () => {
-          this.bigUpgradePage = Math.max(0, this.bigUpgradePage - 1);
-          const wasOpen = this.bigUpgradesOpen;
-          this.createBigUpgradesPanelToolbar();
-          if (wasOpen && !this.bigUpgradesOpen) this.toggleBigUpgrades();
-        });
-      this.bigPageNextBtn = this.add.text(startX + 42, startY - 24, '▶', { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ffffff' })
-        .setDepth(1003).setInteractive({ useHandCursor: true }).on('pointerdown', () => {
-          this.bigUpgradePage = Math.min(totalPages - 1, this.bigUpgradePage + 1);
-          const wasOpen = this.bigUpgradesOpen;
-          this.createBigUpgradesPanelToolbar();
-          if (wasOpen && !this.bigUpgradesOpen) this.toggleBigUpgrades();
-        });
       this.bigPageText = this.add.text(startX + 66, startY - 24, `Page ${this.bigUpgradePage + 1}/${totalPages}`, { fontSize: 12, fontFamily: 'Orbitron, Arial', color: '#cccccc' }).setDepth(1003);
     }
+    if (canGoPrevPage) {
+      this.bigPagePrevBtn = this.add.text(startX - 22, this.scale.height * 0.5, '◀', { fontSize: 28, fontFamily: 'Orbitron, Arial', color: '#ffffff' })
+        .setDepth(1003).setOrigin(0.5).setInteractive({ useHandCursor: true }).on('pointerdown', () => this.goToPreviousBigUpgradePage());
+    }
+    if (canGoNextPage) {
+      this.bigPageNextBtn = this.add.text(this.scale.width - 24, this.scale.height * 0.5, '▶', { fontSize: 28, fontFamily: 'Orbitron, Arial', color: '#ffffff' })
+        .setDepth(1003).setOrigin(0.5).setInteractive({ useHandCursor: true }).on('pointerdown', () => this.goToNextBigUpgradePage());
+    }
     this.bigUpgradesOpen = false;
+  }
+
+
+  goToPreviousBigUpgradePage() {
+    const totalPages = Math.max(1, Math.ceil((this._bigUpgradeDefs?.length || 0) / 60));
+    if (this.bigUpgradePage <= 0 || totalPages <= 1) return;
+    this.bigUpgradePage = Math.max(0, this.bigUpgradePage - 1);
+    const wasOpen = this.bigUpgradesOpen;
+    this.createBigUpgradesPanelToolbar();
+    if (wasOpen && !this.bigUpgradesOpen) this.toggleBigUpgrades();
+  }
+
+  goToNextBigUpgradePage() {
+    const totalPages = Math.max(1, Math.ceil((this._bigUpgradeDefs?.length || 0) / 60));
+    if (this.bigUpgradePage >= totalPages - 1 || totalPages <= 1) return;
+    this.bigUpgradePage = Math.min(totalPages - 1, this.bigUpgradePage + 1);
+    const wasOpen = this.bigUpgradesOpen;
+    this.createBigUpgradesPanelToolbar();
+    if (wasOpen && !this.bigUpgradesOpen) this.toggleBigUpgrades();
   }
 
   toggleBigUpgrades() {
@@ -845,10 +872,12 @@ export default class LocalGameScene extends Phaser.Scene {
       }
     }
 
+    const turnsLeftIncludingCurrent = Math.max(0, this.maxRounds - this.currentRound + 1);
+    const inFinalFiveTurns = turnsLeftIncludingCurrent <= 5;
     const playerIdx = this.players.indexOf(player);
     const topScore = Math.max(...this.players.map(p => p.score || 0));
     const ratioBase = Math.max(1, player.score || 0);
-    if (playerIdx >= 0 && !this._energyBoostGiven[playerIdx] && topScore >= ratioBase * 5) {
+    if (inFinalFiveTurns && playerIdx >= 0 && !this._energyBoostGiven[playerIdx] && topScore >= ratioBase * 5) {
       const boost = Math.floor(topScore * 0.2);
       if (boost > 0) {
         player.score += boost;
