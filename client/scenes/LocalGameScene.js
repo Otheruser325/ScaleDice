@@ -647,6 +647,8 @@ export default class LocalGameScene extends Phaser.Scene {
       this.bigPageNextBtn = this.add.text(this.scale.width - 24, this.scale.height * 0.5, '▶', { fontSize: 28, fontFamily: 'Orbitron, Arial', color: '#ffffff' })
         .setDepth(1003).setOrigin(0.5).setInteractive({ useHandCursor: true }).on('pointerdown', () => this.goToNextBigUpgradePage());
     }
+    if (this.bigPagePrevBtn) this.bigPagePrevBtn.setVisible(false);
+    if (this.bigPageNextBtn) this.bigPageNextBtn.setVisible(false);
     this.bigUpgradesOpen = false;
   }
 
@@ -697,6 +699,8 @@ export default class LocalGameScene extends Phaser.Scene {
         }
       });
       this.bigToggleBtn.setText(this.bigUpgradesOpen ? '<' : '>');
+      if (this.bigPagePrevBtn) this.bigPagePrevBtn.setVisible(this.bigUpgradesOpen);
+      if (this.bigPageNextBtn) this.bigPageNextBtn.setVisible(this.bigUpgradesOpen);
     } catch (e) {}
     if (this.bigUpgradesOpen) this.refreshBigUpgradesPanel();
   }
@@ -707,6 +711,8 @@ export default class LocalGameScene extends Phaser.Scene {
         this.bigUpgradesToolbarContainer.x = this.bigUpgradesToolbarClosedX;
       }
       this.bigUpgradesToolbarContainer.setVisible(false);
+      if (this.bigPagePrevBtn) this.bigPagePrevBtn.setVisible(false);
+      if (this.bigPageNextBtn) this.bigPageNextBtn.setVisible(false);
       this.bigToggleBtn.setText('>');
     } catch (e) {}
     this.bigUpgradesOpen = false;

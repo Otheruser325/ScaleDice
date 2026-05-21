@@ -51,6 +51,8 @@ export default class LocalConfigScene extends Phaser.Scene {
         this.bigUpgradeSortDesc = false;
         this.customizeConfirmModal = null;
         this.customizeModalOverlay = null;
+        this.customizeEditorOpen = false;
+        this.customizeEditorHandlers = null;
         this.customizeKeyHandlers = null;
         this.bigUpgradeCustomizePage = 0;
     }
@@ -298,16 +300,7 @@ export default class LocalConfigScene extends Phaser.Scene {
             });
 
         this.input.keyboard.on('keydown-ESC', () => {
-            if (this.customizeConfirmModal) {
-                GlobalAudio.playButton(this);
-                this.closeCustomizeConfirm();
-                return;
-            }
-            if (this.customizeModalOpen) {
-                GlobalAudio.playButton(this);
-                this.closeBigUpgradesCustomizeModal();
-                return;
-            }
+            if (this._handleCustomizeEscape()) return;
             GlobalAudio.playButton(this);
             this.scene.start('PlayModeScene');
         });
@@ -317,6 +310,26 @@ export default class LocalConfigScene extends Phaser.Scene {
         this.events.once('shutdown', () => {
             try { this.scale.off('resize', this._syncDomContainerToCanvas, this); } catch (e) {}
         });
+    }
+
+
+    _handleCustomizeEscape() {
+        if (this.customizeConfirmModal) {
+            GlobalAudio.playButton(this);
+            this.closeCustomizeConfirm();
+            return true;
+        }
+        if (this.customizeEditorOpen && this.customizeEditorHandlers?.onCancel) {
+            GlobalAudio.playButton(this);
+            this.customizeEditorHandlers.onCancel();
+            return true;
+        }
+        if (this.customizeModalOpen) {
+            GlobalAudio.playButton(this);
+            this.closeBigUpgradesCustomizeModal();
+            return true;
+        }
+        return false;
     }
 
     normalizeState() {
@@ -386,7 +399,7 @@ export default class LocalConfigScene extends Phaser.Scene {
         this.customizeModalContainer = this.add.container(cx, cy).setDepth(5001);
 
         // Title
-        this.customizeModalContainer.add(this.add.text(0, -350, t('CONFIG_CUSTOMIZE_TITLE', 'CUSTOMIZE BIG UPGRADES'), {
+        this.customizeModalContainer.add(this.add.text(0, -390, t('CONFIG_CUSTOMIZE_TITLE', 'CUSTOMIZE BIG UPGRADES'), {
             fontSize: 32,
             fontFamily: 'Orbitron, Arial',
             color: '#ffff66'
@@ -426,7 +439,7 @@ export default class LocalConfigScene extends Phaser.Scene {
         }).setOrigin(0.5).setInteractive({ useHandCursor: true })
             .on('pointerdown', () => this.closeBigUpgradesCustomizeModal());
         this.customizeModalContainer.add(closeBtn);
-        const counterText = this.add.text(0, -320, `Big Upgrades: ${activeUpgradesRaw.length}/${maxBigUpgrades}  •  Page ${this.bigUpgradeCustomizePage + 1}/${totalPages}`, {
+        const counterText = this.add.text(0, -360, `Big Upgrades: ${activeUpgradesRaw.length}/${maxBigUpgrades}  •  Page ${this.bigUpgradeCustomizePage + 1}/${totalPages}`, {
             fontSize: 14,
             fontFamily: 'Orbitron, Arial',
             color: '#cccccc'
@@ -622,6 +635,8 @@ export default class LocalConfigScene extends Phaser.Scene {
             try { this.customizeModalOverlay.destroy(); } catch (e) {}
             this.customizeModalOverlay = null;
         }
+        this.customizeEditorOpen = false;
+        this.customizeEditorHandlers = null;
         this._setCustomizeDomPointerEvents(false);
         this._removeCustomizeHotkeys();
     }
@@ -633,21 +648,23 @@ export default class LocalConfigScene extends Phaser.Scene {
         this.openBigUpgradesCustomizeModal();
     }
 
-    _installCustomizeHotkeys(onEsc, onLeft, onRight) {
+    _installCustomizeHotkeys(onEsc, onLeft, onRight, onEnter) {
         this._removeCustomizeHotkeys();
         this.customizeKeyHandlers = {
             esc: (event) => {
                 if (event.key === 'Escape') {
                     event.preventDefault();
-                    if (this.customizeConfirmModal) {
-                        this.closeCustomizeConfirm();
-                        return;
-                    }
+                    if (this._handleCustomizeEscape()) return;
                     onEsc?.();
                 }
             },
             page: (event) => {
                 if (this.customizeConfirmModal) return;
+                if (event.key === 'Enter' && onEnter) {
+                    event.preventDefault();
+                    onEnter();
+                    return;
+                }
                 if (event.key === 'ArrowLeft' && onLeft) {
                     event.preventDefault();
                     onLeft();
@@ -848,6 +865,7 @@ export default class LocalConfigScene extends Phaser.Scene {
 
         this.customizeModalContainer = this.add.container(cx, cy).setDepth(5001);
         this.customizeModalOpen = true;
+        this.customizeEditorOpen = true;
 
         const effectLabelByKey = {
             rollMultiplier: t('CONFIG_EFFECT_ROLL_MULT', 'Roll Multiplier'),
@@ -1127,7 +1145,8 @@ export default class LocalConfigScene extends Phaser.Scene {
             }
         };
         formDom.node.addEventListener('keydown', onKeydown);
-        this._installCustomizeHotkeys(onCancel);
+        this.customizeEditorHandlers = { onSave, onCancel };
+        this._installCustomizeHotkeys(onCancel, null, null, onSave);
     }
 
     refreshScene() {
