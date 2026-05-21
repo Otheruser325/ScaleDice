@@ -638,6 +638,7 @@ export default class LocalGameScene extends Phaser.Scene {
     const canGoNextPage = this.bigUpgradePage < totalPages - 1;
     if (totalPages > 1) {
       this.bigPageText = this.add.text(startX + 66, startY - 24, `Page ${this.bigUpgradePage + 1}/${totalPages}`, { fontSize: 12, fontFamily: 'Orbitron, Arial', color: '#cccccc' }).setDepth(1003);
+      this.bigPageText.setVisible(false);
     }
     if (canGoPrevPage) {
       this.bigPagePrevBtn = this.add.text(startX - 22, this.scale.height * 0.5, '◀', { fontSize: 28, fontFamily: 'Orbitron, Arial', color: '#ffffff' })
@@ -701,6 +702,7 @@ export default class LocalGameScene extends Phaser.Scene {
       this.bigToggleBtn.setText(this.bigUpgradesOpen ? '<' : '>');
       if (this.bigPagePrevBtn) this.bigPagePrevBtn.setVisible(this.bigUpgradesOpen);
       if (this.bigPageNextBtn) this.bigPageNextBtn.setVisible(this.bigUpgradesOpen);
+      if (this.bigPageText) this.bigPageText.setVisible(this.bigUpgradesOpen);
     } catch (e) {}
     if (this.bigUpgradesOpen) this.refreshBigUpgradesPanel();
   }
@@ -713,6 +715,7 @@ export default class LocalGameScene extends Phaser.Scene {
       this.bigUpgradesToolbarContainer.setVisible(false);
       if (this.bigPagePrevBtn) this.bigPagePrevBtn.setVisible(false);
       if (this.bigPageNextBtn) this.bigPageNextBtn.setVisible(false);
+      if (this.bigPageText) this.bigPageText.setVisible(false);
       this.bigToggleBtn.setText('>');
     } catch (e) {}
     this.bigUpgradesOpen = false;

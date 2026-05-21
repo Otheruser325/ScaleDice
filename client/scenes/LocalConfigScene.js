@@ -51,6 +51,7 @@ export default class LocalConfigScene extends Phaser.Scene {
         this.bigUpgradeSortDesc = false;
         this.customizeConfirmModal = null;
         this.customizeModalOverlay = null;
+        this.customizeOverlays = [];
         this.customizeEditorOpen = false;
         this.customizeEditorHandlers = null;
         this.customizeKeyHandlers = null;
@@ -313,6 +314,20 @@ export default class LocalConfigScene extends Phaser.Scene {
     }
 
 
+
+    _trackCustomizeOverlay(overlay) {
+        if (!overlay) return;
+        if (!Array.isArray(this.customizeOverlays)) this.customizeOverlays = [];
+        this.customizeOverlays.push(overlay);
+    }
+
+    _destroyTrackedCustomizeOverlays() {
+        const overlays = Array.isArray(this.customizeOverlays) ? this.customizeOverlays : [];
+        overlays.forEach((ov) => { try { ov?.destroy?.(); } catch (e) {} });
+        this.customizeOverlays = [];
+        this.customizeModalOverlay = null;
+    }
+
     _handleCustomizeEscape() {
         if (this.customizeConfirmModal) {
             GlobalAudio.playButton(this);
@@ -393,6 +408,7 @@ export default class LocalConfigScene extends Phaser.Scene {
         const overlay = this.add.rectangle(cx, cy, viewW, viewH, 0x000000, 0.85).setOrigin(0.5).setDepth(5000);
         overlay.setInteractive();
         this.customizeModalOverlay = overlay;
+        this._trackCustomizeOverlay(overlay);
         this._setCustomizeDomPointerEvents(false);
 
         // Modal container
@@ -631,10 +647,7 @@ export default class LocalConfigScene extends Phaser.Scene {
             });
             this.customizeModalDom = null;
         }
-        if (this.customizeModalOverlay) {
-            try { this.customizeModalOverlay.destroy(); } catch (e) {}
-            this.customizeModalOverlay = null;
-        }
+        this._destroyTrackedCustomizeOverlays();
         this.customizeEditorOpen = false;
         this.customizeEditorHandlers = null;
         this._setCustomizeDomPointerEvents(false);
@@ -743,6 +756,7 @@ export default class LocalConfigScene extends Phaser.Scene {
         const height = 220;
 
         const overlay = this.add.rectangle(cx, cy, viewW, viewH, 0x000000, 0.6).setDepth(6000).setInteractive();
+        this._trackCustomizeOverlay(overlay);
         const panel = this.add.rectangle(cx, cy, width, height, 0x1e1e1e).setStrokeStyle(2, 0xffff66).setDepth(6001);
         const title = this.add.text(cx, cy - height / 2 + 26, t('UI_CONFIRM', 'CONFIRM'), {
             fontSize: 24,
@@ -837,10 +851,7 @@ export default class LocalConfigScene extends Phaser.Scene {
             });
             this.customizeModalDom = null;
         }
-        if (this.customizeModalOverlay) {
-            try { this.customizeModalOverlay.destroy(); } catch (e) {}
-            this.customizeModalOverlay = null;
-        }
+        this._destroyTrackedCustomizeOverlays();
 
         const t = (key, fallback) => GlobalLocalization.t(key, fallback);
         const fmt = (key, ...args) => GlobalLocalization.format(key, ...args);
@@ -865,6 +876,7 @@ export default class LocalConfigScene extends Phaser.Scene {
         const overlay = this.add.rectangle(cx, cy, viewW, viewH, 0x000000, 0.85).setOrigin(0.5).setDepth(5000);
         overlay.setInteractive();
         this.customizeModalOverlay = overlay;
+        this._trackCustomizeOverlay(overlay);
         this._setCustomizeDomPointerEvents(true);
 
         this.customizeModalContainer = this.add.container(cx, cy).setDepth(5001);
