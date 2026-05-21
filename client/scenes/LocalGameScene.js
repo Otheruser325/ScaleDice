@@ -24,6 +24,7 @@ export default class LocalGameScene extends Phaser.Scene {
     this.teams = data.teams ?? Array.from({ length: this.playerCount }, (_, i) => 'blue');
     this.bigUpgradesEnabled = data.bigUpgradesEnabled ?? true;
     this.bigUpgradeSortAsc = !!data.bigUpgradeSortAsc;
+    this.bigUpgradeSortDesc = !!data.bigUpgradeSortDesc;
     this.challengeKey = data.challengeKey || null;
     this.challengeDate = data.challengeDate || null;
     this.challengeReward = data.challengeReward || 0;
@@ -68,6 +69,8 @@ export default class LocalGameScene extends Phaser.Scene {
 
     this._lastTurnGivenRoundFor = Array(this.playerCount).fill(0);
     this.behindTracker = Array(this.playerCount).fill(true);
+    this._energyBoostGiven = Array(this.playerCount).fill(false);
+    this._megaEnergyBoostGiven = false;
     this.comboStats = Array(this.playerCount).fill(null).map(() => ({
       pair: 0,
       twoPair: 0,
@@ -157,13 +160,13 @@ export default class LocalGameScene extends Phaser.Scene {
         .filter(Boolean);
     } catch (e) {}
 
-    if (this.bigUpgradeSortAsc) {
+    if (this.bigUpgradeSortAsc || this.bigUpgradeSortDesc) {
       this._bigUpgradeDefs = this._bigUpgradeDefs
         .slice()
         .sort((a, b) => {
           const ca = Number.isFinite(a?.baseCost) ? a.baseCost : Infinity;
           const cb = Number.isFinite(b?.baseCost) ? b.baseCost : Infinity;
-          if (ca !== cb) return ca - cb;
+          if (ca !== cb) return this.bigUpgradeSortDesc ? cb - ca : ca - cb;
           const ta = (a?.title || a?.key || '').toString();
           const tb = (b?.title || b?.key || '').toString();
           return ta.localeCompare(tb);
@@ -409,8 +412,6 @@ export default class LocalGameScene extends Phaser.Scene {
   }
 
   toggleComboToolbar() {
-    if (this.bigUpgradesOpen) this.closeBigUpgradesInstant();
-
     const leftPad = Math.max(16, Math.floor(this.scale.width * 0.02));
     const panelWidth = 260;
     const hiddenX = leftPad - panelWidth - 20;
@@ -553,11 +554,11 @@ export default class LocalGameScene extends Phaser.Scene {
       desc: describeUpgrade(def),
       baseCost: def.baseCost
     }));
-    const items = this.bigUpgradeSortAsc
+    const items = (this.bigUpgradeSortAsc || this.bigUpgradeSortDesc)
       ? itemsRaw.slice().sort((a, b) => {
           const ca = Number.isFinite(a?.baseCost) ? a.baseCost : Infinity;
           const cb = Number.isFinite(b?.baseCost) ? b.baseCost : Infinity;
-          if (ca !== cb) return ca - cb;
+          if (ca !== cb) return this.bigUpgradeSortDesc ? cb - ca : ca - cb;
           const ta = (a?.title || a?.key || '').toString();
           const tb = (b?.title || b?.key || '').toString();
           return ta.localeCompare(tb);
@@ -570,7 +571,10 @@ export default class LocalGameScene extends Phaser.Scene {
     const maxColumns = 5;
     const columnGap = 14;
     const rowHeight = 64;
-    const itemsToShow = items.slice(0, upgradesPerColumn * maxColumns);
+    const pageSize = upgradesPerColumn * maxColumns;
+    const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+    this.bigUpgradePage = Math.max(0, Math.min(this.bigUpgradePage || 0, totalPages - 1));
+    const itemsToShow = items.slice(this.bigUpgradePage * pageSize, this.bigUpgradePage * pageSize + pageSize);
     const columns = Math.max(1, Math.min(maxColumns, Math.ceil(itemsToShow.length / upgradesPerColumn)));
     const minPanelWidth = 180;
     const maxPanelWidth = 320;
@@ -615,18 +619,37 @@ export default class LocalGameScene extends Phaser.Scene {
       .setOrigin(0.5).setDepth(1003).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.toggleBigUpgrades());
 
+    if (this.bigPagePrevBtn) try { this.bigPagePrevBtn.destroy(); } catch (e) {}
+    if (this.bigPageNextBtn) try { this.bigPageNextBtn.destroy(); } catch (e) {}
+    if (this.bigPageText) try { this.bigPageText.destroy(); } catch (e) {}
+    if (totalPages > 1) {
+      this.bigPagePrevBtn = this.add.text(startX + 18, startY - 24, '◀', { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ffffff' })
+        .setDepth(1003).setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+          this.bigUpgradePage = Math.max(0, this.bigUpgradePage - 1);
+          const wasOpen = this.bigUpgradesOpen;
+          this.createBigUpgradesPanelToolbar();
+          if (wasOpen && !this.bigUpgradesOpen) this.toggleBigUpgrades();
+        });
+      this.bigPageNextBtn = this.add.text(startX + 42, startY - 24, '▶', { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ffffff' })
+        .setDepth(1003).setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+          this.bigUpgradePage = Math.min(totalPages - 1, this.bigUpgradePage + 1);
+          const wasOpen = this.bigUpgradesOpen;
+          this.createBigUpgradesPanelToolbar();
+          if (wasOpen && !this.bigUpgradesOpen) this.toggleBigUpgrades();
+        });
+      this.bigPageText = this.add.text(startX + 66, startY - 24, `Page ${this.bigUpgradePage + 1}/${totalPages}`, { fontSize: 12, fontFamily: 'Orbitron, Arial', color: '#cccccc' }).setDepth(1003);
+    }
     this.bigUpgradesOpen = false;
   }
 
   toggleBigUpgrades() {
     if (!this.bigUpgradesEnabled) return;
-    if (this.comboPanelOpen) this.closeComboToolbarInstant();
     if (!this.bigUpgradesToolbarContainer) return;
 
     this.bigUpgradesOpen = !this.bigUpgradesOpen;
 
     try {
-      this.bigUpgradesToolbarContainer.setVisible(this.bigUpgradesOpen);
+      if (this.bigUpgradesOpen) this.bigUpgradesToolbarContainer.setVisible(true);
       this.tweens.killTweensOf(this.bigUpgradesToolbarContainer);
       const openX = Number.isFinite(this.bigUpgradesToolbarOpenX)
         ? this.bigUpgradesToolbarOpenX
@@ -639,7 +662,12 @@ export default class LocalGameScene extends Phaser.Scene {
         targets: this.bigUpgradesToolbarContainer,
         x: targetX,
         duration: 260,
-        ease: 'Cubic.easeOut'
+        ease: 'Cubic.easeOut',
+        onComplete: () => {
+          if (!this.bigUpgradesOpen && this.bigUpgradesToolbarContainer) {
+            this.bigUpgradesToolbarContainer.setVisible(false);
+          }
+        }
       });
       this.bigToggleBtn.setText(this.bigUpgradesOpen ? '<' : '>');
     } catch (e) {}
@@ -817,24 +845,57 @@ export default class LocalGameScene extends Phaser.Scene {
       }
     }
 
-    if (this.currentRound >= this.maxRounds - 4 && this._isPlayerBehind(player)) {
-      const highestOpponent = Math.max(...this.players.filter(p => p !== player).map(p => p.score || 0));
-      const boost = Math.floor((this.maxRounds - this.currentRound + 1) * 50 + Math.floor(highestOpponent * 0.2));
-      player.score += boost;
-      const boostText = this.add.text(760, 56, `Energy +${formatCompact(boost)}`, { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ffdd66' }).setOrigin(0.5);
-      this.tweens.add({
-        targets: boostText,
-        y: 36,
-        alpha: 0,
-        duration: 1100,
-        onComplete: () => boostText.destroy()
-      });
-      this._logActivity(`${player.name} received a big boost (${formatCompact(boost)}). Go catch 'em!`);
+    const playerIdx = this.players.indexOf(player);
+    const topScore = Math.max(...this.players.map(p => p.score || 0));
+    const ratioBase = Math.max(1, player.score || 0);
+    if (playerIdx >= 0 && !this._energyBoostGiven[playerIdx] && topScore >= ratioBase * 5) {
+      const boost = Math.floor(topScore * 0.2);
+      if (boost > 0) {
+        player.score += boost;
+        this._energyBoostGiven[playerIdx] = true;
+        const boostText = this.add.text(760, 56, `Energy +${formatCompact(boost)}`, { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ffdd66' }).setOrigin(0.5);
+        this.tweens.add({
+          targets: boostText,
+          y: 36,
+          alpha: 0,
+          duration: 1100,
+          onComplete: () => boostText.destroy()
+        });
+        this._logActivity(`${player.name} received an Energy Boost (${formatCompact(boost)}). Go catch em'!`);
+      }
+    }
+
+    if (!this._megaEnergyBoostGiven && this.currentRound >= this.maxRounds) {
+      const playersByScoreAsc = this.players.slice().sort((a, b) => (a.score || 0) - (b.score || 0));
+      const worst = playersByScoreAsc[0];
+      const top = playersByScoreAsc[playersByScoreAsc.length - 1];
+      if (worst && top && worst !== top) {
+        const others = this.players.filter(p => p !== worst);
+        const worstBase = Math.max(1, worst.score || 0);
+        const behindAllBy50x = others.every(p => (p.score || 0) >= worstBase * 50);
+        if (behindAllBy50x && player === worst) {
+          const megaBoost = Math.floor((top.score || 0) * 0.4);
+          if (megaBoost > 0) {
+            player.score += megaBoost;
+            this._megaEnergyBoostGiven = true;
+            const megaText = this.add.text(760, 82, `MEGA ENERGY +${formatCompact(megaBoost)}`, { fontSize: 17, fontFamily: 'Orbitron, Arial', color: '#ff66ff' }).setOrigin(0.5);
+            this.tweens.add({
+              targets: megaText,
+              y: 58,
+              alpha: 0,
+              duration: 1400,
+              onComplete: () => megaText.destroy()
+            });
+            this._logActivity(`${player.name} triggered Mega Energy Boost (${formatCompact(megaBoost)}). Go catch em'!`);
+          }
+        }
+      }
     }
 
     // Clairvoyance prediction at turn start
-    if (!this.prediction && player.upgrades.hasBigUpgrade && player.upgrades.hasBigUpgrade('clairvoyance')) {
-      const chance = player.upgrades.getClairvoyanceChance();
+    const predictionChance = player.upgrades.getClairvoyanceChance ? player.upgrades.getClairvoyanceChance() : 0;
+    if (!this.prediction && predictionChance > 0) {
+      const chance = predictionChance;
       if (Math.random() < chance) {
         const luckBonus = player.upgrades.getLuckBonus();
         const baseLuck = player.luck || 1;
@@ -933,8 +994,16 @@ export default class LocalGameScene extends Phaser.Scene {
     // ensure it's still their turn and nothing is mid-roll
     if (this.currentPlayerIndex !== playerIdx || this.isRolling || this.waitingForResult) return;
 
-    // DO NOT perform upgrades on last turn
-    if (this.currentRound >= this.maxRounds) {
+    const turnsLeft = this.maxRounds - this.currentRound;
+    const doNothingTurnsByDifficulty = {
+      Baby: 1,
+      Easy: 1,
+      Medium: 2,
+      Hard: 3,
+      Nightmare: 5
+    };
+    const doNothingThreshold = doNothingTurnsByDifficulty[player.difficulty] ?? 1;
+    if (turnsLeft <= doNothingThreshold) {
       this.handleRoll();
       return;
     }
@@ -1129,7 +1198,9 @@ export default class LocalGameScene extends Phaser.Scene {
     };
 
     const bigDefs = Array.isArray(this._bigUpgradeDefs) ? this._bigUpgradeDefs : [];
-    const bigPriorityDefs = bigDefs.filter(d => d && d.key);
+    const bigPriorityDefs = bigDefs
+      .filter(d => d && d.key)
+      .sort((a, b) => (Number(a?.baseCost) || Infinity) - (Number(b?.baseCost) || Infinity));
     const isHard = player.difficulty === 'Hard' || player.difficulty === 'Nightmare';
     const isMedium = player.difficulty === 'Medium';
     comboTargets = buildComboTargets();
@@ -1569,7 +1640,8 @@ export default class LocalGameScene extends Phaser.Scene {
       GlobalAudio.playButton(this);
       this._logActivity(`${player.name} bought Dice -> ${player.diceUnlocked} dice`);
       // Regenerate Clairvoyance prediction if active
-      if (this.prediction && player.upgrades.hasBigUpgrade && player.upgrades.hasBigUpgrade('clairvoyance')) {
+      const predictionChance = player.upgrades.getClairvoyanceChance ? player.upgrades.getClairvoyanceChance() : 0;
+      if (this.prediction && predictionChance > 0) {
         const luckBonus = player.upgrades.getLuckBonus();
         const baseLuck = player.luck || 1;
         const effectiveLuck = Phaser.Math.Clamp(baseLuck + luckBonus, 0.5, 6.0);
@@ -1906,7 +1978,8 @@ export default class LocalGameScene extends Phaser.Scene {
     this.refreshBigUpgradesPanel();
 
     // Clairvoyance prediction clearing
-    if (!p.upgrades.hasBigUpgrade || !p.upgrades.hasBigUpgrade('clairvoyance') || this.currentPlayerIndex !== this.getLocalPlayerIndex()) {
+    const predictionChance = p?.upgrades?.getClairvoyanceChance ? p.upgrades.getClairvoyanceChance() : 0;
+    if (predictionChance <= 0 || this.currentPlayerIndex !== this.getLocalPlayerIndex()) {
       this.prediction = null;
       if (!p.isAI) {
         this.predictionText.setText('');
@@ -2322,6 +2395,3 @@ export default class LocalGameScene extends Phaser.Scene {
     this.exitLocked = false;
   }
 }
-
-
-

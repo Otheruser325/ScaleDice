@@ -48,7 +48,10 @@ export default class LocalConfigScene extends Phaser.Scene {
         this.customizeModalOpen = false;
         this.customizeModalContainer = null;
         this.bigUpgradeSortAsc = false;
+        this.bigUpgradeSortDesc = false;
         this.customizeConfirmModal = null;
+        this.customizeKeyHandlers = null;
+        this.bigUpgradeCustomizePage = 0;
     }
 
     create() {
@@ -274,6 +277,7 @@ export default class LocalConfigScene extends Phaser.Scene {
                     bigUpgradesEnabled: this.bigUpgradesEnabled,
                     customBigUpgrades: this.bigUpgradeCustomizer.getActiveUpgrades(),
                     bigUpgradeSortAsc: this.bigUpgradeSortAsc,
+                    bigUpgradeSortDesc: this.bigUpgradeSortDesc,
                     costMult: this.costMultipliers[this.costMultIndex]
                 });
             });
@@ -387,14 +391,20 @@ export default class LocalConfigScene extends Phaser.Scene {
         }).setOrigin(0.5));
 
         // Upgrades list (simple list view first)
-        const maxBigUpgrades = 60;
+        const maxBigUpgrades = 100;
         const activeUpgradesRaw = this.bigUpgradeCustomizer.getActiveUpgrades();
         const activeUpgrades = this.bigUpgradeSortAsc
             ? activeUpgradesRaw.slice().sort((a, b) => (a?.baseCost ?? Infinity) - (b?.baseCost ?? Infinity))
-            : activeUpgradesRaw;
+            : this.bigUpgradeSortDesc
+                ? activeUpgradesRaw.slice().sort((a, b) => (b?.baseCost ?? -Infinity) - (a?.baseCost ?? -Infinity))
+                : activeUpgradesRaw;
         const upgradesPerColumn = 12;
         const maxColumns = 5;
-        const upgradesToShow = activeUpgrades.slice(0, upgradesPerColumn * maxColumns);
+        const pageSize = 60;
+        const totalPages = Math.max(1, Math.ceil(activeUpgrades.length / pageSize));
+        this.bigUpgradeCustomizePage = Math.max(0, Math.min(this.bigUpgradeCustomizePage || 0, totalPages - 1));
+        const pageStart = this.bigUpgradeCustomizePage * pageSize;
+        const upgradesToShow = activeUpgrades.slice(pageStart, pageStart + pageSize);
         const columns = Math.max(1, Math.min(maxColumns, Math.ceil(upgradesToShow.length / upgradesPerColumn)));
         const maxUsableWidth = Math.max(520, viewW - 160);
         const columnWidth = Math.max(220, Math.min(320, Math.floor(maxUsableWidth / columns)));
@@ -412,6 +422,12 @@ export default class LocalConfigScene extends Phaser.Scene {
         }).setOrigin(0.5).setInteractive({ useHandCursor: true })
             .on('pointerdown', () => this.closeBigUpgradesCustomizeModal());
         this.customizeModalContainer.add(closeBtn);
+        const counterText = this.add.text(0, -320, `Big Upgrades: ${activeUpgradesRaw.length}/${maxBigUpgrades}  •  Page ${this.bigUpgradeCustomizePage + 1}/${totalPages}`, {
+            fontSize: 14,
+            fontFamily: 'Orbitron, Arial',
+            color: '#cccccc'
+        }).setOrigin(0.5);
+        this.customizeModalContainer.add(counterText);
 
         upgradesToShow.forEach((upgrade, index) => {
             const col = Math.floor(index / upgradesPerColumn);
@@ -479,14 +495,19 @@ export default class LocalConfigScene extends Phaser.Scene {
         }).setOrigin(0.5).setInteractive({ useHandCursor: true })
             .on('pointerdown', () => {
                 if (activeUpgradesRaw.length >= maxBigUpgrades) {
-                    GlobalAlerts.show(this, t('CONFIG_MAX_BIG_UPGRADES', 'Maximum of 60 big upgrades reached.'), 'checking');
+                    GlobalAlerts.show(this, t('CONFIG_MAX_BIG_UPGRADES', 'Maximum of 100 big upgrades reached.'), 'checking');
                     return;
                 }
                 this.editBigUpgradeInModal(null);
             });
         this.customizeModalContainer.add(addBtn);
 
-        const sortBtn = this.add.text(-160, listBottomY + 80, t('CONFIG_SORT_ASC', 'SORT ASCENDING'), {
+        const sortLabel = this.bigUpgradeSortAsc
+            ? 'SORT: ASCENDING'
+            : this.bigUpgradeSortDesc
+                ? 'SORT: DESCENDING'
+                : 'SORT: DEFAULT';
+        const sortBtn = this.add.text(-200, listBottomY + 80, sortLabel, {
             fontSize: 16,
             fontFamily: 'Orbitron, Arial',
             color: '#ffff66',
@@ -494,18 +515,44 @@ export default class LocalConfigScene extends Phaser.Scene {
             padding: { x: 10, y: 5 }
         }).setOrigin(0.5).setInteractive({ useHandCursor: true })
             .on('pointerdown', () => {
-                this.showCustomizeConfirm(
-                    t('CONFIG_SORT_CONFIRM', 'Sort all big upgrades by ascending cost?'),
-                    () => {
-                        this.bigUpgradeSortAsc = true;
-                        this.closeBigUpgradesCustomizeModal();
-                        this.openBigUpgradesCustomizeModal();
-                    }
-                );
+                if (!this.bigUpgradeSortAsc && !this.bigUpgradeSortDesc) {
+                    this.bigUpgradeSortAsc = true;
+                } else if (this.bigUpgradeSortAsc) {
+                    this.bigUpgradeSortAsc = false;
+                    this.bigUpgradeSortDesc = true;
+                } else {
+                    this.bigUpgradeSortDesc = false;
+                }
+                this.closeBigUpgradesCustomizeModal();
+                this.openBigUpgradesCustomizeModal();
             });
         this.customizeModalContainer.add(sortBtn);
 
-        const restoreBtn = this.add.text(160, listBottomY + 80, t('CONFIG_RESTORE_DEFAULTS', 'RESTORE DEFAULTS'), {
+        const exportBtn = this.add.text(-20, listBottomY + 80, 'EXPORT', {
+            fontSize: 16, fontFamily: 'Orbitron, Arial', color: '#66ccff', backgroundColor: '#222222', padding: { x: 10, y: 5 }
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true }).on('pointerdown', () => this.exportBigUpgradeSCD());
+        this.customizeModalContainer.add(exportBtn);
+
+        const importBtn = this.add.text(100, listBottomY + 80, 'IMPORT', {
+            fontSize: 16, fontFamily: 'Orbitron, Arial', color: '#66ff66', backgroundColor: '#222222', padding: { x: 10, y: 5 }
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true }).on('pointerdown', () => this.importBigUpgradeSCD());
+        this.customizeModalContainer.add(importBtn);
+        if (totalPages > 1) {
+            const prevBtn = this.add.text(-340, listBottomY + 80, '◀', { fontSize: 20, fontFamily: 'Orbitron, Arial', color: '#ffffff' })
+                .setOrigin(0.5).setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+                    this.bigUpgradeCustomizePage = Math.max(0, this.bigUpgradeCustomizePage - 1);
+                    this._reopenBigUpgradesCustomizeModal();
+                });
+            const nextBtn = this.add.text(340, listBottomY + 80, '▶', { fontSize: 20, fontFamily: 'Orbitron, Arial', color: '#ffffff' })
+                .setOrigin(0.5).setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+                    this.bigUpgradeCustomizePage = Math.min(totalPages - 1, this.bigUpgradeCustomizePage + 1);
+                    this._reopenBigUpgradesCustomizeModal();
+                });
+            this.customizeModalContainer.add(prevBtn);
+            this.customizeModalContainer.add(nextBtn);
+        }
+
+        const restoreBtn = this.add.text(260, listBottomY + 80, t('CONFIG_RESTORE_DEFAULTS', 'RESTORE DEFAULTS'), {
             fontSize: 16,
             fontFamily: 'Orbitron, Arial',
             color: '#ff6666',
@@ -518,6 +565,7 @@ export default class LocalConfigScene extends Phaser.Scene {
                     () => {
                         this.bigUpgradeCustomizer.resetToDefaults();
                         this.bigUpgradeSortAsc = false;
+                        this.bigUpgradeSortDesc = false;
                         this.closeBigUpgradesCustomizeModal();
                         this.openBigUpgradesCustomizeModal();
                     }
@@ -538,6 +586,7 @@ export default class LocalConfigScene extends Phaser.Scene {
                 this.closeBigUpgradesCustomizeModal();
             });
         this.customizeModalContainer.add(doneBtn);
+        this._installCustomizeHotkeys(() => this.closeBigUpgradesCustomizeModal());
     }
 
     closeBigUpgradesCustomizeModal() {
@@ -559,6 +608,73 @@ export default class LocalConfigScene extends Phaser.Scene {
             try { g.destroy(); } catch (e) {}
         });
         this._setCustomizeDomPointerEvents(false);
+        this._removeCustomizeHotkeys();
+    }
+
+    _reopenBigUpgradesCustomizeModal() {
+        const keepPage = this.bigUpgradeCustomizePage || 0;
+        this.closeBigUpgradesCustomizeModal();
+        this.bigUpgradeCustomizePage = keepPage;
+        this.openBigUpgradesCustomizeModal();
+    }
+
+    _installCustomizeHotkeys(onEsc) {
+        this._removeCustomizeHotkeys();
+        this.customizeKeyHandlers = {
+            esc: (event) => {
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    onEsc?.();
+                }
+            }
+        };
+        window.addEventListener('keydown', this.customizeKeyHandlers.esc);
+    }
+
+    _removeCustomizeHotkeys() {
+        if (this.customizeKeyHandlers?.esc) {
+            window.removeEventListener('keydown', this.customizeKeyHandlers.esc);
+        }
+        this.customizeKeyHandlers = null;
+    }
+
+    exportBigUpgradeSCD() {
+        const payload = this.bigUpgradeCustomizer.exportToSCD();
+        const blob = new Blob([payload], { type: 'application/x-scaledice' });
+        const href = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = href;
+        link.download = 'big-upgrades.scd';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(href);
+        GlobalAlerts.show(this, 'Exported big upgrades as SCD.', 'checking');
+    }
+
+    importBigUpgradeSCD() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.scd';
+        input.onchange = async (evt) => {
+            const file = evt?.target?.files?.[0];
+            if (!file) return;
+            const text = await file.text();
+            this.showCustomizeConfirm(
+                'Import stored big upgrades to your customiser? This will REPLACE your current lineup!',
+                () => {
+                    try {
+                        this.bigUpgradeCustomizer.importFromSCD(text);
+                        this.closeBigUpgradesCustomizeModal();
+                        this.openBigUpgradesCustomizeModal();
+                        GlobalAlerts.show(this, 'Imported big upgrades from SCD.', 'checking');
+                    } catch (e) {
+                        GlobalAlerts.show(this, 'Invalid SCD file.', 'warning');
+                    }
+                }
+            );
+        };
+        input.click();
     }
 
     showCustomizeConfirm(message, onConfirm) {
@@ -677,7 +793,7 @@ export default class LocalConfigScene extends Phaser.Scene {
         const cy = this.cameras.main.centerY;
         const viewW = this.cameras.main.width;
         const viewH = this.cameras.main.height;
-        const maxBigUpgrades = 60;
+        const maxBigUpgrades = 100;
         const isDefault = upgrade && BigUpgradeCustomizer.DEFAULT_UPGRADES.some(d => d.key === upgrade.key);
         const defaultDef = isDefault ? BigUpgradeCustomizer.DEFAULT_UPGRADES.find(d => d.key === upgrade.key) : null;
         const baseUpgrade = (isDefault && defaultDef) ? { ...defaultDef, ...upgrade } : (upgrade || {});
@@ -888,7 +1004,7 @@ export default class LocalConfigScene extends Phaser.Scene {
             }
             const isNew = !(upgrade && upgrade.key);
             if (isNew && this.bigUpgradeCustomizer.getActiveUpgrades().length >= maxBigUpgrades) {
-                GlobalAlerts.show(this, t('CONFIG_MAX_BIG_UPGRADES', 'Maximum of 60 big upgrades reached.'), 'checking');
+                GlobalAlerts.show(this, t('CONFIG_MAX_BIG_UPGRADES', 'Maximum of 100 big upgrades reached.'), 'checking');
                 return;
             }
             const costVal = Number(costInput?.value) || 100;
@@ -966,6 +1082,17 @@ export default class LocalConfigScene extends Phaser.Scene {
         const cancelBtn = formDom.node.querySelector('#bu-cancel');
         saveBtn?.addEventListener('click', onSave);
         cancelBtn?.addEventListener('click', onCancel);
+        const onKeydown = (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                onSave();
+            } else if (event.key === 'Escape') {
+                event.preventDefault();
+                onCancel();
+            }
+        };
+        formDom.node.addEventListener('keydown', onKeydown);
+        this._installCustomizeHotkeys(onCancel);
     }
 
     refreshScene() {
@@ -973,5 +1100,3 @@ export default class LocalConfigScene extends Phaser.Scene {
         this.scene.restart();
     }
 }
-
-
