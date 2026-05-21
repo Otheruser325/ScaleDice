@@ -409,8 +409,6 @@ export default class LocalGameScene extends Phaser.Scene {
   }
 
   toggleComboToolbar() {
-    if (this.bigUpgradesOpen) this.closeBigUpgradesInstant();
-
     const leftPad = Math.max(16, Math.floor(this.scale.width * 0.02));
     const panelWidth = 260;
     const hiddenX = leftPad - panelWidth - 20;
@@ -570,7 +568,10 @@ export default class LocalGameScene extends Phaser.Scene {
     const maxColumns = 5;
     const columnGap = 14;
     const rowHeight = 64;
-    const itemsToShow = items.slice(0, upgradesPerColumn * maxColumns);
+    const pageSize = upgradesPerColumn * maxColumns;
+    const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+    this.bigUpgradePage = Math.max(0, Math.min(this.bigUpgradePage || 0, totalPages - 1));
+    const itemsToShow = items.slice(this.bigUpgradePage * pageSize, this.bigUpgradePage * pageSize + pageSize);
     const columns = Math.max(1, Math.min(maxColumns, Math.ceil(itemsToShow.length / upgradesPerColumn)));
     const minPanelWidth = 180;
     const maxPanelWidth = 320;
@@ -615,18 +616,35 @@ export default class LocalGameScene extends Phaser.Scene {
       .setOrigin(0.5).setDepth(1003).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.toggleBigUpgrades());
 
+    if (this.bigPagePrevBtn) try { this.bigPagePrevBtn.destroy(); } catch (e) {}
+    if (this.bigPageNextBtn) try { this.bigPageNextBtn.destroy(); } catch (e) {}
+    if (this.bigPageText) try { this.bigPageText.destroy(); } catch (e) {}
+    if (totalPages > 1) {
+      this.bigPagePrevBtn = this.add.text(startX + 18, startY - 24, '◀', { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ffffff' })
+        .setDepth(1003).setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+          this.bigUpgradePage = Math.max(0, this.bigUpgradePage - 1);
+          this.createBigUpgradesPanelToolbar();
+          this.toggleBigUpgrades();
+        });
+      this.bigPageNextBtn = this.add.text(startX + 42, startY - 24, '▶', { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ffffff' })
+        .setDepth(1003).setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+          this.bigUpgradePage = Math.min(totalPages - 1, this.bigUpgradePage + 1);
+          this.createBigUpgradesPanelToolbar();
+          this.toggleBigUpgrades();
+        });
+      this.bigPageText = this.add.text(startX + 66, startY - 24, `Page ${this.bigUpgradePage + 1}/${totalPages}`, { fontSize: 12, fontFamily: 'Orbitron, Arial', color: '#cccccc' }).setDepth(1003);
+    }
     this.bigUpgradesOpen = false;
   }
 
   toggleBigUpgrades() {
     if (!this.bigUpgradesEnabled) return;
-    if (this.comboPanelOpen) this.closeComboToolbarInstant();
     if (!this.bigUpgradesToolbarContainer) return;
 
     this.bigUpgradesOpen = !this.bigUpgradesOpen;
 
     try {
-      this.bigUpgradesToolbarContainer.setVisible(this.bigUpgradesOpen);
+      if (this.bigUpgradesOpen) this.bigUpgradesToolbarContainer.setVisible(true);
       this.tweens.killTweensOf(this.bigUpgradesToolbarContainer);
       const openX = Number.isFinite(this.bigUpgradesToolbarOpenX)
         ? this.bigUpgradesToolbarOpenX
@@ -639,7 +657,12 @@ export default class LocalGameScene extends Phaser.Scene {
         targets: this.bigUpgradesToolbarContainer,
         x: targetX,
         duration: 260,
-        ease: 'Cubic.easeOut'
+        ease: 'Cubic.easeOut',
+        onComplete: () => {
+          if (!this.bigUpgradesOpen && this.bigUpgradesToolbarContainer) {
+            this.bigUpgradesToolbarContainer.setVisible(false);
+          }
+        }
       });
       this.bigToggleBtn.setText(this.bigUpgradesOpen ? '<' : '>');
     } catch (e) {}
@@ -833,8 +856,9 @@ export default class LocalGameScene extends Phaser.Scene {
     }
 
     // Clairvoyance prediction at turn start
-    if (!this.prediction && player.upgrades.hasBigUpgrade && player.upgrades.hasBigUpgrade('clairvoyance')) {
-      const chance = player.upgrades.getClairvoyanceChance();
+    const predictionChance = player.upgrades.getClairvoyanceChance ? player.upgrades.getClairvoyanceChance() : 0;
+    if (!this.prediction && predictionChance > 0) {
+      const chance = predictionChance;
       if (Math.random() < chance) {
         const luckBonus = player.upgrades.getLuckBonus();
         const baseLuck = player.luck || 1;
@@ -933,8 +957,16 @@ export default class LocalGameScene extends Phaser.Scene {
     // ensure it's still their turn and nothing is mid-roll
     if (this.currentPlayerIndex !== playerIdx || this.isRolling || this.waitingForResult) return;
 
-    // DO NOT perform upgrades on last turn
-    if (this.currentRound >= this.maxRounds) {
+    const turnsLeft = this.maxRounds - this.currentRound;
+    const doNothingTurnsByDifficulty = {
+      Baby: 1,
+      Easy: 1,
+      Medium: 2,
+      Hard: 3,
+      Nightmare: 5
+    };
+    const doNothingThreshold = doNothingTurnsByDifficulty[player.difficulty] ?? 1;
+    if (turnsLeft <= doNothingThreshold) {
       this.handleRoll();
       return;
     }
@@ -1129,7 +1161,9 @@ export default class LocalGameScene extends Phaser.Scene {
     };
 
     const bigDefs = Array.isArray(this._bigUpgradeDefs) ? this._bigUpgradeDefs : [];
-    const bigPriorityDefs = bigDefs.filter(d => d && d.key);
+    const bigPriorityDefs = bigDefs
+      .filter(d => d && d.key)
+      .sort((a, b) => (Number(a?.baseCost) || Infinity) - (Number(b?.baseCost) || Infinity));
     const isHard = player.difficulty === 'Hard' || player.difficulty === 'Nightmare';
     const isMedium = player.difficulty === 'Medium';
     comboTargets = buildComboTargets();
@@ -1569,7 +1603,8 @@ export default class LocalGameScene extends Phaser.Scene {
       GlobalAudio.playButton(this);
       this._logActivity(`${player.name} bought Dice -> ${player.diceUnlocked} dice`);
       // Regenerate Clairvoyance prediction if active
-      if (this.prediction && player.upgrades.hasBigUpgrade && player.upgrades.hasBigUpgrade('clairvoyance')) {
+      const predictionChance = player.upgrades.getClairvoyanceChance ? player.upgrades.getClairvoyanceChance() : 0;
+      if (this.prediction && predictionChance > 0) {
         const luckBonus = player.upgrades.getLuckBonus();
         const baseLuck = player.luck || 1;
         const effectiveLuck = Phaser.Math.Clamp(baseLuck + luckBonus, 0.5, 6.0);
@@ -1906,7 +1941,8 @@ export default class LocalGameScene extends Phaser.Scene {
     this.refreshBigUpgradesPanel();
 
     // Clairvoyance prediction clearing
-    if (!p.upgrades.hasBigUpgrade || !p.upgrades.hasBigUpgrade('clairvoyance') || this.currentPlayerIndex !== this.getLocalPlayerIndex()) {
+    const predictionChance = p?.upgrades?.getClairvoyanceChance ? p.upgrades.getClairvoyanceChance() : 0;
+    if (predictionChance <= 0 || this.currentPlayerIndex !== this.getLocalPlayerIndex()) {
       this.prediction = null;
       if (!p.isAI) {
         this.predictionText.setText('');
@@ -2322,6 +2358,3 @@ export default class LocalGameScene extends Phaser.Scene {
     this.exitLocked = false;
   }
 }
-
-
-
