@@ -2,6 +2,17 @@
   "title": "SCALE DICE — CHANGELOG",
   "entries": [
     {
+      "version": "1.2.2",
+      "date": "21/05/2026",
+      "tags": ["Updates", "Features", "Bug Fixes"],
+      "changes": [
+        "New Features: \n• added an option to import/export your big upgrades in the Big Upgrade Customiser",
+        "Minor Changes: \n• extended the maximum big upgrade limit to 100 \n• added ESC/Enter support when editing big upgrades \n• reworked the big upgrade sort button to switch between default, ascending, or descending by order or cost",
+        "Gameplay Changes: \n• reworked the energy boost catch-up mechanic to only apply once for each player that is behind the top player with over 5x as much score as them (still gives 20% of their best score though) \n• in the final round, added a Mega Energy Boost event that gives the loser 40% of the top player's best score if they're behind 50x as much score as all the other players during a match \n• harder bots now ignore upgrades so that they can try and obtain a strong score without being left empty-handed",
+        "Bug Fixes: \n• fixed several in-game toolbar flickering conflicts\n• fixed an issue that caused the Predict Chance custom big upgrades to not correctly apply the desired effect \n• fixed bot opponents not being able to purchase cheap big upgrades in a clamped order"
+      ]
+    },
+    {
       "version": "1.2.1",
       "date": "17/02/2026",
       "tags": ["Updates", "Features", "Bug Fixes"],
