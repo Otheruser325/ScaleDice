@@ -277,6 +277,7 @@ export default class LocalConfigScene extends Phaser.Scene {
                     bigUpgradesEnabled: this.bigUpgradesEnabled,
                     customBigUpgrades: this.bigUpgradeCustomizer.getActiveUpgrades(),
                     bigUpgradeSortAsc: this.bigUpgradeSortAsc,
+                    bigUpgradeSortDesc: this.bigUpgradeSortDesc,
                     costMult: this.costMultipliers[this.costMultIndex]
                 });
             });
@@ -540,14 +541,12 @@ export default class LocalConfigScene extends Phaser.Scene {
             const prevBtn = this.add.text(-340, listBottomY + 80, '◀', { fontSize: 20, fontFamily: 'Orbitron, Arial', color: '#ffffff' })
                 .setOrigin(0.5).setInteractive({ useHandCursor: true }).on('pointerdown', () => {
                     this.bigUpgradeCustomizePage = Math.max(0, this.bigUpgradeCustomizePage - 1);
-                    this.closeBigUpgradesCustomizeModal();
-                    this.openBigUpgradesCustomizeModal();
+                    this._reopenBigUpgradesCustomizeModal();
                 });
             const nextBtn = this.add.text(340, listBottomY + 80, '▶', { fontSize: 20, fontFamily: 'Orbitron, Arial', color: '#ffffff' })
                 .setOrigin(0.5).setInteractive({ useHandCursor: true }).on('pointerdown', () => {
                     this.bigUpgradeCustomizePage = Math.min(totalPages - 1, this.bigUpgradeCustomizePage + 1);
-                    this.closeBigUpgradesCustomizeModal();
-                    this.openBigUpgradesCustomizeModal();
+                    this._reopenBigUpgradesCustomizeModal();
                 });
             this.customizeModalContainer.add(prevBtn);
             this.customizeModalContainer.add(nextBtn);
@@ -610,6 +609,13 @@ export default class LocalConfigScene extends Phaser.Scene {
         });
         this._setCustomizeDomPointerEvents(false);
         this._removeCustomizeHotkeys();
+    }
+
+    _reopenBigUpgradesCustomizeModal() {
+        const keepPage = this.bigUpgradeCustomizePage || 0;
+        this.closeBigUpgradesCustomizeModal();
+        this.bigUpgradeCustomizePage = keepPage;
+        this.openBigUpgradesCustomizeModal();
     }
 
     _installCustomizeHotkeys(onEsc) {

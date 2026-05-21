@@ -24,6 +24,7 @@ export default class LocalGameScene extends Phaser.Scene {
     this.teams = data.teams ?? Array.from({ length: this.playerCount }, (_, i) => 'blue');
     this.bigUpgradesEnabled = data.bigUpgradesEnabled ?? true;
     this.bigUpgradeSortAsc = !!data.bigUpgradeSortAsc;
+    this.bigUpgradeSortDesc = !!data.bigUpgradeSortDesc;
     this.challengeKey = data.challengeKey || null;
     this.challengeDate = data.challengeDate || null;
     this.challengeReward = data.challengeReward || 0;
@@ -68,6 +69,8 @@ export default class LocalGameScene extends Phaser.Scene {
 
     this._lastTurnGivenRoundFor = Array(this.playerCount).fill(0);
     this.behindTracker = Array(this.playerCount).fill(true);
+    this._energyBoostGiven = Array(this.playerCount).fill(false);
+    this._megaEnergyBoostGiven = false;
     this.comboStats = Array(this.playerCount).fill(null).map(() => ({
       pair: 0,
       twoPair: 0,
@@ -157,13 +160,13 @@ export default class LocalGameScene extends Phaser.Scene {
         .filter(Boolean);
     } catch (e) {}
 
-    if (this.bigUpgradeSortAsc) {
+    if (this.bigUpgradeSortAsc || this.bigUpgradeSortDesc) {
       this._bigUpgradeDefs = this._bigUpgradeDefs
         .slice()
         .sort((a, b) => {
           const ca = Number.isFinite(a?.baseCost) ? a.baseCost : Infinity;
           const cb = Number.isFinite(b?.baseCost) ? b.baseCost : Infinity;
-          if (ca !== cb) return ca - cb;
+          if (ca !== cb) return this.bigUpgradeSortDesc ? cb - ca : ca - cb;
           const ta = (a?.title || a?.key || '').toString();
           const tb = (b?.title || b?.key || '').toString();
           return ta.localeCompare(tb);
@@ -551,11 +554,11 @@ export default class LocalGameScene extends Phaser.Scene {
       desc: describeUpgrade(def),
       baseCost: def.baseCost
     }));
-    const items = this.bigUpgradeSortAsc
+    const items = (this.bigUpgradeSortAsc || this.bigUpgradeSortDesc)
       ? itemsRaw.slice().sort((a, b) => {
           const ca = Number.isFinite(a?.baseCost) ? a.baseCost : Infinity;
           const cb = Number.isFinite(b?.baseCost) ? b.baseCost : Infinity;
-          if (ca !== cb) return ca - cb;
+          if (ca !== cb) return this.bigUpgradeSortDesc ? cb - ca : ca - cb;
           const ta = (a?.title || a?.key || '').toString();
           const tb = (b?.title || b?.key || '').toString();
           return ta.localeCompare(tb);
@@ -623,14 +626,16 @@ export default class LocalGameScene extends Phaser.Scene {
       this.bigPagePrevBtn = this.add.text(startX + 18, startY - 24, '◀', { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ffffff' })
         .setDepth(1003).setInteractive({ useHandCursor: true }).on('pointerdown', () => {
           this.bigUpgradePage = Math.max(0, this.bigUpgradePage - 1);
+          const wasOpen = this.bigUpgradesOpen;
           this.createBigUpgradesPanelToolbar();
-          this.toggleBigUpgrades();
+          if (wasOpen && !this.bigUpgradesOpen) this.toggleBigUpgrades();
         });
       this.bigPageNextBtn = this.add.text(startX + 42, startY - 24, '▶', { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ffffff' })
         .setDepth(1003).setInteractive({ useHandCursor: true }).on('pointerdown', () => {
           this.bigUpgradePage = Math.min(totalPages - 1, this.bigUpgradePage + 1);
+          const wasOpen = this.bigUpgradesOpen;
           this.createBigUpgradesPanelToolbar();
-          this.toggleBigUpgrades();
+          if (wasOpen && !this.bigUpgradesOpen) this.toggleBigUpgrades();
         });
       this.bigPageText = this.add.text(startX + 66, startY - 24, `Page ${this.bigUpgradePage + 1}/${totalPages}`, { fontSize: 12, fontFamily: 'Orbitron, Arial', color: '#cccccc' }).setDepth(1003);
     }
@@ -840,19 +845,51 @@ export default class LocalGameScene extends Phaser.Scene {
       }
     }
 
-    if (this.currentRound >= this.maxRounds - 4 && this._isPlayerBehind(player)) {
-      const highestOpponent = Math.max(...this.players.filter(p => p !== player).map(p => p.score || 0));
-      const boost = Math.floor((this.maxRounds - this.currentRound + 1) * 50 + Math.floor(highestOpponent * 0.2));
-      player.score += boost;
-      const boostText = this.add.text(760, 56, `Energy +${formatCompact(boost)}`, { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ffdd66' }).setOrigin(0.5);
-      this.tweens.add({
-        targets: boostText,
-        y: 36,
-        alpha: 0,
-        duration: 1100,
-        onComplete: () => boostText.destroy()
-      });
-      this._logActivity(`${player.name} received a big boost (${formatCompact(boost)}). Go catch 'em!`);
+    const playerIdx = this.players.indexOf(player);
+    const topScore = Math.max(...this.players.map(p => p.score || 0));
+    const ratioBase = Math.max(1, player.score || 0);
+    if (playerIdx >= 0 && !this._energyBoostGiven[playerIdx] && topScore >= ratioBase * 5) {
+      const boost = Math.floor(topScore * 0.2);
+      if (boost > 0) {
+        player.score += boost;
+        this._energyBoostGiven[playerIdx] = true;
+        const boostText = this.add.text(760, 56, `Energy +${formatCompact(boost)}`, { fontSize: 18, fontFamily: 'Orbitron, Arial', color: '#ffdd66' }).setOrigin(0.5);
+        this.tweens.add({
+          targets: boostText,
+          y: 36,
+          alpha: 0,
+          duration: 1100,
+          onComplete: () => boostText.destroy()
+        });
+        this._logActivity(`${player.name} received an Energy Boost (${formatCompact(boost)}). Go catch em'!`);
+      }
+    }
+
+    if (!this._megaEnergyBoostGiven && this.currentRound >= this.maxRounds) {
+      const playersByScoreAsc = this.players.slice().sort((a, b) => (a.score || 0) - (b.score || 0));
+      const worst = playersByScoreAsc[0];
+      const top = playersByScoreAsc[playersByScoreAsc.length - 1];
+      if (worst && top && worst !== top) {
+        const others = this.players.filter(p => p !== worst);
+        const worstBase = Math.max(1, worst.score || 0);
+        const behindAllBy50x = others.every(p => (p.score || 0) >= worstBase * 50);
+        if (behindAllBy50x && player === worst) {
+          const megaBoost = Math.floor((top.score || 0) * 0.4);
+          if (megaBoost > 0) {
+            player.score += megaBoost;
+            this._megaEnergyBoostGiven = true;
+            const megaText = this.add.text(760, 82, `MEGA ENERGY +${formatCompact(megaBoost)}`, { fontSize: 17, fontFamily: 'Orbitron, Arial', color: '#ff66ff' }).setOrigin(0.5);
+            this.tweens.add({
+              targets: megaText,
+              y: 58,
+              alpha: 0,
+              duration: 1400,
+              onComplete: () => megaText.destroy()
+            });
+            this._logActivity(`${player.name} triggered Mega Energy Boost (${formatCompact(megaBoost)}). Go catch em'!`);
+          }
+        }
+      }
     }
 
     // Clairvoyance prediction at turn start
