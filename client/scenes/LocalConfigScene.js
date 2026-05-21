@@ -837,6 +837,10 @@ export default class LocalConfigScene extends Phaser.Scene {
             });
             this.customizeModalDom = null;
         }
+        if (this.customizeModalOverlay) {
+            try { this.customizeModalOverlay.destroy(); } catch (e) {}
+            this.customizeModalOverlay = null;
+        }
 
         const t = (key, fallback) => GlobalLocalization.t(key, fallback);
         const fmt = (key, ...args) => GlobalLocalization.format(key, ...args);
