@@ -47,6 +47,32 @@ class BigUpgradeCustomizer {
     }
   }
 
+  exportToSCD() {
+    const payload = {
+      version: '1.2.2',
+      exportedAt: new Date().toISOString(),
+      customUpgrades: this.customUpgrades
+    };
+    const json = JSON.stringify(payload);
+    const encoded = btoa(unescape(encodeURIComponent(json)));
+    return `SCD1:${encoded}`;
+  }
+
+  importFromSCD(scdData) {
+    if (typeof scdData !== 'string' || !scdData.startsWith('SCD1:')) {
+      throw new Error('Invalid SCD format');
+    }
+    const encoded = scdData.slice(5).trim();
+    const json = decodeURIComponent(escape(atob(encoded)));
+    const parsed = JSON.parse(json);
+    if (!parsed || !Array.isArray(parsed.customUpgrades)) {
+      throw new Error('SCD payload missing customUpgrades array');
+    }
+    this.customUpgrades = parsed.customUpgrades;
+    this.saveCustomUpgrades();
+    return this.customUpgrades;
+  }
+
   // Get all upgrades (defaults + custom)
   getAllUpgrades() {
     return [...BigUpgradeCustomizer.DEFAULT_UPGRADES, ...this.customUpgrades];
