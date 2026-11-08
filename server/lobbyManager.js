@@ -851,7 +851,11 @@ export default class LobbyManager {
 
     if (lobby.config.teams) fillMissingTeams(lobby.players);
     const active = this.activePlayers(lobby);
-    if (active.length < 2 || !active.every((p) => p.ready)) {
+    if (active.length < 2) {
+      socket.emit('game-failed', { reason: 'not_enough_players' });
+      return;
+    }
+    if (!active.every((p) => p.ready)) {
       socket.emit('game-failed', { reason: 'players_not_ready' });
       return;
     }

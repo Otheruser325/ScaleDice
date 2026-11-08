@@ -25,7 +25,7 @@ hosted client can point at the API with `?server=https://api.example.com` or
 | --- | --- |
 | `index.js` | Binds the HTTP port, graceful shutdown. The only file that listens. |
 | `app.js` | Express/HTTP/Socket.IO wiring, Redis or memory sessions, per-packet session reload, socket connection caps, security/CORS headers, static client, health. |
-| `auth.js` | Passport session, same-origin guard, serialized guest registration, guest login, optional Google & Discord OAuth. |
+| `auth.js` | Passport session, same-origin guard, serialized guest registration, guest login, optional Google & Discord OAuth account provisioning. |
 | `lobbyManager.js` | Lobbies, membership, ready checks, turns, scoring, timeouts, cleanup, persisted lobby restore. |
 | `utils/dice.js` | CSPRNG rolls and base-score helpers. |
 | `utils/combo.js` | Server copy of the client combo table; parity is tested. |
@@ -69,7 +69,9 @@ rejection for unsafe auth requests.
 - OAuth providers are optional. They are enabled only when both
   `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` or
   `DISCORD_CLIENT_ID`/`DISCORD_CLIENT_SECRET` are set. `/auth/providers` drives
-  which buttons the client shows. OAuth uses a one-time state value bound to the
+  which provider buttons the account screen offers alongside guest login and
+  registration. Provider sign-in auto-provisions an account and uses the same
+  session/lobby path as a guest. OAuth uses a one-time state value bound to the
   browser session, and returns to the client root with `?auth=success|error`.
 - Logout destroys the session and disconnects sockets that belong to it, which
   forfeits any match they were in.

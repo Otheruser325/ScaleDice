@@ -59,6 +59,15 @@ test('online actions require an authenticated session', () => {
   assert.equal(Object.keys(manager.lobbies).length, 0);
 });
 
+test('starting a lobby with fewer than two players has a dedicated reason', () => {
+  const { host } = setup();
+  const code = createLobby(host);
+
+  host.trigger('start-game', code);
+
+  assert.equal(host.last('game-failed').reason, 'not_enough_players');
+});
+
 test('a lobby is created, joined and only the host can start it', async () => {
   const context = setup();
   const { host, guest, manager } = context;

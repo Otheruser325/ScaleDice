@@ -11,6 +11,7 @@ process.env.SESSION_SECRET = 'test-session-secret';
 process.env.AUTH_RATE_LIMIT_DISABLED = '1';
 
 const { createOnlineServer } = await import('../server/app.js');
+const { upsertOAuthUser } = await import('../server/auth.js');
 
 let running = null;
 
@@ -166,6 +167,39 @@ test('auth reports which sign-in methods are configured', async () => {
 
   const google = await api('/auth/google');
   assert.equal(google.response.status, 503);
+});
+
+test('OAuth accounts are auto-provisioned and reused by provider id', async () => {
+  const first = await upsertOAuthUser(
+    'google',
+    'oauth-test-google-1',
+    'Google Tester',
+    'https://example.com/google-avatar.png'
+  );
+  assert.equal(first.type, 'google');
+  assert.equal(first.oauthProvider, 'google');
+  assert.equal(first.oauthProviderId, 'oauth-test-google-1');
+  assert.equal(first.avatar, 'https://example.com/google-avatar.png');
+
+  const returning = await upsertOAuthUser(
+    'google',
+    'oauth-test-google-1',
+    'Updated Google Tester',
+    null
+  );
+  assert.equal(returning.id, first.id);
+  assert.equal(returning.name, 'Updated Google Tester');
+  assert.equal(returning.avatar, 'https://example.com/google-avatar.png');
+
+  const otherProvider = await upsertOAuthUser(
+    'discord',
+    'oauth-test-google-1',
+    'Discord Tester',
+    null
+  );
+  assert.notEqual(otherProvider.id, first.id);
+  assert.equal(otherProvider.type, 'discord');
+  assert.equal(otherProvider.oauthProvider, 'discord');
 });
 
 test('unsafe auth requests from a foreign origin are rejected', async () => {

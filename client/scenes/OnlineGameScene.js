@@ -1031,6 +1031,7 @@ export default class OnlineGameScene extends Phaser.Scene {
   onGameFailed(payload) {
     const messages = {
       not_host: 'Only the host can start the match.',
+      not_enough_players: "Game can only be started when there's 2 or more players.",
       players_not_ready: 'Every player must be ready.',
       teams_unbalanced: 'Teams must be balanced with at least one player on each side.',
       already_started: 'That match is already running.'

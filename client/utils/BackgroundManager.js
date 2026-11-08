@@ -1,3 +1,12 @@
+function hasDrawableSource(source) {
+  if (!source || typeof source !== 'object') return false;
+  if (source.complete === false) return false;
+
+  const width = Number(source.width ?? source.naturalWidth ?? source.videoWidth ?? 0);
+  const height = Number(source.height ?? source.naturalHeight ?? source.videoHeight ?? 0);
+  return Number.isFinite(width) && width > 0 && Number.isFinite(height) && height > 0;
+}
+
 class BackgroundManager {
   static _scene = null;
   static _bg = null;
@@ -23,9 +32,30 @@ class BackgroundManager {
     const centerY = cam ? cam.centerY : (h / 2);
 
     const imageKey = opts.key || 'bg';
-    const useImage = !!opts.useImageIfAvailable && scene.textures.exists(imageKey);
+    let src = null;
+    try {
+      if (scene.textures.exists(imageKey)) {
+        const texture = scene.textures.get(imageKey);
+        src = texture?.getSourceImage ? texture.getSourceImage() : null;
+      }
+    } catch (e) {
+      src = null;
+    }
 
+    // A texture key can exist before its image is decoded. Rendering an image
+    // whose source is null causes CanvasRenderer.drawImage(null) to throw, so
+    // only take the image path when the source has real dimensions.
+    const useImage = !!opts.useImageIfAvailable && hasDrawableSource(src);
+    let img = null;
     if (useImage) {
+      try {
+        img = scene.add.image(centerX, centerY, imageKey).setOrigin(0.5).setDepth(opts.depth ?? -1000);
+      } catch (e) {
+        img = null;
+      }
+    }
+
+    if (img) {
       let frame = null;
       try {
         frame = scene.textures.getFrame(imageKey);
@@ -33,17 +63,8 @@ class BackgroundManager {
         frame = null;
       }
 
-      let src = null;
-      try {
-        const tex = scene.textures.get(imageKey);
-        if (tex) src = tex.getSourceImage ? tex.getSourceImage() : null;
-      } catch (e) {
-        src = null;
-      }
-
-      const img = scene.add.image(centerX, centerY, imageKey).setOrigin(0.5).setDepth(opts.depth ?? -1000);
-      const imgW = frame && frame.width ? frame.width : (src && (src.width || src.naturalWidth) ? (src.width || src.naturalWidth) : null);
-      const imgH = frame && frame.height ? frame.height : (src && (src.height || src.naturalHeight) ? (src.height || src.naturalHeight) : null);
+      const imgW = frame && frame.width ? frame.width : (src.width || src.naturalWidth || src.videoWidth || null);
+      const imgH = frame && frame.height ? frame.height : (src.height || src.naturalHeight || src.videoHeight || null);
 
       if (imgW && imgH && w && h) {
         const scale = Math.max(w / imgW, h / imgH);
@@ -96,16 +117,17 @@ class BackgroundManager {
 
   static unregisterScene(scene = null) {
     if (scene && BackgroundManager._scene !== scene) return;
+
+    const bg = BackgroundManager._bg;
+    BackgroundManager._bg = null;
+    BackgroundManager._scene = null;
+    BackgroundManager._opts = {};
+
     try {
-      if (BackgroundManager._bg) {
-        if (BackgroundManager._bg.destroy) BackgroundManager._bg.destroy(true);
-        BackgroundManager._bg = null;
-      }
+      if (bg?.destroy) bg.destroy(true);
     } catch (e) {
       console.warn('[BackgroundManager] cleanup error', e);
     }
-    BackgroundManager._scene = null;
-    BackgroundManager._opts = {};
   }
 
   // Backwards compatible

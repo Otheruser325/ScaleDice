@@ -160,6 +160,8 @@ test('online setup opens the shared customizer and saves a new big upgrade', {
       const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineConfigScene');
       return scene?.customizeModalOpen === false;
     }, null, { timeout: 15000 });
+    assert.equal(await host.page.locator('#bu-name').count(), 0);
+    assert.equal(await host.page.locator('#bu-cost').count(), 0);
 
     // A customizer session must not leave listeners or DOM behind when the
     // host leaves setup for the lobby.

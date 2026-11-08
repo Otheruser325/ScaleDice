@@ -9,6 +9,7 @@ import {
 } from '../utils/AuthManager.js';
 import GlobalAlerts from '../utils/AlertManager.js';
 import GlobalAudio from '../utils/AudioManager.js';
+import { destroyDomObject } from '../utils/DomUtils.js';
 
 export default class OnlineAccountScene extends Phaser.Scene {
   constructor() {
@@ -46,10 +47,8 @@ export default class OnlineAccountScene extends Phaser.Scene {
   destroyInputs() {
     for (const key of ['loginUserInput', 'loginPassInput', 'registerPassInput']) {
       const input = this[key];
-      if (!input) continue;
-      try { input.destroy(); } catch (err) { /* ignore */ }
-      if (input.node?.parentNode) input.node.parentNode.removeChild(input.node);
       this[key] = null;
+      destroyDomObject(input);
     }
   }
 
@@ -183,24 +182,33 @@ export default class OnlineAccountScene extends Phaser.Scene {
     }).setOrigin(0.5).setInteractive({ useHandCursor: true }));
     registerBtn.on('pointerdown', () => this.createGuest());
 
-    // OAuth providers are only offered when the server has credentials.
-    let y = 665;
-    if (this.providers.google) {
-      const google = add(this.add.text(600, y, 'SIGN IN WITH GOOGLE', {
-        fontSize: 22,
+    // OAuth is an additional route into the same account system, never a
+    // replacement for the guest login and registration fields above.
+    if (this.providers.google || this.providers.discord) {
+      add(this.add.text(600, 660, 'OR SIGN IN WITH', {
+        fontSize: 18,
         fontFamily: 'Orbitron, Arial',
-        color: '#ffeb3b'
-      }).setOrigin(0.5).setInteractive({ useHandCursor: true }));
-      google.on('pointerdown', () => this.startOAuth('google'));
-      y += 50;
-    }
-    if (this.providers.discord) {
-      const discord = add(this.add.text(600, y, 'SIGN IN WITH DISCORD', {
-        fontSize: 22,
-        fontFamily: 'Orbitron, Arial',
-        color: '#7289da'
-      }).setOrigin(0.5).setInteractive({ useHandCursor: true }));
-      discord.on('pointerdown', () => this.startOAuth('discord'));
+        color: '#aaaaaa'
+      }).setOrigin(0.5));
+
+      let y = 715;
+      if (this.providers.google) {
+        const google = add(this.add.text(600, y, 'SIGN IN WITH GOOGLE', {
+          fontSize: 22,
+          fontFamily: 'Orbitron, Arial',
+          color: '#ffeb3b'
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true }));
+        google.on('pointerdown', () => this.startOAuth('google'));
+        y += 48;
+      }
+      if (this.providers.discord) {
+        const discord = add(this.add.text(600, y, 'SIGN IN WITH DISCORD', {
+          fontSize: 22,
+          fontFamily: 'Orbitron, Arial',
+          color: '#7289da'
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true }));
+        discord.on('pointerdown', () => this.startOAuth('discord'));
+      }
     }
   }
 
@@ -269,7 +277,10 @@ export default class OnlineAccountScene extends Phaser.Scene {
   showCreatedAccount(user, password) {
     this.user = user;
     this.clearUI();
-    const add = (object) => this.container.add(object);
+    const add = (object) => {
+      this.container.add(object);
+      return object;
+    };
 
     add(this.add.text(600, 180, 'GUEST ACCOUNT CREATED', {
       fontSize: 34,
@@ -299,7 +310,13 @@ export default class OnlineAccountScene extends Phaser.Scene {
       fontSize: 26,
       fontFamily: 'Orbitron, Arial',
       color: '#66ff66'
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true }));
+    }).setOrigin(0.5).setInteractive({
+      useHandCursor: true,
+      // Text bounds can still be zero when the hit area is initialized, which
+      // leaves the button non-interactive. Give it a stable target.
+      hitArea: new Phaser.Geom.Rectangle(0, 0, 200, 40),
+      hitAreaCallback: Phaser.Geom.Rectangle.Contains
+    }));
     continueBtn.on('pointerdown', () => this.complete(user));
   }
 
@@ -312,17 +329,19 @@ export default class OnlineAccountScene extends Phaser.Scene {
   }
 
   complete(user) {
-    if (!user) return;
+    if (!user || this.busy) return;
+    this.busy = true;
     this.user = user;
     // A guest sign-in sets the session cookie after this page's socket already
     // connected. Reconnect so the new handshake is authenticated by the server.
     try { connectTo(); } catch (err) { /* waitForConnection handles retries */ }
-    this.game.events.emit('auth-updated', user);
+    try { this.game.events.emit('auth-updated', user); } catch (err) { /* still close */ }
     this.close();
+    this.busy = false;
   }
 
   close() {
-    GlobalAudio.playButton(this);
+    try { GlobalAudio.playButton(this); } catch (err) { /* keep closing */ }
     this.scene.resume(this.returnTo);
     this.scene.stop();
   }

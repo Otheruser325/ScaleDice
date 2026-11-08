@@ -1,6 +1,7 @@
 import { getSocket, waitForConnection } from '../utils/SocketManager.js';
 import GlobalAlerts from '../utils/AlertManager.js';
 import GlobalAudio from '../utils/AudioManager.js';
+import GlobalBackground from '../utils/BackgroundManager.js';
 import BigUpgradeCustomizer from '../utils/BigUpgradeCustomizer.js';
 import BigUpgradeCustomizerUIMixin from '../utils/BigUpgradeCustomizerUI.js';
 import { COST_MULTIPLIERS, DEFAULT_GAME_SETUP, PLAYER_COUNTS, ROUND_OPTIONS } from '../config/gameSetup.js';
@@ -42,6 +43,10 @@ export default class OnlineConfigScene extends Phaser.Scene {
   }
 
   create() {
+    try {
+      GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
+    } catch (err) { /* keep the setup usable if background setup fails */ }
+
     // Pick up any changes made in the local setup customizer.
     this.bigUpgradeCustomizer = new BigUpgradeCustomizer();
 

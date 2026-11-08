@@ -14,6 +14,7 @@ import GlobalBackground from '../utils/BackgroundManager.js';
 import GlobalErrors from '../utils/ErrorManager.js';
 import GlobalLocalization from '../utils/LocalizationManager.js';
 import GlobalSettings from '../utils/SettingsManager.js';
+import { destroyDomObject } from '../utils/DomUtils.js';
 
 export default class OnlineMenuScene extends Phaser.Scene {
   constructor() {
@@ -29,6 +30,7 @@ export default class OnlineMenuScene extends Phaser.Scene {
     this._onDisconnect = null;
     this._joinTimer = null;
     this._joinHandlers = null;
+    this._onResume = null;
   }
 
   async create() {
@@ -73,6 +75,10 @@ export default class OnlineMenuScene extends Phaser.Scene {
       this.buildUI();
     };
     this.game.events.on('auth-updated', this._onAuthUpdated);
+    // The account scene pauses this menu. Rebuild the menu UI when control
+    // returns so the join field is present again and no stale DOM remains.
+    this._onResume = () => this.buildUI();
+    this.events.on('resume', this._onResume);
     this.events.once('shutdown', () => this.shutdown());
 
     const notice = consumeAuthRedirect();
@@ -121,11 +127,14 @@ export default class OnlineMenuScene extends Phaser.Scene {
     this.statusText.setColor(connected ? '#66ff66' : '#ffaa66');
   }
 
+  destroyJoinInput() {
+    const input = this.joinInput;
+    this.joinInput = null;
+    destroyDomObject(input);
+  }
+
   clearUI() {
-    if (this.joinInput) {
-      try { this.joinInput.destroy(); } catch (err) { /* ignore */ }
-      this.joinInput = null;
-    }
+    this.destroyJoinInput();
     if (this.ui) this.ui.removeAll(true);
     if (this.accountText) {
       try { this.accountText.destroy(); } catch (err) { /* ignore */ }
@@ -215,6 +224,9 @@ export default class OnlineMenuScene extends Phaser.Scene {
 
   openAccount() {
     GlobalAudio.playButton(this);
+    // DOM nodes sit above the canvas, so a paused scene's DOM input would
+    // otherwise remain visible over the account screen.
+    this.destroyJoinInput();
     this.scene.launch('OnlineAccountScene', { returnTo: 'OnlineMenuScene' });
     this.scene.pause();
   }
@@ -304,6 +316,10 @@ export default class OnlineMenuScene extends Phaser.Scene {
     this.socket = null;
     this._onConnect = null;
     this._onDisconnect = null;
+    if (this._onResume) {
+      this.events.off('resume', this._onResume);
+      this._onResume = null;
+    }
     this.clearUI();
   }
 }

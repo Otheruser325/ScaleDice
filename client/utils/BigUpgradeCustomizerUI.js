@@ -3,6 +3,7 @@ import GlobalAudio from './AudioManager.js';
 import GlobalLocalization from './LocalizationManager.js';
 import { formatCompact } from './FormatManager.js';
 import BigUpgradeCustomizer from './BigUpgradeCustomizer.js';
+import { destroyDomObject } from './DomUtils.js';
 
 const BigUpgradeCustomizerUIMixin = {
       _trackCustomizeOverlay(overlay) {
@@ -16,6 +17,13 @@ const BigUpgradeCustomizerUIMixin = {
           overlays.forEach((ov) => { try { ov?.destroy?.(); } catch (e) {} });
           this.customizeOverlays = [];
           this.customizeModalOverlay = null;
+      },
+
+      _destroyCustomizeDom() {
+          if (Array.isArray(this.customizeModalDom)) {
+              this.customizeModalDom.forEach((dom) => destroyDomObject(dom));
+              this.customizeModalDom = null;
+          }
       },
 
       _handleCustomizeEscape() {
@@ -288,12 +296,7 @@ const BigUpgradeCustomizerUIMixin = {
               this.customizeModalContainer.destroy(true);
               this.customizeModalContainer = null;
           }
-          if (Array.isArray(this.customizeModalDom)) {
-              this.customizeModalDom.forEach(dom => {
-                  try { dom.destroy(); } catch (e) {}
-              });
-              this.customizeModalDom = null;
-          }
+          this._destroyCustomizeDom();
           this._destroyTrackedCustomizeOverlays();
           this.customizeEditorOpen = false;
           this.customizeEditorHandlers = null;
@@ -492,12 +495,7 @@ const BigUpgradeCustomizerUIMixin = {
               this.customizeModalContainer.destroy(true);
               this.customizeModalContainer = null;
           }
-          if (Array.isArray(this.customizeModalDom)) {
-              this.customizeModalDom.forEach(dom => {
-                  try { dom.destroy(); } catch (e) {}
-              });
-              this.customizeModalDom = null;
-          }
+          this._destroyCustomizeDom();
           this._destroyTrackedCustomizeOverlays();
 
           const t = (key, fallback) => GlobalLocalization.t(key, fallback);

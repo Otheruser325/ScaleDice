@@ -2,10 +2,12 @@ import { getSocket } from '../utils/SocketManager.js';
 import { fetchMe } from '../utils/AuthManager.js';
 import GlobalAlerts from '../utils/AlertManager.js';
 import GlobalAudio from '../utils/AudioManager.js';
+import GlobalBackground from '../utils/BackgroundManager.js';
 
 const FAILURE_MESSAGES = {
   lobby_notfound: 'That lobby no longer exists.',
   not_host: 'Only the host can start the match.',
+  not_enough_players: "Game can only be started when there's 2 or more players.",
   players_not_ready: 'Every player must be ready before the match can start.',
   teams_unbalanced: 'Teams must be balanced with at least one player on each side.',
   already_started: 'That match is already running.',
@@ -52,7 +54,10 @@ export default class OnlineLobbyScene extends Phaser.Scene {
       return;
     }
 
-    this.add.rectangle(640, 480, 1280, 960, 0x111111, 0.97);
+    try {
+      GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true });
+    } catch (err) { /* keep the lobby usable if background setup fails */ }
+
     this.add.text(600, 55, 'LOBBY', {
       fontSize: 44,
       fontFamily: 'Orbitron, Arial'
@@ -310,7 +315,11 @@ export default class OnlineLobbyScene extends Phaser.Scene {
   startMatch() {
     const isHost = !!this.myId && String(this.hostUserId) === String(this.myId);
     if (!isHost) return;
-    if (this.players.length < 2 || !this.players.every((player) => player.ready)) {
+    if (this.players.length < 2) {
+      GlobalAlerts.show(this, "Game can only be started when there's 2 or more players.", 'warning');
+      return;
+    }
+    if (!this.players.every((player) => player.ready)) {
       GlobalAlerts.show(this, 'Every player must be ready first.', 'warning');
       return;
     }

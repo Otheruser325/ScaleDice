@@ -122,7 +122,7 @@ function sanitizeDisplayName(value, fallback = 'Player') {
   return name || fallback;
 }
 
-async function upsertOAuthUser(provider, providerId, displayName, avatar) {
+export async function upsertOAuthUser(provider, providerId, displayName, avatar) {
   if (!providerId) throw new Error('OAuth provider did not return an id');
 
   const matches = await findUsersByField('oauthProviderId', providerId);
@@ -459,7 +459,7 @@ router.post('/logout', (req, res) => {
   });
 });
 
-// Only show OAuth buttons that can actually work.
+// Provider availability for clients that support OAuth sign-in.
 router.get('/methods', (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   res.json({ guest: true, google: googleConfigured, discord: discordConfigured });

@@ -19,8 +19,10 @@ Then open http://localhost:8080.
 Online mode uses the bundled Node server for accounts, lobbies and
 server-authoritative matches.
 
-- **Accounts:** create a guest account (username + password) or sign in with
-  Google/Discord when the server has OAuth credentials configured.
+- **Accounts:** create or sign in to a guest account (username + password), or
+  use Google/Discord sign-in when the server has OAuth credentials configured.
+  Provider sign-in auto-provisions the account and uses the same session/lobby
+  path as a guest.
 - **Lobbies:** a signed-in host creates a 2–6 player lobby with 10–100 rounds,
   optional blue/red teams, optional big upgrades, and the local upgrade-cost
   multiplier. Online matches always use Scale Dice's local progression rules:

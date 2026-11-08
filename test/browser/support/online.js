@@ -72,14 +72,16 @@ export function createBrowserHarness({ sessionSecret, lobbyOptions = {} } = {}) 
 
   async function openGame(cookie) {
     const context = await browser.newContext({ viewport: VIEWPORT });
-    await context.addCookies([{
-      name: 'scaledice.sid',
-      value: cookie,
-      domain: '127.0.0.1',
-      path: '/',
-      httpOnly: true,
-      sameSite: 'Lax'
-    }]);
+    if (cookie) {
+      await context.addCookies([{
+        name: 'scaledice.sid',
+        value: cookie,
+        domain: '127.0.0.1',
+        path: '/',
+        httpOnly: true,
+        sameSite: 'Lax'
+      }]);
+    }
 
     const page = await context.newPage();
     const pageErrors = [];
