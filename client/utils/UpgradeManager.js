@@ -50,6 +50,13 @@ class UpgradeManager {
     this.comboStreakLabel = null;
     this.spinEffectConfig = null;
     this.interestRate = 0;
+    this.investmentCap = 1;
+    this.comboUpgradePercent = 0;
+    this.comboUpgradeIsMultiplicative = false;
+    this.scoreDrainPercent = 0;
+    this.scoreDrainNumPlayers = 0;
+    this.scoreDrainStealMethod = null;
+    this.scoreDrainLabel = null;
     this.bigUpgradeDefs = new Map();
   }
 
@@ -89,7 +96,12 @@ class UpgradeManager {
 
   getComboMultiplier(key) {
     const lvl = this.getComboLevel(key);
-    return 1 + lvl * 0.1;
+    const flat = 1 + lvl * 0.1;
+    if (lvl <= 0 || this.comboUpgradePercent <= 0) return flat;
+    if (this.comboUpgradeIsMultiplicative) {
+      return flat * Math.pow(1 + this.comboUpgradePercent, lvl);
+    }
+    return flat + lvl * this.comboUpgradePercent;
   }
 
   // -------- Luck --------
@@ -372,8 +384,33 @@ class UpgradeManager {
         return true;
       }
       case 'interestRate': {
-        const rate = clamp(toNumber(def.value, 0), 0, 1);
-        this.interestRate = clamp(this.interestRate + rate, 0, 1);
+        // investmentCap replaces the current ceiling; without it the local
+        // default remains 100%.
+        const cap = toNumber(def.investmentCap, null);
+        if (cap != null) this.investmentCap = Math.max(0, cap);
+        const rate = Math.max(0, toNumber(def.value, 0) || 0);
+        this.interestRate = clamp(this.interestRate + rate, 0, this.investmentCap);
+        return true;
+      }
+      case 'comboUpgrade': {
+        const values = def.values || {};
+        const percent = clamp(toNumber(values.percentage ?? def.value, 0), 0, 1);
+        if (percent <= 0) return false;
+        this.comboUpgradePercent = clamp(this.comboUpgradePercent + percent, 0, 1);
+        if (values.isMultiplicative) this.comboUpgradeIsMultiplicative = true;
+        return true;
+      }
+      case 'scoreDrain': {
+        const values = def.values || {};
+        const percent = clamp(toNumber(values.percentage ?? def.value, 0), 0, 1);
+        if (percent <= 0) return false;
+        const numPlayers = Math.max(1, Math.floor(toNumber(values.numPlayers, 1) || 1));
+        const methods = ['random', 'highest', 'lowest', 'before', 'after'];
+        const method = methods.includes(values.stealMethod) ? values.stealMethod : 'random';
+        this.scoreDrainPercent = clamp(this.scoreDrainPercent + percent, 0, 1);
+        this.scoreDrainNumPlayers = Math.max(this.scoreDrainNumPlayers || 0, numPlayers);
+        this.scoreDrainStealMethod = this.scoreDrainStealMethod || method;
+        this.scoreDrainLabel = this.scoreDrainLabel || def.title || def.key || 'Score Drain';
         return true;
       }
       default:
@@ -417,6 +454,112 @@ class UpgradeManager {
 
   getInterestRate() {
     return this.interestRate || 0;
+  }
+
+  getInvestmentCap() {
+    return this.investmentCap;
+  }
+
+  getComboUpgradePercent() {
+    return this.comboUpgradePercent || 0;
+  }
+
+  isComboUpgradeMultiplicative() {
+    return !!this.comboUpgradeIsMultiplicative;
+  }
+
+  getScoreDrainConfig() {
+    if (this.scoreDrainPercent <= 0 || this.scoreDrainNumPlayers <= 0) return null;
+    return {
+      percentage: this.scoreDrainPercent,
+      numPlayers: this.scoreDrainNumPlayers,
+      stealMethod: this.scoreDrainStealMethod || 'random',
+      label: this.scoreDrainLabel || 'Score Drain'
+    };
+  }
+
+  resolveScoreDrain({ ownerIndex, players = [], random = Math.random, claimedBy = {} } = {}) {
+    const config = this.getScoreDrainConfig();
+    if (!config || !Array.isArray(players)) {
+      return { config: null, targets: [], total: 0, skipped: [] };
+    }
+
+    const getClaimant = (index) => {
+      const value = claimedBy instanceof Map ? claimedBy.get(index) : claimedBy?.[index];
+      if (value === undefined || value === null) return null;
+      const claimant = Number(value);
+      return Number.isInteger(claimant) ? claimant : null;
+    };
+    const isClaimedByOther = (index) => {
+      const claimant = getClaimant(index);
+      return claimant !== null && claimant !== ownerIndex;
+    };
+    const skipped = players
+      .map((player, index) => ({ player, index, claimedBy: getClaimant(index) }))
+      .filter(({ player, index, claimedBy: claimant }) => (
+        index !== ownerIndex && player && !player.left &&
+        claimant !== null && claimant !== ownerIndex
+      ))
+      .map(({ index, claimedBy: claimant }) => ({ index, claimedBy: claimant }));
+    const candidates = players
+      .map((player, index) => ({ player, index, score: Number(player?.score) || 0 }))
+      .filter(({ player, index }) => (
+        index !== ownerIndex && player && !player.left && !isClaimedByOther(index)
+      ));
+
+    let ordered = [];
+    switch (config.stealMethod) {
+      case 'highest':
+        ordered = candidates.slice().sort((a, b) => b.score - a.score || a.index - b.index);
+        break;
+      case 'lowest':
+        ordered = candidates.slice().sort((a, b) => a.score - b.score || a.index - b.index);
+        break;
+      case 'before':
+      case 'after': {
+        const activeOrder = players
+          .map((player, index) => ({ player, index }))
+          .filter(({ player }) => player && !player.left);
+        const anchorIndex = activeOrder.findIndex((entry) => entry.index === ownerIndex);
+        if (anchorIndex >= 0) {
+          const count = activeOrder.length;
+          for (let step = 1; step <= count; step += 1) {
+            const offset = config.stealMethod === 'before' ? -step : step;
+            const index = activeOrder[(anchorIndex + offset + count) % count]?.index;
+            if (index !== ownerIndex && !isClaimedByOther(index)) {
+              ordered.push({ player: players[index], index, score: Number(players[index]?.score) || 0 });
+            }
+          }
+        } else {
+          ordered = candidates.slice();
+        }
+        break;
+      }
+      case 'random':
+      default: {
+        ordered = candidates.slice();
+        for (let i = ordered.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(random() * (i + 1));
+          [ordered[i], ordered[j]] = [ordered[j], ordered[i]];
+        }
+        break;
+      }
+    }
+
+    const selected = ordered.slice(0, Math.min(config.numPlayers, ordered.length));
+    const targets = selected
+      .map(({ index, score }) => ({ index, amount: Math.floor(score * config.percentage) }))
+      .filter((target) => target.amount > 0);
+    return {
+      config,
+      percentage: config.percentage,
+      numPlayers: config.numPlayers,
+      stealMethod: config.stealMethod,
+      label: config.label,
+      targets,
+      skipped,
+      total: targets.reduce((sum, target) => sum + target.amount, 0)
+    };
   }
 }
 

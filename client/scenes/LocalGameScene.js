@@ -68,6 +68,7 @@ export default class LocalGameScene extends Phaser.Scene {
     ];
 
     this._lastTurnGivenRoundFor = Array(this.playerCount).fill(0);
+    this.scoreDrainClaims = {};
     this.behindTracker = Array(this.playerCount).fill(true);
     this._energyBoostGiven = Array(this.playerCount).fill(false);
     this._megaEnergyBoostGiven = false;
@@ -506,6 +507,8 @@ export default class LocalGameScene extends Phaser.Scene {
       highStonks: t('BIG_DESC_HIGH_STONKS', 'Economy +5% per completed round.'),
       comboMasher: t('BIG_DESC_COMBO_MASHER', '+20% combo per consecutive same-type combo.'),
       rollicane: t('BIG_DESC_ROLLICANE', '25% per die to spin 2-10s and gain points each second.'),
+      comboUpgrader: t('BIG_DESC_COMBO_UPGRADER', '+5% combo multiplier per combo level.'),
+      scoreDrain: t('BIG_DESC_SCORE_DRAIN', 'Steal 10% of score from a player at turn end.'),
       ultraStonks: t('BIG_DESC_ULTRA_STONKS', 'Economy income is massively boosted.'),
       scoreInvestor: t('BIG_DESC_SCORE_INVESTOR', 'Gain bonus income each turn from current score.'),
       comboOverclock: t('BIG_DESC_COMBO_OVERCLOCK', 'Combo multipliers are overclocked.')
@@ -553,8 +556,25 @@ export default class LocalGameScene extends Phaser.Scene {
           const maxSec = toNumber(values.maxSec, 10);
           return fmt('BIG_DESC_SPIN', '{0} per die to spin {1}-{2}s and gain points each second.', chance, minSec, maxSec);
         }
-        case 'interestRate':
-          return fmt('BIG_DESC_INTEREST', 'Gain {0} of current score each turn.', toPercent(value));
+        case 'interestRate': {
+          const cap = toNumber(def.investmentCap, null);
+          const capDelta = cap == null ? 0 : Math.round((cap - 1) * 100);
+          const capNote = capDelta === 0
+            ? ''
+            : fmt('BIG_DESC_INTEREST_CAP', ' ({0}% max interest)', `${capDelta >= 0 ? '+' : ''}${capDelta}`);
+          return fmt('BIG_DESC_INTEREST', 'Gain {0} of current score each turn.', toPercent(value)) + capNote;
+        }
+        case 'comboUpgrade': {
+          const pct = toPercent(values.percentage ?? value);
+          const multNote = values.isMultiplicative ? t('BIG_DESC_COMBO_UPGRADER_MULT', ' (multiplicative)') : '';
+          return fmt('BIG_DESC_COMBO_UPGRADER', '+{0} combo multiplier per combo level{1}.', pct, multNote);
+        }
+        case 'scoreDrain': {
+          const pct = toPercent(values.percentage ?? value);
+          const count = Math.max(1, Math.trunc(toNumber(values.numPlayers, 1) || 1));
+          const method = values.stealMethod || 'random';
+          return fmt('BIG_DESC_SCORE_DRAIN', 'Steal {0} of score from {1} player(s) each turn end ({2}).', pct, count, method);
+        }
         default:
           return descriptions[def.key] || t('BIG_DESC_GENERIC', 'Big upgrade effect.');
       }
@@ -1834,6 +1854,7 @@ export default class LocalGameScene extends Phaser.Scene {
     this.isRolling = false;
     this.waitingForResult = false;
     this._setBuyUIEnabled(true);
+    this.applyScoreDrain(endingIndex);
 
     this.rollBtn.setText(this._t('GAME_ROLL_DICE', 'ROLL DICE'));
     this.rollBtn.setStyle({ color: '#66ff66' });
@@ -1864,6 +1885,60 @@ export default class LocalGameScene extends Phaser.Scene {
 
     this.updateTurnUI();
     this.closeComboToolbarInstant();
+  }
+
+  applyScoreDrain(endingIndex = this.currentPlayerIndex) {
+    const owner = this.players[endingIndex];
+    if (!owner?.upgrades?.resolveScoreDrain) return null;
+
+    const claims = this.scoreDrainClaims && typeof this.scoreDrainClaims === 'object'
+      ? this.scoreDrainClaims
+      : {};
+    this.scoreDrainClaims = claims;
+    const result = owner.upgrades.resolveScoreDrain({
+      ownerIndex: endingIndex,
+      players: this.players,
+      claimedBy: claims
+    });
+    if (!result) return result;
+
+    const applied = [];
+    for (const target of result.targets || []) {
+      const victim = this.players[target.index];
+      if (!victim) continue;
+      const amount = Math.min(target.amount, Math.max(0, victim.score));
+      if (amount <= 0) continue;
+      victim.score -= amount;
+      owner.score += amount;
+      claims[target.index] = endingIndex;
+      applied.push({ index: target.index, amount });
+    }
+
+    const total = applied.reduce((sum, target) => sum + target.amount, 0);
+    const skippedDetails = (Array.isArray(result.skipped) ? result.skipped : [])
+      .map((entry) => {
+        const victimName = this.players[entry.index]?.name || `P${entry.index + 1}`;
+        const claimantName = this.players[entry.claimedBy]?.name || `P${entry.claimedBy + 1}`;
+        return `${victimName} (claimed by ${claimantName})`;
+      })
+      .join(', ');
+    if (total > 0) {
+      const details = applied
+        .map((target) => `${this.players[target.index]?.name || `P${target.index + 1}`} -${formatCompact(target.amount)}`)
+        .join(', ');
+      const skipNotice = skippedDetails ? ` Skipped ${skippedDetails}.` : '';
+      this._logActivity(`${owner.name} drained ${formatCompact(total)} (${details}).${skipNotice}`);
+      this.updatePlayerBar();
+    } else if (skippedDetails) {
+      this._logActivity(`${owner.name}'s Score Drain found no available targets. Skipped ${skippedDetails}.`);
+    }
+
+    return {
+      ...result,
+      ownerIndex: endingIndex,
+      targets: applied,
+      total
+    };
   }
 
   updateTurnUI() {
@@ -2061,6 +2136,11 @@ export default class LocalGameScene extends Phaser.Scene {
     const totalComboMult = comboBaseMult * comboUpgradeMult * comboGlobal * streakMult;
 
     lines.push(`Combo: ${comboName} (Level ${comboLevel}: x${this._formatMultiplier(comboUpgradeMult * comboGlobal, 2)})`);
+    const comboUpgradePct = player.upgrades.getComboUpgradePercent?.() || 0;
+    if (comboUpgradePct > 0) {
+      const mode = player.upgrades.isComboUpgradeMultiplicative?.() ? ' (multiplicative)' : '';
+      lines.push(`Combo Upgrader: +${(comboUpgradePct * 100).toFixed(0)}% per level${mode}`);
+    }
     lines.push(`Base Multiplier: x${this._formatMultiplier(comboBaseMult, 2)}`);
 
     if (streakMult !== 1) {

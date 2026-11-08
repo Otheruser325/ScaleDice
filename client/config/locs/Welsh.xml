@@ -226,7 +226,7 @@ Mae gwerthoedd uwch yn arafu cynnydd ac yn gwobrwyo strategaeth tymor hir.</T>
             <T id="CONFIG_RESTORE_DEFAULTS" l="0">ADFER I'R RHAGOSODIADAU</T>
             <T id="CONFIG_SORT_CONFIRM" l="0">Trefnu'r uwchraddiadau mawr yn ôl cost cynyddol?</T>
             <T id="CONFIG_RESTORE_CONFIRM" l="0">Adfer pob uwchraddiad mawr i'r rhagosodiadau? Bydd hyn yn dileu pob uwchraddiad personol.</T>
-            <T id="CONFIG_MAX_BIG_UPGRADES" l="0">Wedi cyrraedd uchafswm o 60 uwchraddiad mawr.</T>
+            <T id="CONFIG_MAX_BIG_UPGRADES" l="0">Wedi cyrraedd uchafswm o 200 uwchraddiad mawr.</T>
             <T id="CONFIG_UPGRADE_NAME_REQUIRED" l="0">Rhowch enw ar gyfer yr uwchraddiad.</T>
             <T id="CONFIG_EFFECT_VALUE_MIN" l="0">Rhaid i werthoedd yr effaith fod yn 0 neu uwch.</T>
             <T id="CONFIG_EFFECT_VALUE_INVALID" l="0">Mae gwerth yr effaith yn annilys.</T>
@@ -235,6 +235,7 @@ Mae gwerthoedd uwch yn arafu cynnydd ac yn gwobrwyo strategaeth tymor hir.</T>
             <T id="CONFIG_UPGRADE_EFFECT" l="0">Effaith:</T>
             <T id="CONFIG_UPGRADE_VALUE" l="0">Gwerth:</T>
             <T id="CONFIG_UPGRADE_CAP_DELTA" l="0">Delta terfyn:</T>
+            <T id="CONFIG_UPGRADE_INVESTMENT_CAP" l="0">Terfyn buddsoddi:</T>
             <T id="CONFIG_UPGRADE_CHANCE" l="0">Siawns:</T>
             <T id="CONFIG_UPGRADE_MIN_SEC" l="0">Eilad min:</T>
             <T id="CONFIG_UPGRADE_MAX_SEC" l="0">Eilad max:</T>
@@ -253,6 +254,7 @@ Mae gwerthoedd uwch yn arafu cynnydd ac yn gwobrwyo strategaeth tymor hir.</T>
             <T id="BIG_DESC_COMBO_STREAK_MULT" l="0"> (lluosol)</T>
             <T id="BIG_DESC_SPIN" l="0">{0} y dis i droelli {1}-{2}s a chael pwyntiau bob eiliad.</T>
             <T id="BIG_DESC_INTEREST" l="0">Ennill {0} o'r sgôr bresennol bob tro.</T>
+            <T id="BIG_DESC_INTEREST_CAP" l="0"> ({0}% o log mwyaf)</T>
             <T id="BIG_DESC_GENERIC" l="0">Effaith uwchraddiad mawr.</T>
             <T id="BIG_DESC_CLAIRVOYANCE" l="0">25% o siawns i ragfynegi'r tafliad nesaf.</T>
             <T id="BIG_DESC_STOCK_EXCHANGE" l="0">Economi +50% incwm.</T>

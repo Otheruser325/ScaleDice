@@ -2,6 +2,16 @@
   "title": "SCALE DICE — CHANGELOG",
   "entries": [
     {
+      "version": "1.3.0",
+      "date": "08/11/2026",
+      "tags": ["Release", "Features", "Online"],
+      "changes": [
+        "Introducing: Online Play! A new way to play Scale Dice with your friends and strangers!\n• Connect with your guest, Google or Discord account and start exploring fun combinations and rulemaking with pleasure!",
+        "We've added two new customisable big upgrades, with one of them introducing some sort of sabotage mechanic to swing the game to your favour: Combo Upgrader & Score Drain!",
+        "Minor changes: \n• further extended the maximum big upgrades per lobby from 100 to 200 \n• the investor big upgrade now has a configurable cap so it overrides the current maximum interest rate % while it was bought"
+      ]
+    },
+    {
       "version": "1.2.2",
       "date": "21/05/2026",
       "tags": ["Updates", "Features", "Bug Fixes"],

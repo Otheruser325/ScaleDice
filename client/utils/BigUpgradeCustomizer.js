@@ -1,4 +1,6 @@
 class BigUpgradeCustomizer {
+  static MAX_UPGRADES = 200;
+
   // Default big upgrades that can be customized or deleted
   static DEFAULT_UPGRADES = [
     { key: 'clairvoyance', title: 'Clairvoyance', baseCost: 500, effect: 'predictChance', value: 0.25 },
@@ -22,7 +24,9 @@ class BigUpgradeCustomizer {
     { key: 'comboCostMultiplier', name: 'Combo Cost Multiplier', desc: 'Discount for combo upgrades' },
     { key: 'interestRate', name: 'Interest Rate', desc: 'Bonus income based on current score' },
     { key: 'comboStreak', name: 'Combo Streak', desc: 'Bonus per consecutive combo' },
-    { key: 'spinEffect', name: 'Spin Effect', desc: 'Dice spin chance (3 values)' }
+    { key: 'spinEffect', name: 'Spin Effect', desc: 'Dice spin chance (3 values)' },
+    { key: 'comboUpgrade', name: 'Combo Upgrader', desc: 'Scales combo upgrade multipliers per level' },
+    { key: 'scoreDrain', name: 'Score Drain', desc: 'Steals score from opponents at turn end (3 values)' }
   ];
 
   constructor() {
@@ -49,7 +53,7 @@ class BigUpgradeCustomizer {
 
   exportToSCD() {
     const payload = {
-      version: '1.2.2',
+      version: '1.3.0',
       exportedAt: new Date().toISOString(),
       customUpgrades: this.customUpgrades
     };

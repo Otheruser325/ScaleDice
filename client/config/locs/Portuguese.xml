@@ -226,7 +226,7 @@ Valores mais altos desaceleram a progressÃ£o e recompensam a estratÃ©gia de 
             <T id="CONFIG_RESTORE_DEFAULTS" l="0">RESTAURAR PADRÕES</T>
             <T id="CONFIG_SORT_CONFIRM" l="0">Ordenar todas as grandes melhorias por custo crescente?</T>
             <T id="CONFIG_RESTORE_CONFIRM" l="0">Restaurar todas as grandes melhorias para o padrão? Isso removerá todas as melhorias personalizadas.</T>
-            <T id="CONFIG_MAX_BIG_UPGRADES" l="0">Máximo de 60 grandes melhorias atingido.</T>
+            <T id="CONFIG_MAX_BIG_UPGRADES" l="0">Máximo de 200 grandes melhorias atingido.</T>
             <T id="CONFIG_UPGRADE_NAME_REQUIRED" l="0">Informe um nome para a melhoria.</T>
             <T id="CONFIG_EFFECT_VALUE_MIN" l="0">Os valores do efeito devem ser 0 ou maiores.</T>
             <T id="CONFIG_EFFECT_VALUE_INVALID" l="0">O valor do efeito é inválido.</T>
@@ -235,6 +235,7 @@ Valores mais altos desaceleram a progressÃ£o e recompensam a estratÃ©gia de 
             <T id="CONFIG_UPGRADE_EFFECT" l="0">Efeito:</T>
             <T id="CONFIG_UPGRADE_VALUE" l="0">Valor:</T>
             <T id="CONFIG_UPGRADE_CAP_DELTA" l="0">Delta do limite:</T>
+            <T id="CONFIG_UPGRADE_INVESTMENT_CAP" l="0">Limite de investimento:</T>
             <T id="CONFIG_UPGRADE_CHANCE" l="0">Chance:</T>
             <T id="CONFIG_UPGRADE_MIN_SEC" l="0">Seg mín:</T>
             <T id="CONFIG_UPGRADE_MAX_SEC" l="0">Seg máx:</T>
@@ -253,6 +254,7 @@ Valores mais altos desaceleram a progressÃ£o e recompensam a estratÃ©gia de 
             <T id="BIG_DESC_COMBO_STREAK_MULT" l="0"> (multiplicativo)</T>
             <T id="BIG_DESC_SPIN" l="0">{0} por dado para girar {1}-{2}s e ganhar pontos a cada segundo.</T>
             <T id="BIG_DESC_INTEREST" l="0">Ganhe {0} da pontuação atual a cada turno.</T>
+            <T id="BIG_DESC_INTEREST_CAP" l="0"> ({0}% de juros máx.)</T>
             <T id="BIG_DESC_GENERIC" l="0">Efeito de grande melhoria.</T>
             <T id="BIG_DESC_CLAIRVOYANCE" l="0">25% de chance de prever sua próxima rolagem.</T>
             <T id="BIG_DESC_STOCK_EXCHANGE" l="0">Economia +50% de renda.</T>

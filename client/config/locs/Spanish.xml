@@ -226,7 +226,7 @@ Los valores mÃ¡s altos ralentizan la progresiÃ³n y premian la estrategia a l
             <T id="CONFIG_RESTORE_DEFAULTS" l="0">RESTABLECER VALORES POR DEFECTO</T>
             <T id="CONFIG_SORT_CONFIRM" l="0">¿Ordenar todas las grandes mejoras por costo ascendente?</T>
             <T id="CONFIG_RESTORE_CONFIRM" l="0">¿Restablecer todas las grandes mejoras a los valores por defecto? Esto eliminará todas las mejoras personalizadas.</T>
-            <T id="CONFIG_MAX_BIG_UPGRADES" l="0">Se alcanzó el máximo de 60 grandes mejoras.</T>
+            <T id="CONFIG_MAX_BIG_UPGRADES" l="0">Se alcanzó el máximo de 200 grandes mejoras.</T>
             <T id="CONFIG_UPGRADE_NAME_REQUIRED" l="0">Introduce un nombre para la mejora.</T>
             <T id="CONFIG_EFFECT_VALUE_MIN" l="0">Los valores del efecto deben ser 0 o mayores.</T>
             <T id="CONFIG_EFFECT_VALUE_INVALID" l="0">El valor del efecto no es válido.</T>
@@ -235,6 +235,7 @@ Los valores mÃ¡s altos ralentizan la progresiÃ³n y premian la estrategia a l
             <T id="CONFIG_UPGRADE_EFFECT" l="0">Efecto:</T>
             <T id="CONFIG_UPGRADE_VALUE" l="0">Valor:</T>
             <T id="CONFIG_UPGRADE_CAP_DELTA" l="0">Delta de límite:</T>
+            <T id="CONFIG_UPGRADE_INVESTMENT_CAP" l="0">Límite de inversión:</T>
             <T id="CONFIG_UPGRADE_CHANCE" l="0">Probabilidad:</T>
             <T id="CONFIG_UPGRADE_MIN_SEC" l="0">Seg mín:</T>
             <T id="CONFIG_UPGRADE_MAX_SEC" l="0">Seg máx:</T>
@@ -253,6 +254,7 @@ Los valores mÃ¡s altos ralentizan la progresiÃ³n y premian la estrategia a l
             <T id="BIG_DESC_COMBO_STREAK_MULT" l="0"> (multiplicativo)</T>
             <T id="BIG_DESC_SPIN" l="0">{0} por dado para girar {1}-{2}s y ganar puntos cada segundo.</T>
             <T id="BIG_DESC_INTEREST" l="0">Gana {0} del puntaje actual en cada turno.</T>
+            <T id="BIG_DESC_INTEREST_CAP" l="0"> ({0}% de interés máx.)</T>
             <T id="BIG_DESC_GENERIC" l="0">Efecto de gran mejora.</T>
             <T id="BIG_DESC_CLAIRVOYANCE" l="0">25% de probabilidad de predecir tu próxima tirada.</T>
             <T id="BIG_DESC_STOCK_EXCHANGE" l="0">Economía +50% de ingresos.</T>

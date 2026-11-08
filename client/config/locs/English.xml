@@ -203,7 +203,7 @@
             <T id="CONFIG_RESTORE_DEFAULTS" l="0">RESTORE DEFAULTS</T>
             <T id="CONFIG_SORT_CONFIRM" l="0">Sort all big upgrades by ascending cost?</T>
             <T id="CONFIG_RESTORE_CONFIRM" l="0">Restore all big upgrades to defaults? This will remove all custom upgrades.</T>
-            <T id="CONFIG_MAX_BIG_UPGRADES" l="0">Maximum of 60 big upgrades reached.</T>
+            <T id="CONFIG_MAX_BIG_UPGRADES" l="0">Maximum of 200 big upgrades reached.</T>
             <T id="CONFIG_UPGRADE_NAME_REQUIRED" l="0">Please enter a name for the upgrade.</T>
             <T id="CONFIG_EFFECT_VALUE_MIN" l="0">Effect values must be 0 or higher.</T>
             <T id="CONFIG_EFFECT_VALUE_INVALID" l="0">Effect value is invalid.</T>
@@ -212,6 +212,7 @@
             <T id="CONFIG_UPGRADE_EFFECT" l="0">Effect:</T>
             <T id="CONFIG_UPGRADE_VALUE" l="0">Value:</T>
             <T id="CONFIG_UPGRADE_CAP_DELTA" l="0">Cap Delta:</T>
+            <T id="CONFIG_UPGRADE_INVESTMENT_CAP" l="0">Investment Cap:</T>
             <T id="CONFIG_UPGRADE_CHANCE" l="0">Chance:</T>
             <T id="CONFIG_UPGRADE_MIN_SEC" l="0">Min Sec:</T>
             <T id="CONFIG_UPGRADE_MAX_SEC" l="0">Max Sec:</T>
@@ -230,6 +231,7 @@
             <T id="BIG_DESC_COMBO_STREAK_MULT" l="0"> (multiplicative)</T>
             <T id="BIG_DESC_SPIN" l="0">{0} per die to spin {1}-{2}s and gain points each second.</T>
             <T id="BIG_DESC_INTEREST" l="0">Gain {0} of current score each turn.</T>
+            <T id="BIG_DESC_INTEREST_CAP" l="0"> ({0}% max interest)</T>
             <T id="BIG_DESC_GENERIC" l="0">Big upgrade effect.</T>
             <T id="BIG_DESC_CLAIRVOYANCE" l="0">25% chance to predict your next roll.</T>
             <T id="BIG_DESC_STOCK_EXCHANGE" l="0">Economy +50% income.</T>

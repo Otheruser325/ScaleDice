@@ -226,7 +226,7 @@ Valori piÃ¹ alti rallentano la progressione e premiano la strategia a lungo te
             <T id="CONFIG_RESTORE_DEFAULTS" l="0">RIPRISTINA PREDEFINITI</T>
             <T id="CONFIG_SORT_CONFIRM" l="0">Ordinare tutti i grandi potenziamenti per costo crescente?</T>
             <T id="CONFIG_RESTORE_CONFIRM" l="0">Ripristinare tutti i grandi potenziamenti ai valori predefiniti? Questo rimuoverà tutti i potenziamenti personalizzati.</T>
-            <T id="CONFIG_MAX_BIG_UPGRADES" l="0">Raggiunto il massimo di 60 grandi potenziamenti.</T>
+            <T id="CONFIG_MAX_BIG_UPGRADES" l="0">Raggiunto il massimo di 200 grandi potenziamenti.</T>
             <T id="CONFIG_UPGRADE_NAME_REQUIRED" l="0">Inserisci un nome per il potenziamento.</T>
             <T id="CONFIG_EFFECT_VALUE_MIN" l="0">I valori dell'effetto devono essere 0 o superiori.</T>
             <T id="CONFIG_EFFECT_VALUE_INVALID" l="0">Il valore dell'effetto non è valido.</T>
@@ -235,6 +235,7 @@ Valori piÃ¹ alti rallentano la progressione e premiano la strategia a lungo te
             <T id="CONFIG_UPGRADE_EFFECT" l="0">Effetto:</T>
             <T id="CONFIG_UPGRADE_VALUE" l="0">Valore:</T>
             <T id="CONFIG_UPGRADE_CAP_DELTA" l="0">Delta limite:</T>
+            <T id="CONFIG_UPGRADE_INVESTMENT_CAP" l="0">Limite investimento:</T>
             <T id="CONFIG_UPGRADE_CHANCE" l="0">Probabilità:</T>
             <T id="CONFIG_UPGRADE_MIN_SEC" l="0">Sec min:</T>
             <T id="CONFIG_UPGRADE_MAX_SEC" l="0">Sec max:</T>
@@ -253,6 +254,7 @@ Valori piÃ¹ alti rallentano la progressione e premiano la strategia a lungo te
             <T id="BIG_DESC_COMBO_STREAK_MULT" l="0"> (moltiplicativo)</T>
             <T id="BIG_DESC_SPIN" l="0">{0} per dado per girare {1}-{2}s e guadagnare punti ogni secondo.</T>
             <T id="BIG_DESC_INTEREST" l="0">Ottieni {0} del punteggio attuale a ogni turno.</T>
+            <T id="BIG_DESC_INTEREST_CAP" l="0"> ({0}% interesse massimo)</T>
             <T id="BIG_DESC_GENERIC" l="0">Effetto di grande potenziamento.</T>
             <T id="BIG_DESC_CLAIRVOYANCE" l="0">25% di probabilità di prevedere il prossimo lancio.</T>
             <T id="BIG_DESC_STOCK_EXCHANGE" l="0">Economia +50% reddito.</T>

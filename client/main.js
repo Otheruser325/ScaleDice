@@ -9,8 +9,14 @@ import LocalConfigScene from './scenes/LocalConfigScene.js';
 import LocalGameScene from './scenes/LocalGameScene.js';
 import LocalPostGameScene from './scenes/LocalPostGameScene.js';
 import OnlineMenuScene from './scenes/OnlineMenuScene.js';
+import OnlineAccountScene from './scenes/OnlineAccountScene.js';
+import OnlineConfigScene from './scenes/OnlineConfigScene.js';
+import OnlineLobbyScene from './scenes/OnlineLobbyScene.js';
+import OnlineGameScene from './scenes/OnlineGameScene.js';
+import OnlinePostGameScene from './scenes/OnlinePostGameScene.js';
 import ChallengesScene from './scenes/ChallengesScene.js';
 import ChallengeConfigScene from './scenes/ChallengeConfigScene.js';
+import { getSocket } from './utils/SocketManager.js';
 
 const config = {
     type: Phaser.AUTO,
@@ -30,12 +36,23 @@ const config = {
         ChangelogScene,
         PlayModeScene,
         LocalConfigScene,
-        LocalGameScene,
-		LocalPostGameScene,
+        LocalGameScene,        LocalPostGameScene,
         OnlineMenuScene,
+        OnlineAccountScene,
+        OnlineConfigScene,
+        OnlineLobbyScene,
+        OnlineGameScene,
+        OnlinePostGameScene,
         ChallengesScene,
         ChallengeConfigScene
     ]
 };
 
-new Phaser.Game(config);
+const game = new Phaser.Game(config);
+
+// Browser smoke tests need to drive real Phaser scenes without reaching into
+// module internals. Keep this opt-in so normal players never get a global
+// handle to the game or socket.
+if (new URLSearchParams(window.location.search).get('test') === '1') {
+    window.__SCALE_DICE_TEST__ = { game, getSocket };
+}
