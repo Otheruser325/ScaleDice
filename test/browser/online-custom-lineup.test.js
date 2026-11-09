@@ -57,7 +57,7 @@ test('online matches use the local custom big-upgrade lineup and show descriptio
       const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
       return scene?.currentPlayerIndex === 0 &&
         scene?.localPlayerIndex === 0 &&
-        scene?.shopBtn?.visible === true;
+        Boolean(scene?.shopUI && scene?.currentShop);
     }, null, { timeout: 15000 });
 
     const activeGame = server.lobbyManager.activeGames[created.code];
@@ -69,17 +69,25 @@ test('online matches use the local custom big-upgrade lineup and show descriptio
     assert.deepEqual(custom.values, { percentage: 0.05, isMultiplicative: false });
     assert.equal(defs.some((def) => def.key === 'rollicane'), false, 'a locally deleted default stays deleted online');
 
-    await clickGame(host.page, 1090, 300);
+    const toggle = await host.page.evaluate(() => {
+      const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
+      const button = scene.bigToggleBtn;
+      if (!button) return null;
+      const bounds = button.getBounds();
+      return { x: bounds.centerX, y: bounds.centerY };
+    });
+    assert.ok(toggle, 'the big-upgrades toggle is rendered');
+    await clickGame(host.page, toggle.x, toggle.y);
     await host.page.waitForFunction(() => {
       const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
-      return scene?.shopOpen === true;
+      return scene?.bigUpgradesOpen === true;
     }, null, { timeout: 15000 });
 
     const labels = await host.page.evaluate(() => {
       const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
       return {
         bigKeys: scene.currentShop.big.map((item) => item.key),
-        texts: scene.shopContainer.list
+        texts: (scene.bigUpgradesToolbarContainer?.list || [])
           .filter((child) => child.type === 'Text')
           .map((child) => child.text)
       };

@@ -59,7 +59,7 @@ test('online restores rolled state, keeps private predictions, and enables End T
     });
     assert.equal(guestPrediction, null, 'the prediction is not exposed to the opponent');
 
-    await clickGame(host.page, 600, 300);
+    await clickGame(host.page, 600, 470);
     await host.page.waitForFunction(() => {
       const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
       return scene?._hasRolledThisTurn === true;
@@ -87,7 +87,7 @@ test('online restores rolled state, keeps private predictions, and enables End T
         scene?.rollBtn?.input?.enabled === false;
     }, null, { timeout: 15000 });
 
-    await clickGame(host.page, 600, 360);
+    await clickGame(host.page, 600, 502);
     await host.page.waitForFunction(() => {
       const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
       return scene?.currentPlayerIndex === 1;

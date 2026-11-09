@@ -62,7 +62,7 @@ test('online Rollicane uses the server spin duration and logs the activity', {
       return scene?.scores?.[0] === 0 && scene?.rollBtn?.input?.enabled === true;
     }, null, { timeout: 15000 });
 
-    await clickGame(host.page, 600, 300);
+    await clickGame(host.page, 600, 470);
     await host.page.waitForFunction(() => {
       const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
       return scene?._rollicaneActive === true;
@@ -148,7 +148,7 @@ test('online score breakdown mirrors the local combo and streak detail', {
         });
       });
     });
-    await clickGame(host.page, 600, 300);
+    await clickGame(host.page, 600, 470);
     const turnResult = await host.page.evaluate(() => window.__breakdownTurnResult);
     await host.page.waitForFunction(() => {
       const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');

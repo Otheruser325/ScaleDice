@@ -31,11 +31,36 @@ async function gameSnapshot(page) {
       localPlayerIndex: scene.localPlayerIndex,
       scores: Array.isArray(scene.scores) ? scene.scores.slice() : [],
       shopOpen: scene.shopOpen,
+      comboPanelOpen: scene.comboPanelOpen,
+      bigUpgradesOpen: scene.bigUpgradesOpen,
       currentShop: scene.currentShop,
       progression: scene.playerSlots[scene.localPlayerIndex]?.progression || null,
       visibleDice: scene.diceSprites.filter((sprite) => sprite.visible).length,
       rollEnabled: Boolean(scene.rollBtn?.input?.enabled)
     };
+  });
+}
+
+async function clickSceneButton(page, path) {
+  const point = await page.evaluate((objectPath) => {
+    const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
+    const button = objectPath.split('.').reduce((value, key) => value?.[key], scene);
+    if (!button?.getBounds) return null;
+    const bounds = button.getBounds();
+    return { x: bounds.centerX, y: bounds.centerY };
+  }, path);
+  assert.ok(point, `${path} is rendered`);
+  await clickGame(page, point.x, point.y);
+}
+
+async function panelLabels(page) {
+  return page.evaluate(() => {
+    const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
+    const containers = [scene.comboToolbarContainer, scene.bigUpgradesToolbarContainer].filter(Boolean);
+    return containers
+      .flatMap((container) => container.list)
+      .filter((child) => child.type === 'Text')
+      .map((child) => child.text);
   });
 }
 
@@ -72,7 +97,7 @@ test('the online shop buys dice through the UI and rolls all six progression dic
       return scene?.currentPlayerIndex === 0 &&
         scene?.localPlayerIndex === 0 &&
         scene?.currentShop?.dice?.current === 1 &&
-        scene?.shopBtn?.visible === true;
+        Boolean(scene?.shopUI);
     }, null, { timeout: 15000 });
 
     const activeGame = server.lobbyManager.activeGames[created.code];
@@ -88,8 +113,8 @@ test('the online shop buys dice through the UI and rolls all six progression dic
       return scene.scores[0] === 25000 && scene.currentShop?.dice?.current === 1;
     }, null, { timeout: 15000 });
 
-    await clickGame(host.page, 1090, 300); // open shop
-    await sceneState(host.page, 'OnlineGameScene', (scene) => scene.shopOpen === true);
+    await clickSceneButton(host.page, 'comboToggleBtn');
+    await sceneState(host.page, 'OnlineGameScene', (scene) => scene.comboPanelOpen === true);
     const opened = await gameSnapshot(host.page);
     assert.equal(opened.currentShop.dice.current, 1);
     assert.equal(opened.currentShop.dice.max, 6);
@@ -104,11 +129,15 @@ test('the online shop buys dice through the UI and rolls all six progression dic
           width: child.input.hitArea.width,
           height: child.input.hitArea.height
         }));
-      return [...collect(scene.children.list), ...collect(scene.shopContainer.list)];
+      return [
+        ...collect(scene.children.list),
+        ...collect(scene.comboToolbarContainer?.list || []),
+        ...collect(scene.bigUpgradesToolbarContainer?.list || [])
+      ];
     });
-    assert.ok(textButtons.some((button) => button.text === 'End Turn'));
-    assert.ok(textButtons.some((button) => button.text === '← Back'));
-    assert.ok(textButtons.some((button) => button.text === 'CLOSE'));
+    assert.ok(textButtons.some((button) => button.text === 'END TURN'));
+    assert.ok(textButtons.some((button) => button.text === '<- BACK'));
+    assert.ok(textButtons.some((button) => button.text.startsWith('UPGRADE')));
     for (const button of textButtons) {
       assert.ok(button.width > 0 && button.height > 0, `${button.text} has a clickable hit area`);
     }
@@ -140,7 +169,7 @@ test('the online shop buys dice through the UI and rolls all six progression dic
         });
       });
 
-      await clickGame(host.page, 250, 197); // DICE buy button
+      await clickGame(host.page, 600, 530); // BUY DICE button
       const purchase = await host.page.evaluate(() => window.__shopPurchase);
       assert.equal(purchase.kind, 'dice');
       assert.equal(purchase.shop.dice.current, next);
@@ -156,8 +185,8 @@ test('the online shop buys dice through the UI and rolls all six progression dic
     assert.equal(sixDice.visibleDice, 0, 'dice are not rendered until the roll result arrives');
     assert.equal(sixDice.scores[0], 1390, 'only server-priced purchases were charged');
 
-    await clickGame(host.page, 1160, 75); // close shop
-    await sceneState(host.page, 'OnlineGameScene', (scene) => scene.shopOpen === false);
+    await clickSceneButton(host.page, 'comboToggleBtn'); // close the combo panel
+    await sceneState(host.page, 'OnlineGameScene', (scene) => scene.comboPanelOpen === false && scene.shopOpen === false);
     await sceneState(host.page, 'OnlineGameScene', (scene) => scene.rollBtn.input?.enabled === true);
 
     await host.page.evaluate(() => {
@@ -174,7 +203,7 @@ test('the online shop buys dice through the UI and rolls all six progression dic
         });
       });
     });
-    await clickGame(host.page, 600, 300); // Roll Dice
+    await clickGame(host.page, 600, 470); // Roll Dice
     const roll = await host.page.evaluate(() => window.__shopRoll);
 
     assert.equal(roll.dice.length, 6, 'the server rolls all six unlocked dice');
@@ -299,9 +328,9 @@ test('online shop prices follow the lobby multiplier and buy a big upgrade', {
 
     await host.page.waitForFunction(() => {
       const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
-      return scene?.currentPlayerIndex === 0 &&
+      return        scene?.currentPlayerIndex === 0 &&
         scene?.localPlayerIndex === 0 &&
-        scene?.shopBtn?.visible === true;
+        Boolean(scene?.shopUI && scene?.currentShop);
     }, null, { timeout: 15000 });
 
     const activeGame = server.lobbyManager.activeGames[created.code];
@@ -316,8 +345,8 @@ test('online shop prices follow the lobby multiplier and buy a big upgrade', {
       return scene.scores[0] === 10000;
     }, null, { timeout: 15000 });
 
-    await clickGame(host.page, 1090, 300);
-    await sceneState(host.page, 'OnlineGameScene', (scene) => scene.shopOpen === true);
+    await clickSceneButton(host.page, 'bigToggleBtn');
+    await sceneState(host.page, 'OnlineGameScene', (scene) => scene.bigUpgradesOpen === true);
     const opened = await gameSnapshot(host.page);
     assert.equal(opened.currentShop.dice.cost, 20);
     assert.equal(opened.currentShop.economy.cost, 50);
@@ -356,7 +385,7 @@ test('online shop prices follow the lobby multiplier and buy a big upgrade', {
 
     const bigButton = await host.page.evaluate(() => {
       const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
-      const button = scene.shopContainer.list.find((child) => (
+      const button = scene.bigUpgradesToolbarContainer?.list.find((child) => (
         child.type === 'Text' && child.text === 'BUY 1000'
       ));
       if (!button) return null;
@@ -399,14 +428,14 @@ test('online shop paginates the complete big-upgrade catalogue', {
       const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
       return scene?.currentPlayerIndex === 0 &&
         scene?.localPlayerIndex === 0 &&
-        scene?.shopBtn?.visible === true;
+        Boolean(scene?.shopUI && scene?.currentShop);
     }, null, { timeout: 15000 });
 
     const activeGame = server.lobbyManager.activeGames[created.code];
     assert.ok(activeGame, 'the online game should be running');
     activeGame.players[0].score = 10000;
     const progression = activeGame.players[0].progression;
-    for (let index = 0; index < 6; index += 1) {
+    for (let index = 0; index < 60; index += 1) {
       const def = {
         key: `catalogue${index}`,
         title: `Catalogue ${index}`,
@@ -424,8 +453,8 @@ test('online shop paginates the complete big-upgrade catalogue', {
       return scene?.scores?.[0] === 10000;
     }, null, { timeout: 15000 });
 
-    await clickGame(host.page, 1090, 300);
-    await sceneState(host.page, 'OnlineGameScene', (scene) => scene.shopOpen === true);
+    await clickSceneButton(host.page, 'bigToggleBtn');
+    await sceneState(host.page, 'OnlineGameScene', (scene) => scene.bigUpgradesOpen === true);
 
     const firstPage = await host.page.evaluate(() => {
       const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
@@ -433,37 +462,31 @@ test('online shop paginates the complete big-upgrade catalogue', {
         page: scene.bigUpgradePage,
         pageCount: scene.bigUpgradePageCount,
         total: scene.currentShop.big.length,
-        labels: scene.shopContainer.list
+        labels: (scene.bigUpgradesToolbarContainer?.list || scene.comboToolbarContainer?.list || [])
           .filter((child) => child.type === 'Text')
           .map((child) => child.text)
       };
     });
-    assert.equal(firstPage.total, 14, 'the shop receives the full catalogue');
+    assert.equal(firstPage.total, 68, 'the shop receives the full catalogue');
     assert.equal(firstPage.pageCount, 2);
     assert.equal(firstPage.page, 0);
     assert.ok(firstPage.labels.includes('Page 1/2'));
     assert.ok(firstPage.labels.some((label) => label.includes('Catalogue 3')));
-    assert.equal(firstPage.labels.some((label) => label.includes('Catalogue 4')), false);
+    assert.equal(firstPage.labels.some((label) => label.includes('Catalogue 59')), false);
 
     const firstPageControls = await host.page.evaluate(() => {
       const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
       return {
-        prevEnabled: Boolean(scene.bigUpgradePrevBtn?.input?.enabled),
-        nextEnabled: Boolean(scene.bigUpgradeNextBtn?.input?.enabled)
+        prevExists: Boolean(scene.bigPagePrevBtn),
+        nextExists: Boolean(scene.bigPageNextBtn)
       };
     });
-    assert.equal(firstPageControls.prevEnabled, false, 'the previous-page control is disabled on the first page');
-    assert.equal(firstPageControls.nextEnabled, true, 'the next-page control is enabled on the first page');
-    const pageAfterFirstBoundary = await host.page.evaluate(() => {
-      const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
-      scene.bigUpgradePrevBtn?.emit('pointerdown');
-      return scene.bigUpgradePage;
-    });
-    assert.equal(pageAfterFirstBoundary, 0, 'the first page cannot go back further');
+    assert.equal(firstPageControls.prevExists, false, 'the first page has no previous arrow');
+    assert.equal(firstPageControls.nextExists, true, 'the first page has a next arrow');
 
     const nextButton = await host.page.evaluate(() => {
       const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
-      const button = scene.bigUpgradeNextBtn;
+      const button = scene.bigPageNextBtn;
       if (!button) return null;
       const bounds = button.getBounds();
       return { x: bounds.centerX, y: bounds.centerY };
@@ -477,7 +500,7 @@ test('online shop paginates the complete big-upgrade catalogue', {
       return {
         page: scene.bigUpgradePage,
         pageCount: scene.bigUpgradePageCount,
-        labels: scene.shopContainer.list
+        labels: (scene.bigUpgradesToolbarContainer?.list || scene.comboToolbarContainer?.list || [])
           .filter((child) => child.type === 'Text')
           .map((child) => child.text)
       };
@@ -485,30 +508,23 @@ test('online shop paginates the complete big-upgrade catalogue', {
     assert.equal(secondPage.page, 1);
     assert.equal(secondPage.pageCount, 2);
     assert.ok(secondPage.labels.includes('Page 2/2'));
-    assert.ok(secondPage.labels.some((label) => label.includes('Catalogue 4')));
-    assert.ok(secondPage.labels.some((label) => label.includes('Catalogue 5')));
+    assert.ok(secondPage.labels.some((label) => label.includes('Catalogue 59')));
+    assert.ok(secondPage.labels.some((label) => label.includes('Catalogue 55')));
     assert.equal(secondPage.labels.some((label) => label.includes('Clairvoyance')), false);
 
     const lastPageControls = await host.page.evaluate(() => {
       const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
       return {
-        prevEnabled: Boolean(scene.bigUpgradePrevBtn?.input?.enabled),
-        nextEnabled: Boolean(scene.bigUpgradeNextBtn?.input?.enabled)
+        prevExists: Boolean(scene.bigPagePrevBtn),
+        nextExists: Boolean(scene.bigPageNextBtn)
       };
     });
-    assert.equal(lastPageControls.prevEnabled, true, 'the previous-page control is enabled on the last page');
-    assert.equal(lastPageControls.nextEnabled, false, 'the next-page control is disabled on the last page');
-
-    const pageAfterLastBoundary = await host.page.evaluate(() => {
-      const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
-      scene.bigUpgradeNextBtn?.emit('pointerdown');
-      return scene.bigUpgradePage;
-    });
-    assert.equal(pageAfterLastBoundary, 1, 'the last page cannot advance further');
+    assert.equal(lastPageControls.prevExists, true, 'the last page has a previous arrow');
+    assert.equal(lastPageControls.nextExists, false, 'the last page has no next arrow');
 
     const previousButton = await host.page.evaluate(() => {
       const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
-      const button = scene.bigUpgradePrevBtn;
+      const button = scene.bigPagePrevBtn;
       if (!button) return null;
       const bounds = button.getBounds();
       return { x: bounds.centerX, y: bounds.centerY };
@@ -521,7 +537,7 @@ test('online shop paginates the complete big-upgrade catalogue', {
       const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
       return {
         page: scene.bigUpgradePage,
-        labels: scene.shopContainer.list
+        labels: (scene.bigUpgradesToolbarContainer?.list || scene.comboToolbarContainer?.list || [])
           .filter((child) => child.type === 'Text')
           .map((child) => child.text)
       };
@@ -529,7 +545,7 @@ test('online shop paginates the complete big-upgrade catalogue', {
     assert.equal(returnedPage.page, 0);
     assert.ok(returnedPage.labels.includes('Page 1/2'));
     assert.ok(returnedPage.labels.some((label) => label.includes('Catalogue 3')));
-    assert.equal(returnedPage.labels.some((label) => label.includes('Catalogue 4')), false);
+    assert.equal(returnedPage.labels.some((label) => label.includes('Catalogue 59')), false);
 
     assert.deepEqual(host.pageErrors, []);
     assert.deepEqual(guest.pageErrors, []);
@@ -562,7 +578,7 @@ test('disabled big upgrades are hidden in the shop and rejected by the server', 
       const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
       return scene?.currentPlayerIndex === 0 &&
         scene?.localPlayerIndex === 0 &&
-        scene?.shopBtn?.visible === true;
+        Boolean(scene?.shopUI && scene?.currentShop);
     }, null, { timeout: 15000 });
 
     const activeGame = server.lobbyManager.activeGames[created.code];
@@ -576,17 +592,12 @@ test('disabled big upgrades are hidden in the shop and rejected by the server', 
       return scene.scores[0] === 10000;
     }, null, { timeout: 15000 });
 
-    await clickGame(host.page, 1090, 300);
-    await sceneState(host.page, 'OnlineGameScene', (scene) => scene.shopOpen === true);
+    await clickSceneButton(host.page, 'comboToggleBtn');
+    await sceneState(host.page, 'OnlineGameScene', (scene) => scene.comboPanelOpen === true);
     const opened = await gameSnapshot(host.page);
     assert.deepEqual(opened.currentShop.big, []);
 
-    const shopLabels = await host.page.evaluate(() => {
-      const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
-      return scene.shopContainer.list
-        .filter((child) => child.type === 'Text')
-        .map((child) => child.text);
-    });
+    const shopLabels = await panelLabels(host.page);
     assert.equal(shopLabels.includes('BIG UPGRADES'), false, 'the shop does not render a big-upgrade heading');
     assert.equal(shopLabels.some((label) => label.includes('Clairvoyance')), false, 'the shop does not render big-upgrade rows');
 

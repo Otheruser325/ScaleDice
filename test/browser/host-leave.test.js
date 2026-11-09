@@ -73,7 +73,7 @@ test('an explicit host leave transfers host and the remaining players continue',
     const backButton = await host.page.evaluate(() => {
       const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
       const button = scene.children.list.find((child) => (
-        child.type === 'Text' && child.text === '← Back'
+        child.type === 'Text' && child.text === '<- BACK'
       ));
       if (!button) return null;
       const bounds = button.getBounds();
@@ -298,7 +298,7 @@ test('an explicit lobby leave transfers host and the new host starts the match',
         scene.rollBtn?.input?.enabled === true;
     }, null, { timeout: 15000 });
 
-    await clickGame(guest.page, 600, 300);
+    await clickGame(guest.page, 600, 470);
     await guest.page.waitForFunction(() => {
       const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
       return scene?._hasRolledThisTurn === true &&

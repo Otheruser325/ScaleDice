@@ -18,18 +18,6 @@ class BackgroundManager {
    */
   static registerScene(scene, opts = {}) {
     if (!scene || !scene.add) return;
-    if (BackgroundManager._scene === scene) return;
-
-    BackgroundManager.unregisterScene();
-
-    BackgroundManager._scene = scene;
-    BackgroundManager._opts = { ...(opts || {}) };
-
-    const cam = scene.cameras.main;
-    const w = cam ? cam.width : scene.scale?.width;
-    const h = cam ? cam.height : scene.scale?.height;
-    const centerX = cam ? cam.centerX : (w / 2);
-    const centerY = cam ? cam.centerY : (h / 2);
 
     const imageKey = opts.key || 'bg';
     let src = null;
@@ -42,10 +30,32 @@ class BackgroundManager {
       src = null;
     }
 
+    const useImage = !!opts.useImageIfAvailable && hasDrawableSource(src);
+    if (BackgroundManager._scene === scene) {
+      const bg = BackgroundManager._bg;
+      const attached = !!bg && bg.scene === scene && bg.active !== false &&
+        (scene.children?.list?.includes(bg) || !!bg.parentContainer);
+      const hasImage = !!bg?.texture && bg.texture.key === imageKey;
+      // If the first registration happened before the texture decoded, retry
+      // now that the image is available instead of keeping the fallback.
+      if (attached && (!opts.useImageIfAvailable || hasImage || !useImage)) return;
+      BackgroundManager.unregisterScene(scene);
+    }
+
+    BackgroundManager.unregisterScene();
+
+    BackgroundManager._scene = scene;
+    BackgroundManager._opts = { ...(opts || {}) };
+
+    const cam = scene.cameras.main;
+    const w = cam ? cam.width : scene.scale?.width;
+    const h = cam ? cam.height : scene.scale?.height;
+    const centerX = cam ? cam.centerX : (w / 2);
+    const centerY = cam ? cam.centerY : (h / 2);
+
     // A texture key can exist before its image is decoded. Rendering an image
     // whose source is null causes CanvasRenderer.drawImage(null) to throw, so
     // only take the image path when the source has real dimensions.
-    const useImage = !!opts.useImageIfAvailable && hasDrawableSource(src);
     let img = null;
     if (useImage) {
       try {
@@ -107,11 +117,36 @@ class BackgroundManager {
       if (BackgroundManager._bg && BackgroundManager._bg.list) {
         BackgroundManager._bg.list.forEach(c => c.setScrollFactor?.(0));
       }
+      // Keep the background behind every scene object even if another system
+      // adds a low-depth object before the scene finishes creating its UI.
+      if (BackgroundManager._bg && scene.children?.sendToBack) {
+        scene.children.sendToBack(BackgroundManager._bg);
+      }
     } catch (e) {}
 
     if (scene.events && typeof scene.events.once === 'function') {
       scene.events.once('shutdown', () => BackgroundManager.unregisterScene(scene));
       scene.events.once('destroy', () => BackgroundManager.unregisterScene(scene));
+    }
+
+    // Some scenes are entered before the image is fully decoded. The panel is
+    // intentionally safe to render at that point, but it must be replaced once
+    // the texture becomes drawable. Retry on the scene clock (which is cleared
+    // when the scene shuts down) so this also works for lobby/post-game scenes
+    // that do not otherwise refresh their background.
+    if (opts.useImageIfAvailable && !useImage && !opts._retry) {
+      const retry = (remaining) => {
+        if (!scene || BackgroundManager._scene !== scene) return;
+        if (BackgroundManager._bg?.texture?.key === imageKey) return;
+        try {
+          BackgroundManager.registerScene(scene, { ...opts, _retry: true });
+        } catch (e) { /* fallback remains usable */ }
+        if (remaining > 1 && BackgroundManager._scene === scene &&
+            BackgroundManager._bg?.texture?.key !== imageKey) {
+          try { scene.time?.delayedCall(300, () => retry(remaining - 1)); } catch (e) { /* ignore */ }
+        }
+      };
+      try { scene.time?.delayedCall(0, () => retry(8)); } catch (e) { /* ignore */ }
     }
   }
 

@@ -31,7 +31,12 @@ export function createBrowserHarness({ sessionSecret, lobbyOptions = {} } = {}) 
     });
     await new Promise((resolve) => server.httpServer.listen(0, '127.0.0.1', resolve));
     baseUrl = `http://127.0.0.1:${server.httpServer.address().port}`;
-    browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
+    // The Windows headless GPU process can crash when several WebGL clients
+    // are open at once. Keep the renderer software-backed on that host so the
+    // multiplayer tests can exercise the game logic and layout reliably.
+    const headlessArgs = ['--no-sandbox'];
+    if (process.platform === 'win32') headlessArgs.push('--disable-gpu', '--enable-unsafe-swiftshader');
+    browser = await chromium.launch({ headless: true, args: headlessArgs });
   }
 
   async function stop() {

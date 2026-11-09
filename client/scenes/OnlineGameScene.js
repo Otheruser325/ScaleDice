@@ -2,8 +2,10 @@ import { getSocket } from '../utils/SocketManager.js';
 import GlobalAudio from '../utils/AudioManager.js';
 import { animateDiceRoll, animateDiceSpin } from '../utils/AnimationManager.js';
 import GlobalAchievements from '../utils/AchievementsManager.js';
+import GlobalBackground from '../utils/BackgroundManager.js';
+import OnlineShopUI from '../utils/OnlineShopUI.js';
 import { COMBO_DISPLAY_NAMES, checkCombo, showComboText, playComboFX } from '../utils/ComboManager.js';
-import { formatCompact } from '../utils/FormatManager.js';
+import { formatCompact, formatCompactFull } from '../utils/FormatManager.js';
 
 // Phaser can measure a text object as zero-sized before its font is ready.
 // Attach an explicit hit area to every text control so it remains clickable
@@ -17,7 +19,47 @@ function makeTextButton(text, width, height) {
   return text;
 }
 
-const SHOP_BIG_UPGRADE_PAGE_SIZE = 12;
+const GAME_FONT = 'Orbitron, Arial';
+
+// Keep these values in step with the local game scene. The online scene shares
+// the same 1280x960 board, header, dice row, action stack and player bar.
+const GAME_LAYOUT = {
+  header: { x: 600, y: 15, fontSize: 22 },
+  round: { x: 600, y: 40, fontSize: 28 },
+  turn: { x: 600, y: 72, fontSize: 24 },
+  lastRoll: { x: 600, y: 100, fontSize: 18 },
+  prediction: { x: 600, y: 115, fontSize: 16 },
+  team: { x: 600, y: 142, fontSize: 18 },
+  score: { x: 600, y: 220, fontSize: 18 },
+  dice: { startX: 350, step: 90, y: 360 },
+  timer: { x: 600, y: 425, fontSize: 20 },
+  roll: { x: 600, y: 470, fontSize: 36 },
+  endTurn: { x: 600, y: 502, fontSize: 28 },
+  buyDice: { x: 600, y: 530, fontSize: 26 },
+  diceCost: { x: 600, y: 560, fontSize: 18 },
+  buyEconomy: { x: 600, y: 590, fontSize: 24 },
+  ecoCost: { x: 600, y: 620, fontSize: 18 },
+  buyLuck: { x: 600, y: 650, fontSize: 24 },
+  luckCost: { x: 600, y: 680, fontSize: 18 },
+  shop: { x: 1090, y: 420, fontSize: 22 },
+  player: {
+    spacing: 200,
+    y: 850,
+    iconScale: 0.7,
+    nameY: 70,
+    nameFontSize: 22,
+    scoreY: -134,
+    scoreFontSize: 20,
+    diceY: -102,
+    diceFontSize: 18,
+    luckY: -80,
+    luckFontSize: 18,
+    incomeY: -58,
+    incomeFontSize: 16,
+    ringSize: 90
+  },
+  history: { right: 1280, y: 10, width: 420, height: 380 }
+};
 
 export default class OnlineGameScene extends Phaser.Scene {
   constructor() {
@@ -69,6 +111,14 @@ export default class OnlineGameScene extends Phaser.Scene {
     this.currentShop = null;
     this.shopOpen = false;
     this.prediction = null;
+    this._turnToken = 0;
+    this._turnHasRolled = false;
+    this._turnRolling = false;
+    this._turnExpiresAt = null;
+    this._resumeSyncInstalled = false;
+    this._onVisibilityChange = null;
+    this._onWindowFocus = null;
+    this._lastResyncAt = 0;
 
     // timer (client side mirror only)
     this.turnTimer = null;
@@ -82,88 +132,151 @@ export default class OnlineGameScene extends Phaser.Scene {
     this.history = null;
     this.bigUpgradePage = 0;
     this.bigUpgradePageCount = 1;
+    this.comboPanelOpen = false;
+    this.bigUpgradesOpen = false;
+    this._comboSignature = null;
+    this._bigSignature = null;
     this._consecutiveFullHouse = 0;
+    this._leaving = false;
+    this._shutDown = false;
+    this.exitModal = null;
+    this.shopUI = null;
+    this.playerTints = [0x66aaff, 0xffdd66, 0x66ff99, 0xff6666, 0xffaa44, 0xee88ff];
   }
 
   create() {
     this.exitLocked = true;
     this.debug = false;
+    this._leaving = false;
+    this._shutDown = false;
+
+    try { GlobalBackground.registerScene(this, { key: 'bg', useImageIfAvailable: true }); } catch (err) { /* ignore */ }
     try { GlobalAchievements.registerScene(this); } catch (err) { /* ignore */ }
 
     if (this.debug) console.log('[OnlineGameScene] create() room=', this.roomCode);
 
-    this.add.rectangle(600, 480, 1280, 960, 0x111111, 0.95);
-    this.roundTitle = this.add.text(600, 50, 'Online Game', { fontSize: 32 }).setOrigin(0.5);
-    this.teamScoreText = this.add.text(600, 100, '', {
-      fontSize: 18,
-      fontFamily: 'Orbitron, Arial',
-      color: '#aaddff'
-    }).setOrigin(0.5).setVisible(false);
-    this.info = this.add.text(600, 180, '', { fontSize: 24, align: 'center' }).setOrigin(0.5);
-    this.predictionText = this.add.text(600, 130, '', {
-      fontSize: 16,
-      fontFamily: 'Orbitron, Arial',
+    this.headerText = this.add.text(GAME_LAYOUT.header.x, GAME_LAYOUT.header.y, 'Scale Dice', {
+      fontSize: GAME_LAYOUT.header.fontSize,
+      fontFamily: GAME_FONT,
+      color: '#cccccc'
+    }).setOrigin(0.5);
+    this.roundText = this.add.text(GAME_LAYOUT.round.x, GAME_LAYOUT.round.y, '', {
+      fontSize: GAME_LAYOUT.round.fontSize,
+      fontFamily: GAME_FONT
+    }).setOrigin(0.5);
+    this.roundTitle = this.roundText;
+    this.info = this.add.text(GAME_LAYOUT.turn.x, GAME_LAYOUT.turn.y, '', {
+      fontSize: GAME_LAYOUT.turn.fontSize,
+      fontFamily: GAME_FONT,
+      align: 'center'
+    }).setOrigin(0.5);
+    this.turnText = this.info;
+    this.lastRollText = this.add.text(GAME_LAYOUT.lastRoll.x, GAME_LAYOUT.lastRoll.y, '', {
+      fontSize: GAME_LAYOUT.lastRoll.fontSize,
+      fontFamily: GAME_FONT,
+      color: '#ffffaa'
+    }).setOrigin(0.5).setDepth(10);
+    this.predictionText = this.add.text(GAME_LAYOUT.prediction.x, GAME_LAYOUT.prediction.y, '', {
+      fontSize: GAME_LAYOUT.prediction.fontSize,
+      fontFamily: GAME_FONT,
       color: '#88ff88'
     }).setOrigin(0.5);
-
-    this.shopBtn = this.add.text(1090, 300, 'SHOP', {
-      fontSize: 22,
-      fontFamily: 'Orbitron, Arial',
-      color: '#66ccff'
+    this.teamScoreText = this.add.text(GAME_LAYOUT.team.x, GAME_LAYOUT.team.y, '', {
+      fontSize: GAME_LAYOUT.team.fontSize,
+      fontFamily: GAME_FONT,
+      color: '#aaddff'
     }).setOrigin(0.5).setVisible(false);
-    makeTextButton(this.shopBtn, 90, 40);
-    this.shopBtn.on('pointerdown', () => this.toggleShop());
-    this.shopContainer = this.add.container(0, 0).setDepth(3000).setVisible(false);
 
     // Roll button (client -> server). Text bounds can be zero before the font
     // is measured in a headless browser, so give it an explicit hit area.
-    this.rollBtn = this.add.text(600, 300, 'Roll Dice', {
-      fontSize: 32,
-      fontFamily: 'Orbitron, Arial',
+    this.rollBtn = this.add.text(GAME_LAYOUT.roll.x, GAME_LAYOUT.roll.y, 'ROLL DICE', {
+      fontSize: GAME_LAYOUT.roll.fontSize,
+      fontFamily: GAME_FONT,
       color: '#999999'
     })
       .setOrigin(0.5)
-      .setInteractive(new Phaser.Geom.Rectangle(0, 0, 210, 50), Phaser.Geom.Rectangle.Contains)
+      .setInteractive(new Phaser.Geom.Rectangle(0, 0, 260, 60), Phaser.Geom.Rectangle.Contains)
       .on('pointerdown', () => {
         if (this.localPlayerIndex === null || this.currentPlayerIndex !== this.localPlayerIndex) return;
         this.rollBtn.disableInteractive();
-        this.rollBtn.setText('Rolling...');
+        this.rollBtn.setText('ROLLING...');
         this.onRollPressed();
       });
 
-    // End Turn (optional, server drives flow)
-    this.endTurnBtn = this.add.text(600, 360, 'End Turn', {
-      fontSize: 20,
-      fontFamily: 'Orbitron, Arial',
-      color: '#ffaa66'
+    this.endTurnBtn = this.add.text(GAME_LAYOUT.endTurn.x, GAME_LAYOUT.endTurn.y, 'END TURN', {
+      fontSize: GAME_LAYOUT.endTurn.fontSize,
+      fontFamily: GAME_FONT,
+      color: '#666666'
     }).setOrigin(0.5);
-    makeTextButton(this.endTurnBtn, 150, 40);
+    makeTextButton(this.endTurnBtn, 170, 48);
     this.endTurnBtn.on('pointerdown', () => {
       if (this.localPlayerIndex === null || this.currentPlayerIndex !== this.localPlayerIndex) return;
       if (!this._hasRolledThisTurn) {
         this.info.setText('You must roll before ending your turn.');
         return;
       }
-      getSocket().emit('player-end-turn', { code: this.roomCode, playerIndex: this.localPlayerIndex });
+      const socket = getSocket();
+      if (socket) socket.emit('player-end-turn', { code: this.roomCode, playerIndex: this.localPlayerIndex });
       this.endTurnBtn.disableInteractive();
     });
     this.endTurnBtn.disableInteractive();
 
-    this.timerText = this.add.text(600, 580, '', { fontSize: 20 }).setOrigin(0.5);
+    this.buyDiceBtn = this.add.text(GAME_LAYOUT.buyDice.x, GAME_LAYOUT.buyDice.y, 'BUY DICE', {
+      fontSize: GAME_LAYOUT.buyDice.fontSize,
+      fontFamily: GAME_FONT,
+      color: '#555555'
+    }).setOrigin(0.5);
+    makeTextButton(this.buyDiceBtn, 190, 44);
+    this.buyDiceBtn.on('pointerdown', () => this.buyUpgrade('dice'));
+    this.diceCostText = this.add.text(GAME_LAYOUT.diceCost.x, GAME_LAYOUT.diceCost.y, '', {
+      fontSize: GAME_LAYOUT.diceCost.fontSize,
+      fontFamily: GAME_FONT,
+      color: '#ffaa44'
+    }).setOrigin(0.5);
 
-    // dice sprites (up to six for local progression)
+    this.buyEcoBtn = this.add.text(GAME_LAYOUT.buyEconomy.x, GAME_LAYOUT.buyEconomy.y, 'UPGRADE ECONOMY', {
+      fontSize: GAME_LAYOUT.buyEconomy.fontSize,
+      fontFamily: GAME_FONT,
+      color: '#555555'
+    }).setOrigin(0.5);
+    makeTextButton(this.buyEcoBtn, 240, 44);
+    this.buyEcoBtn.on('pointerdown', () => this.buyUpgrade('economy'));
+    this.ecoCostText = this.add.text(GAME_LAYOUT.ecoCost.x, GAME_LAYOUT.ecoCost.y, '', {
+      fontSize: GAME_LAYOUT.ecoCost.fontSize,
+      fontFamily: GAME_FONT,
+      color: '#66ccff'
+    }).setOrigin(0.5);
+
+    this.buyLuckBtn = this.add.text(GAME_LAYOUT.buyLuck.x, GAME_LAYOUT.buyLuck.y, 'UPGRADE LUCK', {
+      fontSize: GAME_LAYOUT.buyLuck.fontSize,
+      fontFamily: GAME_FONT,
+      color: '#555555'
+    }).setOrigin(0.5);
+    makeTextButton(this.buyLuckBtn, 220, 44);
+    this.buyLuckBtn.on('pointerdown', () => this.buyUpgrade('luck'));
+    this.luckCostText = this.add.text(GAME_LAYOUT.luckCost.x, GAME_LAYOUT.luckCost.y, '', {
+      fontSize: GAME_LAYOUT.luckCost.fontSize,
+      fontFamily: GAME_FONT,
+      color: '#ff88ff'
+    }).setOrigin(0.5);
+
+    this.timerText = this.add.text(GAME_LAYOUT.timer.x, GAME_LAYOUT.timer.y, '', {
+      fontSize: GAME_LAYOUT.timer.fontSize,
+      fontFamily: GAME_FONT
+    }).setOrigin(0.5);
+
+    // dice sprites (up to six for online progression)
     this.diceSprites = [];
-    const startX = 600 - (6 * 70) / 2;
-    const y = 240;
+    const { startX, step, y } = GAME_LAYOUT.dice;
     for (let i = 0; i < 6; i++) {
-      const s = this.add.image(startX + i * 70, y, 'dice1').setScale(0.9).setVisible(false);
+      const s = this.add.image(startX + i * step, y, 'dice1').setVisible(false);
       s.originalX = s.x; s.originalY = s.y;
       this.diceSprites.push(s);
     }
 
-    this.scoreBreakdown = this.add.text(600, 420, '', {
-      fontSize: 18,
-      fontFamily: 'Orbitron, Arial',
+    this.scoreBreakdown = this.add.text(GAME_LAYOUT.score.x, GAME_LAYOUT.score.y, '', {
+      fontSize: GAME_LAYOUT.score.fontSize,
+      fontFamily: GAME_FONT,
       align: 'center',
       color: '#ffffaa',
       lineSpacing: -2
@@ -173,7 +286,15 @@ export default class OnlineGameScene extends Phaser.Scene {
     this.createHistoryLog();
 
     this.addBackButton();
+    this.shopUI = new OnlineShopUI(this);
+    if (this.input?.keyboard) {
+      this.input.keyboard.on('keydown-C', () => { if (!this._leaving) this.shopUI?.toggleComboToolbar(); });
+      this.input.keyboard.on('keydown-B', () => { if (!this._leaving) this.shopUI?.toggleBigUpgrades(); });
+    }
+    this.events.once('shutdown', () => this.shutdown());
+    this.events.once('destroy', () => this.shutdown());
     this.installSocketHandlers();
+    this._installResumeSync();
 
     // Identity is established by the HTTP session during the socket handshake;
     // the game never promotes a cached/local value to a player identity.
@@ -196,100 +317,128 @@ export default class OnlineGameScene extends Phaser.Scene {
     // small flag so handlers don't run before scene is ready
     this._sceneReady = true;
     this._logActivity(`Game started — Room ${this.roomCode}`);
+
   }
 
   // -----------------------
   // Player bar helpers
   // -----------------------
   createPlayerBar() {
-    // destroy previous visuals (if any)
+    // Destroy previous visuals (if any). Each slot owns several text objects,
+    // so tear down all values and rebuild at the local-game geometry.
     if (Array.isArray(this.playerBar) && this.playerBar.length) {
-      this.playerBar.forEach(item => {
-        if (item.icon) item.icon.destroy();
-        if (item.tag) item.tag.destroy();
-        if (item.ring) item.ring.destroy();
-        if (item.scoreText) item.scoreText.destroy();
-        if (item.progressText) item.progressText.destroy();
+      this.playerBar.forEach((item) => {
+        Object.values(item).forEach((object) => {
+          try { object?.destroy?.(); } catch (err) { /* ignore */ }
+        });
       });
     }
     this.playerBar = [];
 
     const total = this.playerSlots.length || 1;
-    const spacing = 200;
-    const startX = 600 - ((total - 1) * spacing) / 2;
-    const y = 850;
+    const cfg = GAME_LAYOUT.player;
+    const startX = 600 - ((total - 1) * cfg.spacing) / 2;
+    const y = cfg.y;
 
     for (let i = 0; i < total; i++) {
-      const icon = this.add.image(startX + i * spacing, y, 'playerIcon').setScale(0.7).setVisible(false);
-      const tag = this.add.text(startX + i * spacing, y + 70, `P${i + 1}`, { fontSize: 26, color: '#ffffff' }).setOrigin(0.5).setVisible(false);
-      const scoreText = this.add.text(startX + i * spacing, y - 70, '0', { fontSize: 20, color: '#ffff88' }).setOrigin(0.5).setVisible(false);
-      const progressText = this.add.text(startX + i * spacing, y + 42, '', { fontSize: 14, color: '#aaddff' }).setOrigin(0.5).setVisible(false);
-      const ring = this.add.rectangle(startX + i * spacing, y, 90, 90, 0x66ccff, 0.25).setStrokeStyle(3, 0x66ccff).setVisible(false);
-      this.playerBar.push({ ring, icon, tag, scoreText, progressText });
+      const x = startX + i * cfg.spacing;
+      const icon = this.add.image(x, y, 'playerIcon').setScale(cfg.iconScale).setVisible(false);
+      const tag = this.add.text(x, y + cfg.nameY, `P${i + 1}`, {
+        fontSize: cfg.nameFontSize,
+        fontFamily: GAME_FONT,
+        color: '#ffffff'
+      }).setOrigin(0.5).setVisible(false);
+      const scoreText = this.add.text(x, y + cfg.scoreY, '0', {
+        fontSize: cfg.scoreFontSize,
+        fontFamily: GAME_FONT,
+        color: '#ffff88'
+      }).setOrigin(0.5).setVisible(false);
+      const diceText = this.add.text(x, y + cfg.diceY, '', {
+        fontSize: cfg.diceFontSize,
+        fontFamily: GAME_FONT,
+        color: '#ffaa44'
+      }).setOrigin(0.5).setVisible(false);
+      const luckText = this.add.text(x, y + cfg.luckY, '', {
+        fontSize: cfg.luckFontSize,
+        fontFamily: GAME_FONT,
+        color: '#66ccff'
+      }).setOrigin(0.5).setVisible(false);
+      const incomeText = this.add.text(x, y + cfg.incomeY, '', {
+        fontSize: cfg.incomeFontSize,
+        fontFamily: GAME_FONT,
+        color: '#66ccff'
+      }).setOrigin(0.5).setVisible(false);
+      const ring = this.add.rectangle(x, y, cfg.ringSize, cfg.ringSize, 0xffffff, 0.2)
+        .setStrokeStyle(3, 0xffffff)
+        .setVisible(false);
+      this.playerBar.push({ ring, icon, tag, scoreText, diceText, luckText, incomeText });
     }
 
     this.updatePlayerBar();
   }
 
   updatePlayerBar() {
-    const total = this.playerSlots.length || 1;
-    const spacing = 200;
-    const startX = 600 - ((total - 1) * spacing) / 2;
-    const y = 850;
+    if (!Array.isArray(this.playerBar) || !this.playerBar.length) return;
+    const total = this.playerSlots.length || 0;
+    const cfg = GAME_LAYOUT.player;
+    const startX = 600 - ((Math.max(total, 1) - 1) * cfg.spacing) / 2;
+    const y = cfg.y;
 
     this.playerBar.forEach((slot, idx) => {
-      const x = startX + idx * spacing;
+      const x = startX + idx * cfg.spacing;
+      const player = this.playerSlots[idx];
+      const visible = idx < total && Boolean(player);
+      const score = (this.scores && typeof this.scores[idx] === 'number') ? this.scores[idx] : 0;
 
-      // reposition visuals in case layout changed
-      if (slot.icon) { slot.icon.x = x; slot.icon.y = y; slot.icon.setVisible(idx < total); }
-      if (slot.tag) { slot.tag.x = x; slot.tag.y = y + 70; slot.tag.setVisible(idx < total); }        if (slot.scoreText) { slot.scoreText.x = x; slot.scoreText.y = y - 70; slot.scoreText.setVisible(idx < total); }
-      if (slot.progressText) { slot.progressText.x = x; slot.progressText.y = y + 42; slot.progressText.setVisible(idx < total); }
-      if (slot.ring) { slot.ring.x = x; slot.ring.y = y; slot.ring.setVisible(idx < total); }
+      if (slot.icon) { slot.icon.x = x; slot.icon.y = y; slot.icon.setVisible(visible); }
+      if (slot.tag) { slot.tag.x = x; slot.tag.y = y + cfg.nameY; slot.tag.setVisible(visible); }
+      if (slot.scoreText) { slot.scoreText.x = x; slot.scoreText.y = y + cfg.scoreY; slot.scoreText.setVisible(visible); }
+      if (slot.diceText) { slot.diceText.x = x; slot.diceText.y = y + cfg.diceY; slot.diceText.setVisible(visible); }
+      if (slot.luckText) { slot.luckText.x = x; slot.luckText.y = y + cfg.luckY; slot.luckText.setVisible(visible); }
+      if (slot.incomeText) { slot.incomeText.x = x; slot.incomeText.y = y + cfg.incomeY; slot.incomeText.setVisible(visible); }
+      if (slot.ring) { slot.ring.x = x; slot.ring.y = y; slot.ring.setVisible(visible); }
 
-      if (slot.ring) slot.ring.setVisible(idx < total);
+      if (!visible) {
+        if (slot.ring) slot.ring.setVisible(false);
+        return;
+      }
 
-      if (this.playerSlots[idx]) {
-        // Avatar URLs from OAuth providers are not loaded textures; use the
-        // bundled player icon and keep the account name in the label.
-        slot.icon.setTexture('playerIcon');
-        slot.icon.setVisible(true);
-        const playerTeam = this.playerSlots[idx].team;
-        slot.tag.setText(this.playerSlots[idx].name || `P${idx + 1}`);
-        slot.tag.setColor(playerTeam === 'red' ? '#ff9999' : playerTeam === 'blue' ? '#99bbff' : '#ffffff');
-        // Guest names are long; keep adjacent tags from touching in 2P games.
-        slot.tag.setFontSize(total <= 2 ? 22 : 24);
-        slot.tag.setVisible(true);
-        if (slot.ring) {
-          const teamColor = playerTeam === 'red' ? 0xff7777 : playerTeam === 'blue' ? 0x77bbff : 0x66ccff;
-          slot.ring.setFillStyle(teamColor, 0.16);
-          slot.ring.setStrokeStyle(idx === this.currentPlayerIndex ? 4 : 3, idx === this.currentPlayerIndex ? 0xffffff : teamColor);
-        }
+      // Avatar URLs from OAuth providers are not loaded textures; use the
+      // bundled player icon and keep the account name in the label.
+      slot.icon.setTexture('playerIcon');
+      const playerTeam = player.team;
+      const isActive = idx === this.currentPlayerIndex;
+      slot.tag.setText(player.name || `P${idx + 1}`);
+      slot.tag.setColor(playerTeam === 'red' ? '#ff9999' : playerTeam === 'blue' ? '#99bbff' : '#ffffff');
+      slot.tag.setVisible(true);
 
-        const sc = (this.scores && typeof this.scores[idx] === 'number') ? String(this.scores[idx]) : '0';
-        if (slot.scoreText) { slot.scoreText.setText(sc).setVisible(true); }
-        const progression = this.playerSlots[idx].progression;
-        if (slot.progressText) {
-          if (this.progressionEnabled && progression) {
-            const effectiveLuck = Number(progression.effectiveLuck || 1).toFixed(1);
-            slot.progressText.setText(`🎲 ${progression.diceUnlocked || 1}  🍀 ${effectiveLuck}  💰 +${progression.economyIncome || 0}`);
-            slot.progressText.setVisible(true);
-          } else {
-            slot.progressText.setText('').setVisible(false);
-          }
-        }
+      const teamColor = playerTeam === 'red' ? 0xff7777 : playerTeam === 'blue' ? 0x77bbff : 0x66ccff;
+      const tint = playerTeam ? teamColor : this.playerTints[idx % this.playerTints.length];
+      if (slot.ring) {
+        // LocalGameScene keeps every seat ring visible and only uses the
+        // stroke/glow to distinguish the active player.
+        slot.ring.setFillStyle(0xffffff, 0.2);
+        slot.ring.setStrokeStyle(isActive ? 4 : 3, isActive ? 0xdddddd : tint);
+        slot.ring.setVisible(true);
+      }
 
-        if (this.playerSlots[idx].connected === false) {
-          slot.icon.setTint(0x444444);
-          slot.tag.setText(`${this.playerSlots[idx].name} (left)`);
-          if (slot.scoreText) slot.scoreText.setTint(0x444444);
-        } else {
-          slot.icon.clearTint();
-          if (slot.scoreText) slot.scoreText.clearTint();
-        }
+      slot.scoreText.setText(formatCompact(score)).setVisible(true);
+      const progression = player.progression || {};
+      const diceUnlocked = Number(progression.diceUnlocked || player.diceUnlocked || 1);
+      const effectiveLuck = Number(progression.effectiveLuck || 1);
+      const income = Number(progression.economyIncome || 0);
+      slot.diceText.setText(`🎲 ${diceUnlocked}`).setVisible(true);
+      slot.luckText.setText(`🍀 x${this._formatMultiplier(effectiveLuck, 1)}`).setVisible(true);
+      slot.incomeText.setText(income > 0 ? `💰 +${formatCompact(income)}` : '').setVisible(true);
+
+      if (player.connected === false) {
+        slot.icon.setTint(0x444444);
+        slot.tag.setText(`${player.name} (left)`).setTint(0x444444);
+        slot.scoreText.setTint(0x444444);
       } else {
-        slot.icon.setVisible(false);
-        slot.tag.setVisible(false);
-        if (slot.scoreText) slot.scoreText.setVisible(false);
+        slot.icon.clearTint();
+        slot.tag.clearTint();
+        slot.scoreText.clearTint();
       }
     });
   }
@@ -301,25 +450,36 @@ export default class OnlineGameScene extends Phaser.Scene {
     const s = getSocket();
     if (!s) return;
 
+    // Every server event is gated while this scene is leaving. The leave path
+    // is deferred by one frame, and the server can emit a final game-state or
+    // player-left during that window; those handlers must not touch a scene
+    // whose UI is being torn down.
+    const guarded = (handler) => (payload) => {
+      if (this._leaving || this._shutDown) return;
+      return handler(payload);
+    };
+
     // store bound handlers so we can remove them cleanly
     this._handlers = {
-      gameState: (p) => { if (this.debug) console.log('[socket] game-state', p); this.applyGameState(p); },
-      turnStart: (p) => { if (this.debug) console.log('[socket] turn-start', p); this.onTurnStart(p); },
-      turnResult: (p) => { if (this.debug) console.log('[socket] turn-result', p); this.onTurnResult(p); },
-      playerTimeout: (p) => { if (this.debug) console.log('[socket] player-timeout', p); this.onPlayerTimeout(p); },
-      playerLeft: (p) => this.onPlayerLeft(p),
-      gameStarting: (p) => this.onGameStarting(p),
-      gameFinished: (p) => this.endGame(p),
-      lobbyDeleted: (p) => this.onLobbyDeleted(p),
-      playerRolling: (p) => this.onPlayerRolling(p),
-      endTurnFailed: (p) => { if (p && p.reason === 'not_rolled') this.info.setText('You must roll before ending your turn.'); },
-      upgradeResult: (p) => this.onUpgradeResult(p),
-      upgradeFailed: (p) => this.onUpgradeFailed(p),
-      scoreDrain: (p) => this.onScoreDrain(p),
-      prediction: (p) => this.onPrediction(p),
-      stateDenied: (p) => this.onStateDenied(p),
-      authRequired: (p) => this.onAuthRequired(p),
-      gameFailed: (p) => this.onGameFailed(p)
+      gameState: guarded((p) => { if (this.debug) console.log('[socket] game-state', p); this.applyGameState(p); }),
+      turnStart: guarded((p) => { if (this.debug) console.log('[socket] turn-start', p); this.onTurnStart(p); }),
+      turnResult: guarded((p) => { if (this.debug) console.log('[socket] turn-result', p); this.onTurnResult(p); }),
+      playerTimeout: guarded((p) => { if (this.debug) console.log('[socket] player-timeout', p); this.onPlayerTimeout(p); }),
+      playerLeft: guarded((p) => this.onPlayerLeft(p)),
+      gameStarting: guarded((p) => this.onGameStarting(p)),
+      gameFinished: guarded((p) => this.endGame(p)),
+      lobbyDeleted: guarded((p) => this.onLobbyDeleted(p)),
+      playerRolling: guarded((p) => this.onPlayerRolling(p)),
+      endTurnFailed: guarded((p) => {
+        if (p && p.reason === 'not_rolled') this.info.setText('You must roll before ending your turn.');
+      }),
+      upgradeResult: guarded((p) => this.onUpgradeResult(p)),
+      upgradeFailed: guarded((p) => this.onUpgradeFailed(p)),
+      scoreDrain: guarded((p) => this.onScoreDrain(p)),
+      prediction: guarded((p) => this.onPrediction(p)),
+      stateDenied: guarded((p) => this.onStateDenied(p)),
+      authRequired: guarded((p) => this.onAuthRequired(p)),
+      gameFailed: guarded((p) => this.onGameFailed(p))
     };
 
     s.on('game-state', this._handlers.gameState);
@@ -343,9 +503,6 @@ export default class OnlineGameScene extends Phaser.Scene {
     s.on('auth-required', this._handlers.authRequired);
     s.on('game-failed', this._handlers.gameFailed);
 
-    // ensure cleanup on scene stop
-    this.events.once('shutdown', () => this.shutdown());
-    this.events.once('destroy', () => this.shutdown());
   }
 
   // -----------------------
@@ -353,7 +510,7 @@ export default class OnlineGameScene extends Phaser.Scene {
   // -----------------------
   onGameStarting(payload) {
     // server: lobby -> game transition. Request fresh game-state to sync.
-    if (!this._sceneReady) return;
+    if (this._leaving || !this._sceneReady) return;
     if (!getSocket()) return;
     getSocket().emit('request-game-state', { code: this.roomCode });
   }
@@ -362,6 +519,7 @@ export default class OnlineGameScene extends Phaser.Scene {
   // Turn lifecycle
   // -----------------------
   onTurnStart(payload) {
+    if (this._leaving || this._gameEnded) return;
     // accept multiple shape variants
     const playerIndex = (typeof payload.playerIndex === 'number')
       ? payload.playerIndex
@@ -372,6 +530,9 @@ export default class OnlineGameScene extends Phaser.Scene {
       return;
     }
 
+    // A new authoritative turn invalidates any roll-result animation that is
+    // still running from the previous turn (common when a tab was hibernated).
+    this._turnToken += 1;
     const round = typeof payload.round === 'number' ? payload.round : this.currentRound;
     const timeLimitSeconds = typeof payload.timeLimitSeconds === 'number' ? payload.timeLimitSeconds : this.turnTimeoutSeconds;
 
@@ -400,14 +561,21 @@ export default class OnlineGameScene extends Phaser.Scene {
     this.updateTeamDisplay();
 
     const name = (this.playerSlots[playerIndex] && this.playerSlots[playerIndex].name) || `P${playerIndex + 1}`;
+    const income = Number(payload.income) || 0;
+    const interest = Number(payload.interest) || 0;
+    const energyBoost = Number(payload.energyBoost) || 0;
+    const megaEnergyBoost = Number(payload.megaEnergyBoost) || 0;
     const turnLogKey = `${this.currentRound}:${playerIndex}`;
-    if (this._lastTurnLogKey !== turnLogKey) {
+    const isNewTurn = this._lastTurnLogKey !== turnLogKey;
+    if (isNewTurn) {
       this._lastTurnLogKey = turnLogKey;
+      // A new turn must not keep the previous player's roll label.
+      this.lastRollText?.setText('');
       this._logActivity(`${name}'s turn started`);
-      if (payload.income > 0) this._logActivity(`${name} received ${payload.income} income`);
-      if (payload.interest > 0) this._logActivity(`${name} received ${payload.interest} interest`);
-      if (payload.energyBoost > 0) this._logActivity(`${name} received an Energy Boost (${payload.energyBoost})`);
-      if (payload.megaEnergyBoost > 0) this._logActivity(`${name} received MEGA ENERGY (${payload.megaEnergyBoost})`);
+      if (income > 0) this._logActivity(`${name} received ${formatCompact(income)} income`);
+      if (interest > 0) this._logActivity(`${name} received ${formatCompact(interest)} interest`);
+      if (energyBoost > 0) this._logActivity(`${name} received an Energy Boost (${formatCompact(energyBoost)})`);
+      if (megaEnergyBoost > 0) this._logActivity(`${name} received MEGA ENERGY (${formatCompact(megaEnergyBoost)})`);
     }
 
     // A game-state refresh can arrive after a roll (or while a roll is being
@@ -416,9 +584,15 @@ export default class OnlineGameScene extends Phaser.Scene {
     const hasRolled = payload.currentPlayerHasRolled === true;
     const rolling = payload.currentPlayerRolling === true;
     this._rollInProgress = rolling;
+    this._turnRolling = rolling;
+    this._turnHasRolled = hasRolled;
     this._hasRolledThisTurn = this.localPlayerIndex === playerIndex ? hasRolled : false;
     this.progressionEnabled = true;
-    this.currentShop = payload.shop || null;
+    // Some refresh payloads do not carry a shop snapshot. Keep the existing
+    // personalised snapshot in that case instead of making the toolbars vanish.
+    if (Object.prototype.hasOwnProperty.call(payload, 'shop')) {
+      this.currentShop = payload.shop || null;
+    }
 
     if (Object.prototype.hasOwnProperty.call(payload, 'prediction')) {
       const prediction = Array.isArray(payload.prediction) ? payload.prediction.slice() : null;
@@ -431,52 +605,44 @@ export default class OnlineGameScene extends Phaser.Scene {
       if (this.predictionText) this.predictionText.setText('');
     }
 
-    if (this.localPlayerIndex === playerIndex) {
-      const bonuses = [];
-      if (payload.income > 0) bonuses.push(`+${payload.income} income`);
-      if (payload.interest > 0) bonuses.push(`+${payload.interest} interest`);
-      if (payload.energyBoost > 0) bonuses.push(`+${payload.energyBoost} energy`);
-      if (payload.megaEnergyBoost > 0) bonuses.push(`+${payload.megaEnergyBoost} mega energy`);
+    const bonuses = [];
+    if (income > 0) bonuses.push(`+${formatCompact(income)} income`);
+    if (interest > 0) bonuses.push(`+${formatCompact(interest)} interest`);
+    if (energyBoost > 0) bonuses.push(`+${formatCompact(energyBoost)} energy`);
+    if (megaEnergyBoost > 0) bonuses.push(`+${formatCompact(megaEnergyBoost)} mega energy`);
+    const bonusText = bonuses.length ? `  (${bonuses.join(', ')})` : '';
+    const localInfo = rolling
+      ? '🎲 Rolling...'
+      : hasRolled
+        ? `🎲 Your roll${bonusText}`
+        : `🎲 Your turn${bonusText}`;
+    const remoteInfo = rolling
+      ? `🎲 ${name} is rolling...`
+      : hasRolled
+        ? `🎲 ${name} has rolled`
+        : `🎲 ${name}'s turn`;
 
-      if (rolling) {
-        this.info.setText('🎲 Rolling...');
-        this.rollBtn.setText('Rolling...').setStyle({ color: '#c4c70bd2' }).disableInteractive();
-        this.endTurnBtn.disableInteractive();
-        this.endTurnBtn.setStyle({ color: '#888888' });
-      } else if (hasRolled) {
-        this.info.setText(`🎲 Your roll${bonuses.length ? `  (${bonuses.join(', ')})` : ''}`);
-        this.rollBtn.setText('Results').setStyle({ color: '#888888' }).disableInteractive();
-        this.endTurnBtn.setInteractive();
-        this.endTurnBtn.setStyle({ color: '#ff4444' });
-      } else {
-        this.info.setText(`🎲 Your turn${bonuses.length ? `  (${bonuses.join(', ')})` : ''}`);
-        this.rollBtn.setText('Roll Dice').setStyle({ color: '#66ff66' }).setInteractive();
-        this.endTurnBtn.disableInteractive();
-        this.endTurnBtn.setStyle({ color: '#888888' });
-      }
-      this.startTurnTimer(timeLimitSeconds, payload?.turnExpiresAt || null);
-    } else {
-      this.info.setText(rolling
-        ? `🎲 ${name} is rolling...`
-        : hasRolled
-          ? `🎲 ${name} has rolled`
-          : `🎲 ${name}'s turn`);
-      this.rollBtn.setText(rolling ? 'Rolling...' : 'Waiting...')
-        .setStyle({ color: '#999999' })
-        .disableInteractive();
-      this.endTurnBtn.disableInteractive();
-      this.endTurnBtn.setStyle({ color: '#888888' });
-      this.startTurnTimer(timeLimitSeconds, payload?.turnExpiresAt || null);
-    }
+    this.syncTurnControls({ localInfo, remoteInfo });
+    this.startTurnTimer(timeLimitSeconds, payload?.turnExpiresAt || null);
     this.updateShopUI();
   }
 
   // unify result rendering for turn-result and player-timeout
   async _renderTurnResult(payload = {}, { isTimeout = false } = {}) {
+    if (this._leaving || this._gameEnded) return;
     if (!payload || typeof payload.playerIndex !== 'number') {
       console.warn('_renderTurnResult: invalid payload', payload);
       return;
     }
+    // Ignore a result that belongs to a turn the server has already replaced.
+    // This is the common hibernation/reconnect case where an old animation is
+    // resumed after a newer turn-start has arrived.
+    if (Number.isInteger(this.currentPlayerIndex) && payload.playerIndex !== this.currentPlayerIndex) return;
+    if (Number.isInteger(payload.round) && Number.isInteger(this.currentRound) && payload.round !== this.currentRound) return;
+
+    // Invalidate any previous result animation and capture this result's token.
+    this._turnToken += 1;
+    const turnToken = this._turnToken;
 
     if (payload.turnExpiresAt) {
       const remSec = Math.max(0, Math.ceil((payload.turnExpiresAt - Date.now()) / 1000));
@@ -506,18 +672,22 @@ export default class OnlineGameScene extends Phaser.Scene {
       }
     }
 
+    if (this._leaving || this._shutDown || turnToken !== this._turnToken) return;
+
     // apply final textures and hide dice the player has not unlocked
     if (dice.length) {
       this.diceSprites.forEach((sprite, i) => {
         if (i < dice.length) sprite.setTexture(`dice${dice[i]}`).setVisible(true);
         else sprite.setVisible(false);
       });
+      this.lastRollText?.setText(`Last Roll: ${dice.join(', ')}`);
     }
 
     const spinEntries = Array.isArray(payload.rollicaneSpins) ? payload.rollicaneSpins : [];
     if (spinEntries.length) {
-      await this.runRollicanePresentation(payload, dice);
+      await this.runRollicanePresentation(payload, dice, turnToken);
     }
+    if (this._leaving || this._shutDown || turnToken !== this._turnToken) return;
 
     // server authoritative arrays (scores/comboStats)
     if (Array.isArray(payload.scores) && payload.scores.length === playerCount) {
@@ -562,34 +732,24 @@ export default class OnlineGameScene extends Phaser.Scene {
 
     // show results header
     const resultName = (this.playerSlots[playerIndex] && this.playerSlots[playerIndex].name) || `P${playerIndex + 1}`;
-    if (this.localPlayerIndex === playerIndex) {
-      this.info.setText(`🎲 Your roll`);
-    } else {
-      this.info.setText(`🎲 ${resultName}'s roll`);
-    }
-    this.rollBtn.setText('Results').setStyle({ color: '#888888' });
-    this._hasRolledThisTurn = true;
-    this.currentShop = null;
+    this._turnRolling = false;
+    this._turnHasRolled = true;
     this._rollInProgress = false;
+    if (this.localPlayerIndex === playerIndex) this._hasRolledThisTurn = true;
+    this.currentShop = null;
     this.updateShopUI();
+    this.syncTurnControls({
+      localInfo: '🎲 Your roll',
+      remoteInfo: `🎲 ${resultName}'s roll`
+    });
 
     const comboLabel = combo?.key ? ` (${COMBO_DISPLAY_NAMES[combo.key] || combo.key})` : '';
-    const scoredLabel = typeof scored === 'number' ? scored : 0;
+    const scoredValue = Number(scored);
+    const scoredLabel = Number.isFinite(scoredValue) ? formatCompact(scoredValue) : '0';
     this._logActivity(`${resultName} rolled [${dice.join(', ')}] -> +${scoredLabel}${comboLabel}${isTimeout ? ' (timeout)' : ''}`);
     if (this.localPlayerIndex === playerIndex) this.recordRollAchievements(payload);
 
     this.updatePlayerBar();
-
-    // Local play enables End Turn as soon as the roll result is on screen.
-    // Match that instead of making online players wait through an extra delay.
-    if (!isTimeout && this.localPlayerIndex === playerIndex && this.currentPlayerIndex === playerIndex) {
-      this._hasRolledThisTurn = true;
-      this.endTurnBtn.setInteractive();
-      this.endTurnBtn.setStyle({ color: '#ff4444' });
-    } else {
-      this.endTurnBtn.disableInteractive();
-      this.endTurnBtn.setStyle({ color: '#888888' });
-    }
 
     // clear the client timer (server confirmed outcome)
     this.clearTurnTimer();
@@ -602,6 +762,9 @@ export default class OnlineGameScene extends Phaser.Scene {
 
   // called when server emits 'player-timeout'
   onPlayerTimeout(payload) {
+    if (this._leaving || this._gameEnded) return;
+    if (Number.isInteger(this.currentPlayerIndex) && payload.playerIndex !== this.currentPlayerIndex) return;
+    if (Number.isInteger(payload.round) && Number.isInteger(this.currentRound) && payload.round !== this.currentRound) return;
     if (payload.turnExpiresAt) {
       const remSec = Math.max(0, Math.ceil((payload.turnExpiresAt - Date.now()) / 1000));
       this.startTurnTimer(remSec, payload.turnExpiresAt);
@@ -628,6 +791,7 @@ export default class OnlineGameScene extends Phaser.Scene {
   // Game-state application
   // -----------------------
   applyGameState(payload = {}) {
+    if (this._leaving || this._gameEnded) return;
     const players = Array.isArray(payload.players) ? payload.players : [];
 
     // build display playerSlots (id, name, avatar, connected)
@@ -660,7 +824,9 @@ export default class OnlineGameScene extends Phaser.Scene {
     }
 
     this.progressionEnabled = true;
-    this.currentShop = payload.shop || null;
+    if (Object.prototype.hasOwnProperty.call(payload, 'shop')) {
+      this.currentShop = payload.shop || null;
+    }
 
     // apply config override if present
     if (payload.config) {
@@ -693,7 +859,7 @@ export default class OnlineGameScene extends Phaser.Scene {
     this.roomCode = payload.room || this.roomCode;
 
     // Update UI
-    this.roundTitle.setText(`Online Game — Round ${this.currentRound}/${this.totalRounds}`);
+    this.updateRoundTitle();
     this.createPlayerBar();
     this.updatePlayerBar();
 
@@ -714,22 +880,26 @@ export default class OnlineGameScene extends Phaser.Scene {
         currentPlayerRolling: payload.currentPlayerRolling === true,
         prediction: payload.prediction,
         progressionEnabled: this.progressionEnabled,
-        shop: payload.shop || null
+        shop: Object.prototype.hasOwnProperty.call(payload, 'shop') ? (payload.shop || null) : this.currentShop
       });
     } else {
       // no current player index in payload — clear any transient controls
       this.currentPlayerIndex = null;
-      this.rollBtn.setText('Roll Dice').disableInteractive().setStyle({ color: '#999999' });
-      this.endTurnBtn.disableInteractive();
+      this._turnRolling = false;
+      this._turnHasRolled = false;
+      this._rollInProgress = false;
+      this._hasRolledThisTurn = false;
+      this.syncTurnControls();
+      this.updateShopUI();
     }
   }
 
   createHistoryLog() {
     const pad = 12;
-    const panelWidth = 420;
-    const panelHeight = 380;
-    const panelX = this.scale.width;
-    const panelY = 400;
+    const panelWidth = GAME_LAYOUT.history.width;
+    const panelHeight = GAME_LAYOUT.history.height;
+    const panelX = GAME_LAYOUT.history.right;
+    const panelY = GAME_LAYOUT.history.y;
 
     this.history = {
       container: this.add.container(panelX, panelY).setDepth(950),
@@ -833,7 +1003,7 @@ export default class OnlineGameScene extends Phaser.Scene {
     this.history = null;
   }
 
-  async runRollicanePresentation(payload = {}, dice = []) {
+  async runRollicanePresentation(payload = {}, dice = [], turnToken = this._turnToken) {
     const spins = Array.isArray(payload.rollicaneSpins) ? payload.rollicaneSpins : [];
     if (!spins.length) return;
 
@@ -845,6 +1015,7 @@ export default class OnlineGameScene extends Phaser.Scene {
     try {
       await animateDiceSpin(this, this.diceSprites.slice(0, dice.length), spins, {
         onTick: (_second, activeForSecond) => {
+          if (this._leaving || this._shutDown || turnToken !== this._turnToken) return;
           const tickBase = activeForSecond.reduce(
             (sum, entry) => sum + (Number(entry.face) || 0),
             0
@@ -852,7 +1023,7 @@ export default class OnlineGameScene extends Phaser.Scene {
           const tickGain = Math.floor(tickBase * Math.max(1, multiplier));
           if (tickGain <= 0) return;
 
-          const tickText = this.add.text(600, 260, `Dice Spin +${tickGain}`, {
+          const tickText = this.add.text(600, 260, `Dice Spin +${formatCompact(tickGain)}`, {
             fontSize: 20,
             fontFamily: 'Orbitron, Arial',
             color: '#99eeff'
@@ -872,8 +1043,9 @@ export default class OnlineGameScene extends Phaser.Scene {
       this._rollicaneActive = false;
     }
 
+    if (this._leaving || this._shutDown || turnToken !== this._turnToken) return;
     if (Number(payload.rollicaneBonus) > 0) {
-      this._logActivity(`Dice Spin +${payload.rollicaneBonus}`);
+      this._logActivity(`Dice Spin +${formatCompact(Number(payload.rollicaneBonus))}`);
     }
   }
 
@@ -960,31 +1132,28 @@ export default class OnlineGameScene extends Phaser.Scene {
   }
 
   onPlayerRolling(payload = {}) {
-    if (!payload || typeof payload.playerIndex !== 'number') return;
+    if (this._leaving || this._gameEnded || !payload || typeof payload.playerIndex !== 'number') return;
+    if (Number.isInteger(this.currentPlayerIndex) && payload.playerIndex !== this.currentPlayerIndex) return;
+    this._turnToken += 1;
     this._rollInProgress = true;
+    this._turnRolling = true;
+    this._turnHasRolled = false;
+    this._hasRolledThisTurn = false;
     this.currentShop = null;
     this.updateShopUI();
     const rollingIndex = payload.playerIndex;
-
-    // who is rolling
     const name = (this.playerSlots[rollingIndex] && this.playerSlots[rollingIndex].name) || `P${rollingIndex + 1}`;
-
-    // If it's our own index, set the local Roll button to Rolling...
-    if (rollingIndex === this.localPlayerIndex) {
-      this.rollBtn.setText('Rolling...').setStyle({ color: '#c4c70bd2' }).disableInteractive();
-      this.endTurnBtn.disableInteractive();
-      this.endTurnBtn.setStyle({ color: '#888888' });
-    } else {
-      this.rollBtn.setText('Rolling...').setStyle({ color: '#c4c70bd2' }).disableInteractive();
-      this.info.setText(`🎲 ${name} is rolling...`);
-    }
+    this.syncTurnControls({
+      localInfo: '🎲 Rolling...',
+      remoteInfo: `🎲 ${name} is rolling...`
+    });
   }
 
   // -----------------------
   // Player left handler
   // -----------------------
   onPlayerLeft(payload) {
-    if (!payload) return;
+    if (this._leaving || !payload) return;
     const id = payload.id;
     let idx = (typeof payload.index === 'number') ? payload.index : -1;
 
@@ -1007,28 +1176,37 @@ export default class OnlineGameScene extends Phaser.Scene {
 
   // lobby deleted while in-game
   onLobbyDeleted(payload) {
+    if (this._leaving) return;
     // server requested cleanup — return to the online menu
     this.info.setText('Lobby closed by host.');
     this.clearTurnTimer();
     this.time.delayedCall(1500, () => {
+      if (this._leaving) return;
       this.exitLocked = false;
       this.scene.start('OnlineMenuScene');
     });
   }
 
   onStateDenied(payload) {
+    if (this._leaving) return;
     this.info.setText('You are no longer a member of this match.');
     this.clearTurnTimer();
-    this.time.delayedCall(1500, () => this.scene.start('OnlineMenuScene'));
+    this.time.delayedCall(1500, () => {
+      if (!this._leaving) this.scene.start('OnlineMenuScene');
+    });
   }
 
   onAuthRequired() {
+    if (this._leaving) return;
     this.info.setText('Your session expired. Please sign in again.');
     this.clearTurnTimer();
-    this.time.delayedCall(1500, () => this.scene.start('OnlineMenuScene'));
+    this.time.delayedCall(1500, () => {
+      if (!this._leaving) this.scene.start('OnlineMenuScene');
+    });
   }
 
   onGameFailed(payload) {
+    if (this._leaving) return;
     const messages = {
       not_host: 'Only the host can start the match.',
       not_enough_players: "Game can only be started when there's 2 or more players.",
@@ -1043,8 +1221,11 @@ export default class OnlineGameScene extends Phaser.Scene {
   // Game end / postgame
   // -----------------------
   endGame(payload = {}) {
-    if (this._gameEnded) return;
+    if (this._leaving || this._gameEnded) return;
     this._gameEnded = true;
+    this._turnToken += 1;
+    this._turnRolling = false;
+    this._turnHasRolled = false;
     this.closeShop();
     const scores = Array.isArray(payload.scores) ? payload.scores : (this.scores || []);
     const combos = Array.isArray(payload.comboStats) ? payload.comboStats : (this.comboStats || []);
@@ -1057,11 +1238,11 @@ export default class OnlineGameScene extends Phaser.Scene {
     let resultText = 'Game Over\n\n';
     resultText += scores.map((s, i) => {
       const name = (this.playerSlots[i] && this.playerSlots[i].name) || `P${i + 1}`;
-      return `${name}: ${s}`;
+      return `${name}: ${formatCompact(s)}`;
     }).join('\n');
     if (this.gameConfig.teams) {
       const totals = payload.teamScores || this.computeTeamScores() || { blue: 0, red: 0 };
-      resultText += `\n\nBlue: ${totals.blue}\nRed: ${totals.red}`;
+      resultText += `\n\nBlue: ${formatCompactFull(totals.blue)}\nRed: ${formatCompactFull(totals.red)}`;
     }
 
     this.info.setText(resultText);
@@ -1071,6 +1252,7 @@ export default class OnlineGameScene extends Phaser.Scene {
 
     this.time.delayedCall(4000, () => {
       const finish = () => {
+        if (this._leaving) return;
         this._achievementSequenceFinished = true;
         this.registry.set('onlineAchievementsComplete', true);
         this.exitLocked = false;
@@ -1120,214 +1302,117 @@ export default class OnlineGameScene extends Phaser.Scene {
       !this._hasRolledThisTurn;
   }
 
+  // Keep the turn prompt and both action buttons in one place. Every socket
+  // path (turn-start, rolling, result, timeout, reconnect) goes through this
+  // method so a delayed or replayed event cannot leave the text and controls
+  // disagreeing with each other.
+  syncTurnControls({ localInfo = null, remoteInfo = null } = {}) {
+    if (!this.info || !this.rollBtn || !this.endTurnBtn) return;
+    const localTurn = Number.isInteger(this.localPlayerIndex) &&
+      Number.isInteger(this.currentPlayerIndex) &&
+      this.currentPlayerIndex === this.localPlayerIndex;
+    const rolling = this._turnRolling === true;
+    const hasRolled = this._turnHasRolled === true;
+
+    if (localTurn) {
+      if (rolling) {
+        this.info.setText(localInfo || '🎲 Rolling...');
+        this.rollBtn.setText('ROLLING...').setStyle({ color: '#c4c70bd2' }).disableInteractive();
+        this.endTurnBtn.disableInteractive();
+        this.endTurnBtn.setStyle({ color: '#888888' });
+      } else if (hasRolled) {
+        this.info.setText(localInfo || '🎲 Your roll');
+        this.rollBtn.setText('RESULTS').setStyle({ color: '#888888' }).disableInteractive();
+        this.endTurnBtn.setInteractive();
+        this.endTurnBtn.setStyle({ color: '#ff4444' });
+      } else {
+        this.info.setText(localInfo || '🎲 Your turn');
+        this.rollBtn.setText('ROLL DICE').setStyle({ color: '#66ff66' }).setInteractive();
+        this.endTurnBtn.disableInteractive();
+        this.endTurnBtn.setStyle({ color: '#888888' });
+      }
+      return;
+    }
+
+    this.info.setText(remoteInfo || (rolling
+      ? '🎲 Rolling...'
+      : hasRolled
+        ? '🎲 Roll complete'
+        : '🎲 Waiting...'));
+    this.rollBtn.setText(rolling ? 'ROLLING...' : 'WAITING...')
+      .setStyle({ color: '#999999' })
+      .disableInteractive();
+    this.endTurnBtn.disableInteractive();
+    this.endTurnBtn.setStyle({ color: '#888888' });
+  }
+
+  _setBuyButton(button, width, enabled, color) {
+    if (!button) return;
+    if (enabled) {
+      makeTextButton(button, width, 44);
+      button.setStyle({ color });
+    } else {
+      button.disableInteractive();
+      button.setStyle({ color: '#555555' });
+    }
+  }
+
   updateShopUI() {
-    if (!this.shopBtn) return;
-    const visible = this.progressionEnabled &&
+    const shop = this.currentShop;
+    const onLocalTurn = this.progressionEnabled &&
       this.localPlayerIndex !== null &&
-      this.currentPlayerIndex === this.localPlayerIndex &&
-      !!this.currentShop &&
-      !this._rollInProgress &&
-      !this._hasRolledThisTurn;
-    this.shopBtn.setVisible(visible);
-    if (!visible) {
+      this.currentPlayerIndex === this.localPlayerIndex;
+    const canBuy = onLocalTurn && !this._rollInProgress && !this._hasRolledThisTurn && !!shop;
+    const score = Number(this.scores?.[this.localPlayerIndex] ?? 0);
+
+    if (!shop) {
+      this.diceCostText?.setText('');
+      this.ecoCostText?.setText('');
+      this.luckCostText?.setText('');
+      this._setBuyButton(this.buyDiceBtn, 190, false, '#ffaa44');
+      this._setBuyButton(this.buyEcoBtn, 240, false, '#66ccff');
+      this._setBuyButton(this.buyLuckBtn, 220, false, '#ff88ff');
       this.closeShop();
       return;
     }
-    this.shopBtn.setAlpha(this.canUseShop() ? 1 : 0.5);
-    if (this.shopOpen) this.renderShop();
-  }
 
-  toggleShop() {
-    if (!this.currentShop || !this.canUseShop()) {
-      this.info.setText('The shop is only available on your turn before rolling.');
-      return;
-    }
-    this.shopOpen = !this.shopOpen;
-    if (this.shopOpen) this.renderShop();
-    else this.closeShop();
+    this.shopUI?.ensure();
+    this.shopUI?.refresh();
+
+    const dice = shop.dice || {};
+    const diceMax = Number(dice.current) >= 6 || !dice.next;
+    const diceEnabled = canBuy && !diceMax && score >= Number(dice.cost || 0);
+    const diceLevel = Math.max(0, Math.min(5, Number(dice.current || 1) - 1));
+    this.diceCostText?.setText(diceMax
+      ? 'Max Dice'
+      : `Next Dice: ${formatCompact(dice.cost)} (Lv ${diceLevel}/5)`);
+    this._setBuyButton(this.buyDiceBtn, 190, diceEnabled, '#ffaa44');
+
+    const economy = shop.economy || {};
+    const ecoMax = Number(economy.level) >= Number(economy.cap);
+    const ecoEnabled = canBuy && !ecoMax && score >= Number(economy.cost || 0);
+    this.ecoCostText?.setText(ecoMax
+      ? 'Eco MAX'
+      : `Eco Upgrade: ${formatCompact(economy.cost)} (Lv ${economy.level}/${economy.cap})`);
+    this._setBuyButton(this.buyEcoBtn, 240, ecoEnabled, '#66ccff');
+
+    const luck = shop.luck || {};
+    const luckMax = Number(luck.level) >= Number(luck.maxLevel);
+    const luckEnabled = canBuy && !luckMax && score >= Number(luck.cost || 0);
+    this.luckCostText?.setText(luckMax
+      ? 'Luck MAX'
+      : `Luck Upgrade: ${formatCompact(luck.cost)} (Lv ${luck.level}/${luck.maxLevel})`);
+    this._setBuyButton(this.buyLuckBtn, 220, luckEnabled, '#ff88ff');
   }
 
   closeShop() {
-    this.shopOpen = false;
-    if (this.shopContainer) {
-      this.shopContainer.removeAll(true);
-      this.shopContainer.setVisible(false);
-    }
+    try { this.shopUI?.close(); } catch (err) { /* ignore */ }
   }
 
   buyUpgrade(kind, key = null) {
     if (!this.canUseShop()) return;
-    getSocket().emit('buy-upgrade', { code: this.roomCode, kind, key });
-  }
-
-  renderShop() {
-    if (!this.shopContainer || !this.currentShop) return;
-    this.shopContainer.removeAll(true);
-    this.shopContainer.setVisible(true);
-    this.bigUpgradePrevBtn = null;
-    this.bigUpgradeNextBtn = null;
-    this.bigUpgradePageText = null;
-
-    const shop = this.currentShop;
-    const score = Number(this.scores[this.localPlayerIndex]) || 0;
-    const add = (child) => { this.shopContainer.add(child); return child; };
-    const addRow = (x, y, label, cost, enabled, onClick, purchased = false) => {
-      const text = add(this.add.text(x, y, label, {
-        fontSize: 14,
-        fontFamily: 'Orbitron, Arial',
-        color: purchased ? '#777777' : (enabled ? '#ffffff' : '#777777')
-      }).setOrigin(0, 0.5));
-      const button = add(this.add.text(x + 300, y, purchased ? 'OWNED' : `BUY ${cost ?? '--'}`, {
-        fontSize: 13,
-        fontFamily: 'Orbitron, Arial',
-        color: purchased ? '#555555' : (enabled ? '#66ff66' : '#555555')
-      }).setOrigin(0, 0.5));
-      if (!purchased && enabled) {
-        makeTextButton(button, 120, 28);
-        button.on('pointerdown', onClick);
-      }
-      return { text, button };
-    };
-
-    add(this.add.rectangle(640, 480, 1160, 840, 0x080808, 0.98).setStrokeStyle(2, 0x66ccff));
-    add(this.add.text(640, 75, 'LOCAL UPGRADES', {
-      fontSize: 26,
-      fontFamily: 'Orbitron, Arial',
-      color: '#66ccff'
-    }).setOrigin(0.5));
-    const close = add(this.add.text(1160, 75, 'CLOSE', {
-      fontSize: 18,
-      fontFamily: 'Orbitron, Arial',
-      color: '#ff8888'
-    }).setOrigin(0.5));
-    makeTextButton(close, 100, 40);
-    close.on('pointerdown', () => this.closeShop());
-
-    add(this.add.text(100, 120, `Score: ${score}`, {
-      fontSize: 18,
-      fontFamily: 'Orbitron, Arial',
-      color: '#ffff88'
-    }));
-
-    const coreY = 155;
-    const core = [
-      {
-        x: 250,
-        label: `DICE ${shop.dice.current}/${shop.dice.max}\nNext: ${shop.dice.next || 'MAX'}`,
-        cost: shop.dice.cost,
-        enabled: shop.dice.next && score >= shop.dice.cost,
-        onClick: () => this.buyUpgrade('dice')
-      },
-      {
-        x: 640,
-        label: `ECONOMY Lv ${shop.economy.level}/${shop.economy.cap}\nIncome: ${shop.economy.income}`,
-        cost: shop.economy.cost,
-        enabled: shop.economy.level < shop.economy.cap && score >= shop.economy.cost,
-        onClick: () => this.buyUpgrade('economy')
-      },
-      {
-        x: 1030,
-        label: `LUCK Lv ${shop.luck.level}/${shop.luck.maxLevel}\nEffective: ${Number(shop.luck.effective || 1).toFixed(1)}`,
-        cost: shop.luck.cost,
-        enabled: Number(shop.luck.effective) < 6 && score >= shop.luck.cost,
-        onClick: () => this.buyUpgrade('luck')
-      }
-    ];
-    core.forEach((item) => {
-      add(this.add.text(item.x, coreY, item.label, {
-        fontSize: 15,
-        fontFamily: 'Orbitron, Arial',
-        align: 'center',
-        color: '#ffffff'
-      }).setOrigin(0.5));
-      const button = add(this.add.text(item.x, coreY + 42, `BUY ${item.cost ?? 'MAX'}`, {
-        fontSize: 15,
-        fontFamily: 'Orbitron, Arial',
-        color: item.enabled ? '#66ff66' : '#555555'
-      }).setOrigin(0.5));
-      if (item.enabled) {
-        makeTextButton(button, 140, 36);
-        button.on('pointerdown', item.onClick);
-      }
-    });
-
-    add(this.add.text(350, 235, 'COMBO UPGRADES', {
-      fontSize: 18,
-      fontFamily: 'Orbitron, Arial',
-      color: '#ffdd66'
-    }).setOrigin(0.5));
-    shop.combos.forEach((combo, index) => {
-      const y = 265 + index * 29;
-      const req = combo.requirement;
-      const available = combo.available;
-      const enabled = available && combo.level < 1000 && score >= combo.cost;
-      addRow(100, y, `${COMBO_DISPLAY_NAMES[combo.key] || combo.key} Lv ${combo.level}${available ? '' : ` (needs ${req} dice)`}`, combo.cost, enabled, () => this.buyUpgrade('combo', combo.key));
-    });
-
-    const bigItems = Array.isArray(shop.big) ? shop.big : [];
-    this.bigUpgradePageCount = Math.max(1, Math.ceil(bigItems.length / SHOP_BIG_UPGRADE_PAGE_SIZE));
-    this.bigUpgradePage = Math.max(0, Math.min(this.bigUpgradePage || 0, this.bigUpgradePageCount - 1));
-    if (bigItems.length > 0) {
-      const pageStart = this.bigUpgradePage * SHOP_BIG_UPGRADE_PAGE_SIZE;
-      const itemsToShow = bigItems.slice(pageStart, pageStart + SHOP_BIG_UPGRADE_PAGE_SIZE);
-      add(this.add.text(820, 235, 'BIG UPGRADES', {
-        fontSize: 18,
-        fontFamily: 'Orbitron, Arial',
-        color: '#ff99dd'
-      }).setOrigin(0.5));
-      itemsToShow.forEach((big, index) => {
-        const y = 265 + index * 44;
-        const label = `${big.title}${big.purchased ? ' (owned)' : ''}`;
-        addRow(650, y, label, big.cost, !big.purchased && score >= big.cost, () => this.buyUpgrade('big', big.key), big.purchased);
-        add(this.add.text(650, y + 12, this.bigUpgradeDescription(big), {
-          fontSize: 9,
-          fontFamily: 'Orbitron, Arial',
-          color: big.purchased ? '#666666' : '#aaaaaa',
-          wordWrap: { width: 250 }
-        }).setOrigin(0, 0.5));
-      });
-
-      if (this.bigUpgradePageCount > 1) {
-        const prev = add(this.add.text(600, 820, '◀', {
-          fontSize: 24,
-          fontFamily: 'Orbitron, Arial',
-          color: this.bigUpgradePage > 0 ? '#ffffff' : '#555555'
-        }).setOrigin(0.5));
-        this.bigUpgradePrevBtn = prev;
-        if (this.bigUpgradePage > 0) {
-          makeTextButton(prev, 40, 36);
-          prev.on('pointerdown', () => {
-            this.bigUpgradePage -= 1;
-            this.renderShop();
-          });
-        }
-
-        this.bigUpgradePageText = add(this.add.text(700, 820, `Page ${this.bigUpgradePage + 1}/${this.bigUpgradePageCount}`, {
-          fontSize: 14,
-          fontFamily: 'Orbitron, Arial',
-          color: '#cccccc'
-        }).setOrigin(0.5));
-
-        const next = add(this.add.text(800, 820, '▶', {
-          fontSize: 24,
-          fontFamily: 'Orbitron, Arial',
-          color: this.bigUpgradePage < this.bigUpgradePageCount - 1 ? '#ffffff' : '#555555'
-        }).setOrigin(0.5));
-        this.bigUpgradeNextBtn = next;
-        if (this.bigUpgradePage < this.bigUpgradePageCount - 1) {
-          makeTextButton(next, 40, 36);
-          next.on('pointerdown', () => {
-            this.bigUpgradePage += 1;
-            this.renderShop();
-          });
-        }
-      }
-    }
-    add(this.add.text(640, 880, 'Purchases are only allowed before rolling on your turn.', {
-      fontSize: 14,
-      fontFamily: 'Orbitron, Arial',
-      color: '#aaaaaa'
-    }).setOrigin(0.5));
+    const socket = getSocket();
+    if (socket) socket.emit('buy-upgrade', { code: this.roomCode, kind, key });
   }
 
   bigUpgradeDescription(item = {}) {
@@ -1377,6 +1462,7 @@ export default class OnlineGameScene extends Phaser.Scene {
   }
 
   onUpgradeResult(payload = {}) {
+    if (this._leaving || this._gameEnded) return;
     if (Number.isInteger(payload.playerIndex) && typeof payload.score === 'number') {
       this.scores[payload.playerIndex] = payload.score;
     }
@@ -1387,13 +1473,18 @@ export default class OnlineGameScene extends Phaser.Scene {
     this.updatePlayerBar();
     this.updateShopUI();
 
+    if (payload.playerIndex === this.localPlayerIndex) {
+      try { GlobalAudio.playButton(this); } catch (err) { /* audio is best-effort */ }
+    }
+
     const playerName = this.playerSlots[payload.playerIndex]?.name || `P${payload.playerIndex + 1}`;
     const label = this.upgradeLabel(payload.kind, payload.key);
     const cost = Number(payload.cost);
-    this._logActivity(`${playerName} bought ${label}${Number.isFinite(cost) ? ` for ${cost}` : ''}`);
+    this._logActivity(`${playerName} bought ${label}${Number.isFinite(cost) ? ` for ${formatCompact(cost)}` : ''}`);
   }
 
   onUpgradeFailed(payload = {}) {
+    if (this._leaving || this._gameEnded) return;
     const messages = {
       not_your_turn: 'You can only buy upgrades on your turn.',
       not_available: 'The shop is not available right now.',
@@ -1408,6 +1499,7 @@ export default class OnlineGameScene extends Phaser.Scene {
   }
 
   onScoreDrain(payload = {}) {
+    if (this._leaving || this._gameEnded) return;
     if (Array.isArray(payload.scores) && (!this.playerSlots.length || payload.scores.length === this.playerSlots.length)) {
       this.scores = payload.scores.slice();
     }
@@ -1437,7 +1529,7 @@ export default class OnlineGameScene extends Phaser.Scene {
   }
 
   onPrediction(payload = {}) {
-    if (!Array.isArray(payload.prediction) || !payload.prediction.length) return;
+    if (this._leaving || !Array.isArray(payload.prediction) || !payload.prediction.length) return;
     if (this.localPlayerIndex === null || this.currentPlayerIndex !== this.localPlayerIndex) return;
     this.prediction = payload.prediction.slice();
     this.predictionText.setText(`Prediction: ${this.prediction.join(', ')}`);
@@ -1458,13 +1550,16 @@ export default class OnlineGameScene extends Phaser.Scene {
   }
 
   updateTeamDisplay() {
-    if (!this.teamScoreText) return;
+    if (!this.headerText) return;
     if (!this.gameConfig.teams) {
-      this.teamScoreText.setText('').setVisible(false);
+      this.headerText.setText('Scale Dice');
+      this.teamScoreText?.setText('').setVisible(false);
       return;
     }
     const totals = this.teamScores || this.computeTeamScores() || { blue: 0, red: 0 };
-    this.teamScoreText.setText(`Blue: ${totals.blue}  •  Red: ${totals.red}`).setVisible(true);
+    this.headerText.setText(`Scale Dice - Blue: ${formatCompactFull(totals.blue)}  Red: ${formatCompactFull(totals.red)}`);
+    this.teamScoreText?.setText('');
+    this.teamScoreText?.setVisible(false);
   }
 
   makeDefaultComboStats(n) {
@@ -1600,53 +1695,98 @@ export default class OnlineGameScene extends Phaser.Scene {
   }
 
   updateRoundTitle() {
-    this.roundTitle.setText(`Online Game — Round ${this.currentRound}/${this.gameConfig.rounds}`);
+    const total = this.totalRounds || this.gameConfig.rounds || 1;
+    this.roundText?.setText(`Round ${this.currentRound} / ${total}`);
   }
 
   // -----------------------
   // Turn timer (client display only)
   // -----------------------
   startTurnTimer(seconds, expireAt = null) {
+    if (this._leaving) return;
     this.clearTurnTimer();
 
-    let remaining = seconds;
+    // The server owns turn expiry. Store an absolute deadline and derive the
+    // label from it so a throttled/hibernated tab cannot drift the countdown.
+    const endAt = Number.isFinite(expireAt)
+      ? expireAt
+      : Date.now() + Math.max(0, Number(seconds) || 0) * 1000;
+    this._turnExpiresAt = endAt;
 
-    // If server provided an expireAt timestamp (ms), compute remaining
-    if (expireAt && typeof expireAt === 'number') {
-      const remMs = Math.max(0, expireAt - Date.now());
-      remaining = Math.ceil(remMs / 1000);
-    }
-
-    this.timerText.setText(`Time: ${remaining}s`);
-
-    // Use Phaser timed event to tick every second so every client shows a countdown
-    this.turnTimer = this.time.addEvent({
-      delay: 1000,
-      repeat: Math.max(0, remaining - 1),
-      callback: () => {
-        remaining--;
-        this.timerText.setText(`Time: ${remaining}s`);
-        if (remaining <= 0) {
-          // The server timer is authoritative and will auto-roll.
-          this.clearTurnTimer();
-          this.timerText.setText("Time's up");
-        }
+    const update = () => {
+      if (this._leaving || this._shutDown || !this.timerText?.active) {
+        this.clearTurnTimer();
+        return;
       }
-    });
+      const remaining = Math.max(0, Math.ceil((this._turnExpiresAt - Date.now()) / 1000));
+      this.timerText.setText(`Time: ${remaining}s`);
+      if (remaining <= 0) {
+        // The server timer is authoritative and will auto-roll.
+        this.clearTurnTimer();
+        if (this.timerText?.active) this.timerText.setText("Time's up");
+      }
+    };
+
+    update();
+    if (this._turnExpiresAt && !this._leaving && !this._shutDown) {
+      this.turnTimer = this.time.addEvent({ delay: 250, loop: true, callback: update });
+    }
+  }
+
+  _refreshTurnTimer() {
+    if (!this._turnExpiresAt || !this.timerText?.active) return;
+    const remaining = Math.max(0, Math.ceil((this._turnExpiresAt - Date.now()) / 1000));
+    try { this.timerText.setText(`Time: ${remaining}s`); } catch (err) { /* ignore */ }
   }
 
   clearTurnTimer() {
     if (this.turnTimer) {
-      this.turnTimer.remove();
+      try { this.turnTimer.remove(); } catch (err) { /* ignore */ }
       this.turnTimer = null;
     }
-    this.timerText.setText('');
+    this._turnExpiresAt = null;
+    if (this.timerText?.setText) {
+      try { this.timerText.setText(''); } catch (err) { /* scene may be shutting down */ }
+    }
+  }
+
+  _installResumeSync() {
+    if (this._resumeSyncInstalled || typeof document === 'undefined') return;
+    this._resumeSyncInstalled = true;
+    this._onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') this._resyncFromServer();
+    };
+    this._onWindowFocus = () => this._resyncFromServer();
+    try { document.addEventListener('visibilitychange', this._onVisibilityChange); } catch (err) { /* ignore */ }
+    try { window.addEventListener('focus', this._onWindowFocus); } catch (err) { /* ignore */ }
+  }
+
+  _removeResumeSync() {
+    if (this._onVisibilityChange) {
+      try { document.removeEventListener('visibilitychange', this._onVisibilityChange); } catch (err) { /* ignore */ }
+    }
+    if (this._onWindowFocus) {
+      try { window.removeEventListener('focus', this._onWindowFocus); } catch (err) { /* ignore */ }
+    }
+    this._onVisibilityChange = null;
+    this._onWindowFocus = null;
+    this._resumeSyncInstalled = false;
+  }
+
+  _resyncFromServer() {
+    if (this._leaving || this._shutDown) return;
+    const now = Date.now();
+    if (now - (this._lastResyncAt || 0) < 500) return;
+    this._lastResyncAt = now;
+    this._refreshTurnTimer();
+    const socket = getSocket();
+    if (socket) socket.emit('request-game-state', { code: this.roomCode });
   }
 
   addBackButton() {
-    const back = this.add.text(50, 50, '← Back', {
+    const back = this.add.text(50, 50, '<- BACK', {
       fontSize: 24,
-      fontFamily: 'Orbitron, Arial',
+      fontFamily: GAME_FONT,
       color: '#ff6666'
     });
     makeTextButton(back, 130, 40);
@@ -1661,28 +1801,70 @@ export default class OnlineGameScene extends Phaser.Scene {
   }
 
   showConfirmExit() {
-    const bg = this.add.rectangle(600, 300, 500, 250, 0x000000, 0.85);
-    const msg = this.add.text(600, 260, 'Are you sure you want to leave the match?\nYou may forfeit.', { fontSize: 22, align: 'center' }).setOrigin(0.5);
-    const yesBtn = this.add.text(540, 340, 'Yes', {
+    if (this.exitModal || this._leaving) return;
+    const bg = this.add.rectangle(600, 300, 500, 250, 0x000000, 0.8).setDepth(2000);
+    const msg = this.add.text(600, 260, 'Are you sure you want to leave the match?\nYou may forfeit.', {
       fontSize: 26,
-      fontFamily: 'Orbitron, Arial',
+      fontFamily: GAME_FONT,
+      align: 'center'
+    }).setOrigin(0.5).setDepth(2001);
+    const yesBtn = this.add.text(550, 340, 'Yes', {
+      fontSize: 28,
+      fontFamily: GAME_FONT,
       color: '#66ff66'
-    }).setOrigin(0.5);
-    const noBtn = this.add.text(660, 340, 'No', {
-      fontSize: 26,
-      fontFamily: 'Orbitron, Arial',
+    }).setOrigin(0.5).setDepth(2001);
+    const noBtn = this.add.text(650, 340, 'No', {
+      fontSize: 28,
+      fontFamily: GAME_FONT,
       color: '#ff6666'
-    }).setOrigin(0.5);
-    makeTextButton(yesBtn, 80, 44);
-    makeTextButton(noBtn, 80, 44);
+    }).setOrigin(0.5).setDepth(2001);
+    makeTextButton(yesBtn, 100, 50);
+    makeTextButton(noBtn, 100, 50);
 
+    this.exitModal = { bg, msg, yesBtn, noBtn };
     yesBtn.on('pointerdown', () => {
-      // Leaving mid-match is a forfeit; the server marks the player left.
-      getSocket().emit('leave-lobby', this.roomCode);
-      this.scene.start('OnlineMenuScene');
+      if (this._leaving) return;
+      GlobalAudio.playButton(this);
+      this.leaveActiveGame();
     });
     noBtn.on('pointerdown', () => {
-      bg.destroy(); msg.destroy(); yesBtn.destroy(); noBtn.destroy();
+      GlobalAudio.playButton(this);
+      this.closeExitModal();
+    });
+  }
+
+  closeExitModal() {
+    if (!this.exitModal) return;
+    const { bg, msg, yesBtn, noBtn } = this.exitModal;
+    try { bg.destroy(); } catch (err) { /* ignore */ }
+    try { msg.destroy(); } catch (err) { /* ignore */ }
+    try { yesBtn.destroy(); } catch (err) { /* ignore */ }
+    try { noBtn.destroy(); } catch (err) { /* ignore */ }
+    this.exitModal = null;
+  }
+
+  leaveActiveGame() {
+    if (this._leaving || this._shutDown) return;
+    this._leaving = true;
+    this._sceneReady = false;
+    this.exitLocked = false;
+    this.clearTurnTimer();
+
+    // Leaving mid-match is a forfeit; the server marks the player left. Remove
+    // our socket listeners before the menu transition so any late server event
+    // cannot touch this scene while it is being destroyed.
+    const socket = getSocket();
+    if (socket) socket.emit('leave-lobby', this.roomCode);
+
+    // Defer the teardown until the button's pointer event has completed. Doing
+    // it synchronously can destroy the button while Phaser is still dispatching
+    // that event.
+    this.time.delayedCall(0, () => {
+      if (this._shutDown) return;
+      try { this.tweens.killAll(); } catch (err) { /* ignore */ }
+      try { this.time.removeAllEvents(); } catch (err) { /* ignore */ }
+      try { this.shutdown(); } catch (err) { console.warn('[OnlineGameScene] leave cleanup failed', err); }
+      try { this.scene.start('OnlineMenuScene'); } catch (err) { console.warn('[OnlineGameScene] menu transition failed', err); }
     });
   }
 
@@ -1690,9 +1872,23 @@ export default class OnlineGameScene extends Phaser.Scene {
   // Cleanup
   // -----------------------
   shutdown() {
+    if (this._shutDown) return;
+    this._shutDown = true;
+    this._leaving = true;
     this._sceneReady = false;
-    this.closeShop();
-    this.closeHistoryLog();
+    this._turnToken += 1;
+    this._removeResumeSync();
+    try { this.closeExitModal(); } catch (err) { /* ignore */ }
+    const timerText = this.timerText;
+    this.timerText = null;
+    if (this.turnTimer) {
+      try { this.turnTimer.remove(); } catch (err) { /* ignore */ }
+      this.turnTimer = null;
+    }
+    try { if (timerText?.active) timerText.setText(''); } catch (err) { /* ignore */ }
+    try { this.closeShop(); } catch (err) { /* ignore */ }
+    this.shopUI = null;
+    try { this.closeHistoryLog(); } catch (err) { /* ignore */ }
     const s = getSocket();
     if (s && this._handlers) {
       // remove only the handlers we added
@@ -1724,6 +1920,5 @@ export default class OnlineGameScene extends Phaser.Scene {
       s.off('upgrade-failed'); s.off('score-drain'); s.off('player-prediction'); s.off('game-state-denied');
       s.off('auth-required'); s.off('game-failed');
     }
-    this.clearTurnTimer();
   }
 }

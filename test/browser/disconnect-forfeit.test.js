@@ -172,7 +172,7 @@ test('the leave confirmation can be canceled, and Yes forfeits explicitly', {
     const backButton = await guest.page.evaluate(() => {
       const scene = window.__SCALE_DICE_TEST__.game.scene.getScene('OnlineGameScene');
       const button = scene.children.list.find((child) => (
-        child.type === 'Text' && child.text === '← Back'
+        child.type === 'Text' && child.text === '<- BACK'
       ));
       if (!button) return null;
       const bounds = button.getBounds();
